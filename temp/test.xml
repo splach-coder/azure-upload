@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<NctsSswDeclaration xsi:noNamespaceSchemaLocation="NctsSsw.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <typeDeclaration>N</typeDeclaration>
+  <version>516.1.002</version>
+  <CustomsStreamliner>
+    <template>CASA</template>
+    <company>DKM</company>
+    <user>STAGIAIR2</user>
+    <printLocation>DEFAULT PRINTGROEP</printLocation>
+    <createDeclaration>F</createDeclaration>
+    <sendingMode>R</sendingMode>
+    <sendDeclaration>F</sendDeclaration>
+    <dossierNumberERP>???????</dossierNumberERP>
+    <transhipment>F</transhipment>
+    <isFerry>F</isFerry>
+    <Principal>
+      <id>CASAINTERN</id>
+      <ContactPerson>
+        <contactPersonCode>BCTN</contactPersonCode>
+      </ContactPerson>
+    </Principal>
+    <IntegratedLogisticStreamliner>
+      <createDossier>F</createDossier>
+      <IlsDossier>
+        <iLSCompany>DKM</iLSCompany>
+      </IlsDossier>
+    </IntegratedLogisticStreamliner>
+    <ControlValues>
+      <ControlArticles>0</ControlArticles>
+      <ControlPackages>???????</ControlPackages>
+      <ControlGrossmass>????????</ControlGrossmass>
+      <ControlNetmass>??????</ControlNetmass>
+    </ControlValues>
+  </CustomsStreamliner>
+  <MessageBody>
+    <GoodsDeclaration>
+      <Header>
+        <typeOfDeclaration>T1</typeOfDeclaration>
+        <countryOfDestinationCode>BE</countryOfDestinationCode>
+        <codeAuthorisedLocationOfGoods>BEDELAZ03318001</codeAuthorisedLocationOfGoods>
+        <countryOfDispatchExportCode>CN</countryOfDispatchExportCode>
+        <inlandTransportMode>80</inlandTransportMode>
+        <transportModeAtBorder>10</transportModeAtBorder>
+        <identityOfMeansOfTransportAtDeparture language="EN">LICHTER</identityOfMeansOfTransportAtDeparture>
+        <nationalityOfMeansOfTransportAtDeparture>BE</nationalityOfMeansOfTransportAtDeparture>
+        <identityOfMeansOfTransportCrossingBorder language="EN">????????</identityOfMeansOfTransportCrossingBorder>
+        <nationalityOfMeansOfTransportCrossingBorder>BE</nationalityOfMeansOfTransportCrossingBorder>
+        <typeOfMeansOfTransportCrossingBorder>11</typeOfMeansOfTransportCrossingBorder>
+        <containerisedIndicator>T</containerisedIndicator>
+        <dialogLanguageIndicatorAtDeparture>NL</dialogLanguageIndicatorAtDeparture>
+        <nctsAccompanyingDocumentLanguageCode>NL</nctsAccompanyingDocumentLanguageCode>
+        <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
+        <declarationPlace language="EN">2000</declarationPlace>
+        <Security>(</Security>
+      </Header>
+    </GoodsDeclaration>
+    <GoodsItems>
+      <itemNumber>1</itemNumber>
+      <goodsDescription language="EN">???????</goodsDescription>
+      <grossMass>??????</grossMass>
+      <netMass>??????</netMass>
+      <PreviousAdministrativeReferences>
+        <previousDocumentType>126E</previousDocumentType>
+        <previousDocumentReference language="EN">???????????</previousDocumentReference>
+        <complementOfInformation language="EN">??????????</complementOfInformation>
+      </PreviousAdministrativeReferences>
+      <ProducedDocuments>
+        <documentType>Y026</documentType>
+        <documentReference language="EN">BEAEOF0000064GDA</documentReference>
+        <complementOfInformation language="EN">.</complementOfInformation>
+      </ProducedDocuments>
+      <Containers>
+        <containerNumber>??????????</containerNumber>
+      </Containers>
+      <Packages>
+        <marksAndNumbersOfPackages language="EN">KARTON</marksAndNumbersOfPackages>
+        <kindOfPackages>CT</kindOfPackages>
+        <numberOfPackages>??????</numberOfPackages>
+        <numberOfPieces>0</numberOfPieces>
+      </Packages>
+    </GoodsItems>
+  </MessageBody>
+</NctsSswDeclaration>

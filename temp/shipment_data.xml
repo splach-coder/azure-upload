@@ -1,0 +1,16 @@
+<ShipmentData>
+    <Vissel>/S MSC KATRINA</Vissel>
+    <Port_Of_Loading>TIANJINXIN</Port_Of_Loading>
+    <ETA>10/09/2024</ETA>
+    <LoydsNumber>9467445</LoydsNumber>
+    <BL_number>MEDUWC35644A</BL_number>
+    <Article>220</Article>
+    <Agent_Code>MSCBEL</Agent_Code>
+    <Stay>285377</Stay>
+    <Quay>1742</Quay>
+    <Date>07/06/2024</Date>
+    <Container>CAAU7311683</Container>
+    <Item>Item: 1</Item><Packages>1275 Carton(s)</Packages>
+    <Description>GLASSWARE GLASS CUP,BOT</Description>
+    <Gross_Weight>7330 kgs.</Gross_Weight>
+</ShipmentData>
