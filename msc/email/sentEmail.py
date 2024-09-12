@@ -24,6 +24,12 @@ def transform_json(input_data):
     arrival_notice2 = f"{agent_code}*{item_number}*{bl_number}"
     if quay == "1742":
         quay = "BEDELAZ03318001"
+    if quay == "CS1700P":
+        quay = "BEDELAZ03318001" 
+    if quay == "913":
+        quay = "BEDELAZ03318001"
+    if quay == "CSP":
+        quay = "BEDELAZ03318001"    
     
     # Construct the output JSON
     output_data = {
