@@ -68,7 +68,7 @@ def json_to_xml(json_data):
     <Principal>
       <id>CASAINTERN</id>
       <ContactPerson>
-        <contactPersonCode>BCTN</contactPersonCode>
+        <contactPersonCode>MSC NCTS</contactPersonCode>
       </ContactPerson>
     </Principal>
     <IntegratedLogisticStreamliner>
