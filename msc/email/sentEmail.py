@@ -122,12 +122,15 @@ def json_to_xml(json_data):
                 Packages=data_items["Packages"]
             ))
 
+        # Join the goods items list into a single string
+        formatted_goods_items_str = "".join(formatted_goods_items)
+
         # Fill the XML template with the formatted goods items
         xml_filled = xml_template.format (
             Container=data["Container"],
             Vissel=data["Vissel"],
             Quay=data["Quay"],
-            GoodsItems = formatted_goods_items
+            GoodsItems = formatted_goods_items_str
         )
 
         xml_files.append(xml_filled)
