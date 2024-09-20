@@ -4,10 +4,10 @@ import json
 import os
 import base64
 
-from msc.service.pdf_service import extract_text_from_coordinates
+from msc.service.pdf_service import extract_text_from_coordinates, process
 from msc.config.coords import coordinates
 from msc.config.data_structure import key_map
-from msc.utils.text_utils import data_to_json, update_object
+from msc.utils.text_utils import update_object
 from msc.email.sentEmail import json_to_xml
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -50,20 +50,37 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             temp_file.write(file_content)
         
         # Extract text from PDF based on coordinates
-        extracted_text = extract_text_from_coordinates(uploaded_file_path, coordinates)
-        extracted_text = data_to_json(extracted_text[1], key_map)
-        extracted_text = json.loads(extracted_text)
+        # Actual code logic
+        extracted_data = extract_text_from_coordinates(uploaded_file_path, coordinates, key_map)
+        
+        # Handle string case and parse 'data' if it's a string
+        if isinstance(extracted_data, str):
+            extracted_data = {"data": extracted_data}
+        
+        # Check if 'data' key exists and is a stringified JSON
+        if 'data' in extracted_data:
+            parsed_data = json.loads(extracted_data['data'])  # Parse the string in 'data'
+            del extracted_data['data']  # Remove the 'data' key
+            extracted_data.update(parsed_data)  # Merge parsed 'data' at the top level
+        
+        # Now add containers to the extracted_data
+        extracted_data["containers"] = process(uploaded_file_path)
 
-        extracted_text = update_object(extracted_text, "Gross Weight")
-        extracted_text = update_object(extracted_text, "Item")
-        extracted_text = update_object(extracted_text, "Packages")
+        # Step 2: Print the final JSON with proper formatting
+        formatted_json = json.dumps(extracted_data, indent=4)
+
+        formatted_json = update_object(formatted_json)
 
         # Delete the temporary uploaded file
         os.remove(uploaded_file_path)
 
     # Convert JSON to XML (kept in memory, not saved as a file)
-    xml_content = json_to_xml(extracted_text)
-    
+    xml_content = json_to_xml(formatted_json)
+
+    # If json_to_xml() returns a list, get the first item
+    # If it returns a string, this line isn't necessary
+    xml_string = xml_content[0] if isinstance(xml_content, list) else xml_content
+
     # Set the response headers to indicate an XML content type
     headers = {
         "Content-Type": "application/xml",
@@ -72,7 +89,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     # Create the response object with the XML content
     return func.HttpResponse(
-        body=xml_content,
+        body=xml_string,
         status_code=200,
         headers=headers
     )

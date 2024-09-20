@@ -1,56 +1,38 @@
 import xml.etree.ElementTree as ET
 import json
-import io
-
 
 def transform_json(input_data):
-    # Extract fields from input
-    vissel = input_data.get("Vissel")
-    stay = input_data.get("Stay")
-    loyds_number = input_data.get("LoydsNumber")
-    article_number = input_data.get("Article").zfill(4)  # Make sure Article is 4 digits
-    agent_code = input_data.get("Agent Code")
-    item_number = ''.join([i for i in input_data.get("Item", "") if i.isdigit()]).zfill(4)  # Remove strings, ensure 4 digits
-    bl_number = input_data.get("BL number")
-    quay = input_data.get("Quay")
-    container = input_data.get("Container")
-    packages = ''.join([i for i in input_data.get("Packages") if i.isdigit()])  # Remove strings, keep only digits
-    description = input_data.get("Description")
-    gross_weight = ''.join([i for i in input_data.get("Gross Weight") if i.isdigit()])  # Remove strings, keep only digits
-    net_weight = gross_weight  # Net Weight equals Gross Weight
-    
-    # Transform values based on rules
-    arrival_notice1 = f"1{stay}L{loyds_number}*{article_number}"
-    arrival_notice2 = f"{agent_code}*{item_number}*{bl_number}"
-    if quay == "1742":
-        quay = "BEDELAZ03318001"
-    if quay == "CS1700P":
-        quay = "BEDELAZ03318001" 
-    if quay == "913":
-        quay = "BEDELAZ03318001"
-    if quay == "CSP":
-        quay = "BEDELAZ03318001"    
-    
-    # Construct the output JSON
-    output_data = {
-        "Vissel": vissel,
-        "ArrivalNotice1": arrival_notice1,
-        "ArrivalNotice2": arrival_notice2,
-        "Quay": quay,
-        "Container": container,
-        "Packages": packages,
-        "Description": description,
-        "Gross Weight": gross_weight,
-        "Net Weight": net_weight
-    }
-    
-    return json.dumps(output_data, indent=4)
+    transformed_data = []
+
+    for container in input_data.get("containers", []):
+        for item in container.get("items", []):
+            item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
+            packages = ''.join([i for i in item.get("Packages", "") if i.isdigit()])
+            description = item.get("desc", "")
+            gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
+            net_weight = gross_weight
+
+            # Construct transformed data for each item in each container
+            transformed_data.append({
+                "Vissel": input_data.get("Vissel"),
+                "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
+                "ArrivalNotice2": f"{input_data.get('Agent Code')}*{item_number}*{input_data.get('BL number')}",
+                "Quay": input_data.get("Quay"),
+                "Container": container.get("container"),
+                "Packages": packages,
+                "Description": description,
+                "Gross Weight": gross_weight,
+                "Net Weight": net_weight
+            })
+
+    return json.dumps(transformed_data, indent=4)
 
 def json_to_xml(json_data):
-    json_data = json.loads(transform_json(json_data))
+    json_data = json.loads(transform_json(json_data)) 
+    xml_files = []
 
-    # Define the XML structure with placeholders for data
-    xml_template = '''<?xml version="1.0" encoding="iso-8859-1"?>
+    for data in json_data:
+        xml_template = '''<?xml version="1.0" encoding="iso-8859-1"?>
 <NctsSswDeclaration xsi:noNamespaceSchemaLocation="NctsSsw.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <typeDeclaration>N</typeDeclaration>
   <version>516.1.002</version>
@@ -85,11 +67,11 @@ def json_to_xml(json_data):
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
-    <GoodsDeclaration>
-      <Header>
+  <GoodsDeclaration>
+    <Header>
         <typeOfDeclaration>T1</typeOfDeclaration>
         <countryOfDestinationCode>BE</countryOfDestinationCode>
-        <codeAuthorisedLocationOfGoods>BEDELAZ03318001</codeAuthorisedLocationOfGoods>
+        <codeAuthorisedLocationOfGoods>BEANRAZ03318002</codeAuthorisedLocationOfGoods>
         <countryOfDispatchExportCode>CN</countryOfDispatchExportCode>
         <inlandTransportMode>80</inlandTransportMode>
         <transportModeAtBorder>10</transportModeAtBorder>
@@ -106,46 +88,60 @@ def json_to_xml(json_data):
         <Security>(</Security>
       </Header>
     </GoodsDeclaration>
-    <GoodsItems>
-      <itemNumber>1</itemNumber>
-      <goodsDescription language="EN">{Description}</goodsDescription>
-      <grossMass>{GrossWeight}</grossMass>
-      <netMass>{NetWeight}</netMass>
-      <PreviousAdministrativeReferences>
-        <previousDocumentType>126E</previousDocumentType>
-        <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
-        <complementOfInformation language="EN">{ArrivalNotice2}</complementOfInformation>
-      </PreviousAdministrativeReferences>
-      <ProducedDocuments>
-        <documentType>Y026</documentType>
-        <documentReference language="EN">BEAEOF0000064GDA</documentReference>
-        <complementOfInformation language="EN">.</complementOfInformation>
-      </ProducedDocuments>
-      <Containers>
-        <containerNumber>{Container}</containerNumber>
-      </Containers>
-      <Packages>
-        <marksAndNumbersOfPackages language="EN">KARTON</marksAndNumbersOfPackages>
-        <kindOfPackages>CT</kindOfPackages>
-        <numberOfPackages>{Packages}</numberOfPackages>
-        <numberOfPieces>0</numberOfPieces>
-      </Packages>
-    </GoodsItems>
+    {GoodsItems}
   </MessageBody>
-</NctsSswDeclaration>
-    '''
+</NctsSswDeclaration>'''
 
-    # Replace placeholders with actual values from JSON
-    xml_filled = xml_template.format(
-        Container=json_data["Container"],
-        Packages=json_data["Packages"],
-        GrossWeight=json_data["Gross Weight"],
-        NetWeight=json_data["Net Weight"],
-        Vissel=json_data["Vissel"],
-        Description=json_data["Description"],
-        ArrivalNotice1=json_data["ArrivalNotice1"],
-        ArrivalNotice2=json_data["ArrivalNotice2"]
-    )
-    
-    return xml_filled
+        goods_items = '''<GoodsItems>
+            <itemNumber>1</itemNumber>
+            <goodsDescription language="EN">{Description}</goodsDescription>
+            <grossMass>{GrossWeight}</grossMass>
+            <netMass>{NetWeight}</netMass>
+            <PreviousAdministrativeReferences>
+                <previousDocumentType>126E</previousDocumentType>
+                <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
+                <complementOfInformation language="EN">{ArrivalNotice2}</complementOfInformation>
+            </PreviousAdministrativeReferences>
+            <ProducedDocuments>
+                <documentType>Y026</documentType>
+                <documentReference language="EN">BEAEOF0000064GDA</documentReference>
+                <complementOfInformation language="EN">.</complementOfInformation>
+            </ProducedDocuments>
+            <Containers>
+                <containerNumber>{Container}</containerNumber>
+            </Containers>
+            <Packages>
+                <marksAndNumbersOfPackages language="EN">KARTON</marksAndNumbersOfPackages>
+                <kindOfPackages>CT</kindOfPackages>
+                <numberOfPackages>{Packages}</numberOfPackages>
+                <numberOfPieces>0</numberOfPieces>
+            </Packages>
+        </GoodsItems>'''
 
+        # Format goods items with the given data
+        formatted_goods_items = goods_items.format(
+            Description=data["Description"],
+            GrossWeight=data["Gross Weight"],
+            NetWeight=data["Net Weight"],
+            ArrivalNotice1=data["ArrivalNotice1"],
+            ArrivalNotice2=data["ArrivalNotice2"],
+            Container=data["Container"],
+            Packages=data["Packages"]
+        )
+
+        # Fill the XML template with the formatted goods items
+        xml_filled = xml_template.format(
+            Container=data["Container"],
+            Packages=data["Packages"],
+            GrossWeight=data["Gross Weight"],
+            NetWeight=data["Net Weight"],
+            Vissel=data["Vissel"],
+            Description=data["Description"],
+            ArrivalNotice1=data["ArrivalNotice1"],
+            ArrivalNotice2=data["ArrivalNotice2"],
+            GoodsItems=formatted_goods_items
+        )
+
+        xml_files.append(xml_filled)
+
+    return xml_files

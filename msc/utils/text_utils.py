@@ -1,12 +1,5 @@
-import json
 import re
-
-def data_to_json(data_list, key_map):
-    if len(data_list) != len(key_map):
-        raise ValueError("Length of data list and key map must be equal.")
-
-    data_dict = dict(zip(key_map, data_list))
-    return json.dumps(data_dict)
+import json
 
 def swap_number_string(text):
     text = re.sub(r'\s+', ' ', text).strip()
@@ -31,15 +24,39 @@ def switch_number_and_string(text):
 def remove_control_chars(text):
     return ''.join(char for char in text if ord(char) >= 32 and ord(char) != 127)
 
-def update_object(json_object, object_key):
-    for key in json_object:
-        if key == object_key and key == "Gross Weight":
-            json_object[key] = remove_control_chars(json_object[key])
-            json_object[key] = switch_number_and_string(json_object[key])
-        if key == object_key and key == "Packages":
-            json_object[key] = remove_control_chars(json_object[key])
-        if key == object_key and key == "Item":
-            json_object[key] = remove_control_chars(json_object[key])
-            json_object[key] = swap_number_string(json_object[key])
+def extract_numbers(input_string):
+    # Use a regular expression to find all digits in the string
+    numbers = re.sub(r'\D', '', input_string)
+    return numbers
+
+def update_object(json_object):
+     # If the input is a string, convert it to a dictionary
+    if isinstance(json_object, str):
+        try:
+            json_object = json.loads(json_object)
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+            return None  # or handle the error as needed
+
+    # Now proceed assuming json_object is a dictionary
+    if isinstance(json_object, dict):
+        if 'containers' in json_object:
+            for container in json_object.get('containers', []):
+                for item in container.get('items', []):
+                    if 'item' in item:
+                        item['Item'] = remove_control_chars(item['item'])
+                        item['Item'] = swap_number_string(item['Item'])
+                        item['Item'] = extract_numbers(item['Item'])
+                        del item['item']
+                    if 'pkgs' in item:
+                        item['Packages'] = remove_control_chars(item['pkgs'])
+                        item['Packages'] = extract_numbers(item['pkgs'])
+                        del item['pkgs']
+                    if 'weight' in item:
+                        item['Gross Weight'] = remove_control_chars(item['weight'])
+                        item['Gross Weight'] = switch_number_and_string(item['Gross Weight'])
+                        item['Gross Weight'] = extract_numbers(item['Gross Weight'])
+                        del item['weight']
+    
     return json_object
 
