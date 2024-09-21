@@ -77,19 +77,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Convert JSON to XML (kept in memory, not saved as a file)
     xml_content = json_to_xml(formatted_json)
 
-    # If json_to_xml() returns a list, get the first item
-    # If it returns a string, this line isn't necessary
-    xml_string = xml_content[0] if isinstance(xml_content, list) else xml_content
+    try:
+        # Prepare the JSON response
+        response = {
+            "xml_files": xml_content  # Sending the array of XML strings
+        }
 
-    # Set the response headers to indicate an XML content type
-    headers = {
-        "Content-Type": "application/xml",
-        "Content-Disposition": "attachment; filename=shipment_data.xml"
-    }
+        return func.HttpResponse(
+            json.dumps(response),
+            mimetype="application/json",
+            status_code=200
+        )
     
-    # Create the response object with the XML content
-    return func.HttpResponse(
-        body=xml_string,
-        status_code=200,
-        headers=headers
-    )
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error processing request: {e}", status_code=500
+        )
