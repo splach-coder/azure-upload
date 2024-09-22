@@ -1,16 +1,23 @@
 import xml.etree.ElementTree as ET
 import json
+import utils.searchOnExcel as search_excel
 
 def transform_json(input_data):
     transformed_data = []
 
     currentIndex = 0
     for container in input_data.get("containers", []):
+        
+        dispatch_country = input_data.get("Port Of Loading")
+
         # Construct transformed data for each item in each container
         transformed_data.append({
             "Vissel": input_data.get("Vissel"),
             "Container": container.get("container"),
+            "globalWeight": "",
+            "globalPkgs": "",
             "Quay" : "",
+            "DispatchCountry" : dispatch_country,
             "items" : []
         })
 
@@ -23,6 +30,9 @@ def transform_json(input_data):
             description = item.get("desc", "")
             gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
             net_weight = gross_weight
+
+            transformed_data[currentIndex]["globalWeight"] += gross_weight
+            transformed_data[currentIndex]["globalPkgs"] += packages
 
             item = {
                 "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
