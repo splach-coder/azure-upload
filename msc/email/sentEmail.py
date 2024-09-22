@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import json
-import utils.searchOnExcel as search_excel
+from msc.utils.searchOnExcel import search_excel
 
 def transform_json(input_data):
     transformed_data = []
@@ -8,7 +8,7 @@ def transform_json(input_data):
     currentIndex = 0
     for container in input_data.get("containers", []):
         
-        dispatch_country = input_data.get("Port Of Loading")
+        dispatch_country = search_excel(input_data.get("Port Of Loading"))
 
         # Construct transformed data for each item in each container
         transformed_data.append({
