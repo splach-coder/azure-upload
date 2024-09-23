@@ -38,8 +38,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not file_content_base64:
             continue
         
-        # Decode the base64 content
-        file_content = base64.b64decode(file_content_base64)
+        # Decode the base64-encoded content
+        try:
+            file_content = base64.b64decode(file_content_base64)
+        except Exception as e:
+            return func.HttpResponse(
+                body=json.dumps({"error": "Failed to decode base64 content", "details": str(e)}),
+                status_code=400,
+                mimetype="application/json"
+            )
         
         # Save the uploaded file temporarily
         temp_dir = os.getenv('TEMP', '/tmp')

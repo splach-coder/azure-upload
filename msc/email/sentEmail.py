@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import json
-from msc.utils.searchOnExcel import search_excel
+from msc.utils.searchOnPorts import search_ports
 
 def transform_json(input_data):
     transformed_data = []
@@ -8,14 +8,14 @@ def transform_json(input_data):
     currentIndex = 0
     for container in input_data.get("containers", []):
         
-        dispatch_country = search_excel(input_data.get("Port Of Loading"))
+        dispatch_country = search_ports(input_data.get("Port Of Loading"))
 
         # Construct transformed data for each item in each container
         transformed_data.append({
             "Vissel": input_data.get("Vissel"),
             "Container": container.get("container"),
-            "globalWeight": "",
-            "globalPkgs": "",
+            "globalWeight": 0,
+            "globalPkgs": 0,
             "Quay" : "",
             "DispatchCountry" : dispatch_country,
             "items" : []
@@ -31,8 +31,8 @@ def transform_json(input_data):
             gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
             net_weight = gross_weight
 
-            transformed_data[currentIndex]["globalWeight"] += gross_weight
-            transformed_data[currentIndex]["globalPkgs"] += packages
+            transformed_data[currentIndex]["globalWeight"] += int(gross_weight)
+            transformed_data[currentIndex]["globalPkgs"] += int(packages)
 
             item = {
                 "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
@@ -45,7 +45,7 @@ def transform_json(input_data):
             }
 
             # Construct transformed data for each item in each container
-            transformed_data[0]["items"].append(item)
+            transformed_data[currentIndex]["items"].append(item)
         currentIndex += 1     
 
     return json.dumps(transformed_data, indent=4)
@@ -80,23 +80,35 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
+        <dossierId>71100</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
       <ControlArticles>0</ControlArticles>
-      <ControlPackages>0</ControlPackages>
-      <ControlGrossmass>0</ControlGrossmass>
-      <ControlNetmass>0</ControlNetmass>
+      <ControlPackages>{globalPkgs}</ControlPackages>
+      <ControlGrossmass>{globalWeight}</ControlGrossmass>
+      <ControlNetmass>{globalWeight}</ControlNetmass>
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
+  <GoodsDeclaration>
+    <Header>
+      <typeOfDeclaration>T1</typeOfDeclaration>
+      <countryOfDestinationCode>BE</countryOfDestinationCode>
+      <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
+      <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
+      <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
+    </Header>
+  </GoodsDeclaration>
     {GoodsItems}
   </MessageBody>
 </NctsSswDeclaration>'''
         formatted_goods_items = []
+        itemNumber = 1
         for data_items in data['items'] :
-            goods_items = '''<GoodsItems>
-            <itemNumber>1</itemNumber>
+            goods_items = '''
+        <GoodsItems>
+            <itemNumber>{itemNmber}</itemNumber>
             <goodsDescription language="EN">{Description}</goodsDescription>
             <grossMass>{GrossWeight}</grossMass>
             <netMass>{NetWeight}</netMass>
@@ -119,8 +131,9 @@ def json_to_xml(json_data):
                 <numberOfPackages>{Packages}</numberOfPackages>
                 <numberOfPieces>0</numberOfPieces>
             </Packages>
-        </GoodsItems>'''
-            
+        </GoodsItems>
+        '''
+          
             # Format goods items with the given data
             formatted_goods_items.append(goods_items.format(
                 Description=data_items["Description"],
@@ -129,8 +142,11 @@ def json_to_xml(json_data):
                 ArrivalNotice1=data_items["ArrivalNotice1"],
                 ArrivalNotice2=data_items["ArrivalNotice2"],
                 Container=data_items["Container"],
-                Packages=data_items["Packages"]
+                Packages=data_items["Packages"],
+                itemNmber=itemNumber,
             ))
+
+            itemNumber += 1
 
         # Join the goods items list into a single string
         formatted_goods_items_str = "".join(formatted_goods_items)
@@ -139,7 +155,10 @@ def json_to_xml(json_data):
         xml_filled = xml_template.format (
             Container=data["Container"],
             Vissel=data["Vissel"],
+            DispatchCountry=data["DispatchCountry"],
             Quay=data["Quay"],
+            globalWeight=data["globalWeight"],
+            globalPkgs=data["globalPkgs"],
             GoodsItems = formatted_goods_items_str
         )
 

@@ -6,7 +6,6 @@ def is_container_number(text):
     pattern = r"^[A-Za-z]{4}\d{7}$"
     return bool(re.match(pattern, text))
 
-
 def extract_text_from_coordinates(pdf_path, coordinates, key_map):
     pdf_document = fitz.open(pdf_path)
     extracted_text = {}
@@ -44,70 +43,74 @@ def process(pdf_path):
         (450, 333, 550, 348),
     ]
 
+    cy_increment = 30  # Increment for container y-axis after finding each container
+    y_increment = 13   # Increment for items' y-axis to search next row of items
+
     for page_num in range(len(pdf_document)):
-
         page = pdf_document[page_num]
-        attempts = 0
-        cy_increment = 30  # Adjust the increment as needed
-        y_increment = 13  # Adjust the increment as needed
-
         cx0, cy0, cx1, cy1 = container_coords
+
         while True:
             # Check for container
             rect = fitz.Rect(cx0, cy0, cx1, cy1)
-            text = page.get_text("text", clip=rect).strip()
+            container_text = page.get_text("text", clip=rect).strip()
 
-            if is_container_number(text):
+            if is_container_number(container_text):
                 container_data = {
-                    "container": text,
+                    "container": container_text,
                     "items": []
                 }
 
-                found_text = False  # Flag to track if text is found
-                attempts = 0  # Counter to track the number of consecutive empty checks
-                new_coords = list(item_coords)
+                # Adjust item coordinates based on container's y position
+                container_y_offset = cy0 - container_coords[1]
+                new_coords = [(x0, y0 + container_y_offset, x1, y1 + container_y_offset) for (x0, y0, x1, y1) in item_coords]
 
+                attempts = 0  # Counter to track the number of consecutive empty checks
                 while attempts < 2:  # Double check if the text is empty twice
                     temp_items = []
+                    found_text = False
 
                     # Extract all coordinates for the items
                     for (x0, y0, x1, y1) in new_coords:
                         rect = fitz.Rect(x0, y0, x1, y1)
-                        text = page.get_text("text", clip=rect).strip()
+                        item_text = page.get_text("text", clip=rect).strip()
 
-                        if text:  # Check if text is not empty
-                            temp_items.append(text)
+                        if item_text:  # Check if text is not empty
+                            temp_items.append(item_text)
                             found_text = True
                         else:
                             found_text = False
+                            break  # Stop if any item field is missing
 
-                    # Append the item data if found
-                    if found_text:
+                    # Append the item data if valid items are found
+                    if len(temp_items) == 4:
                         item_data = {
-                                "item": temp_items[0],       # Here 'text' is the item's identifier, change if needed
-                                "pkgs": temp_items[1],         # Assign appropriate extracted values for pkgs, desc, weight
-                                "desc": temp_items[2],
-                                "weight": temp_items[3]
+                            "item": temp_items[0],       # Item identifier
+                            "pkgs": temp_items[1],       # Package info
+                            "desc": temp_items[2],       # Description
+                            "weight": temp_items[3]      # Weight
                         }
                         container_data["items"].append(item_data)
 
-                    # Stop processing further coordinates if no text was found after two attempts
-                    if not found_text and attempts >= 2:
-                        break
-                    elif not found_text:
+                    # Break if no text was found twice in a row
+                    if not found_text:
                         attempts += 1
                     else:
-                        # Increment the y-axis for the next attempt
+                        # Increment the y-axis for the next set of items
                         new_coords = [(x0, y0 + y_increment, x1, y1 + y_increment) for (x0, y0, x1, y1) in new_coords]
+                        attempts = 0  # Reset attempts if text was found
 
                 # Append the container data (with its items) to the final result
                 extracted_data.append(container_data)
-            else:
-                break
 
             # Increment the y-axis for the container for the next attempt
             cy0 += cy_increment
             cy1 += cy_increment
 
-    return extracted_data
+            # Check if there are more containers to extract, otherwise break
+            next_rect = fitz.Rect(cx0, cy0, cx1, cy1)
+            next_container_text = page.get_text("text", clip=next_rect).strip()
+            if not next_container_text:
+                break
 
+    return extracted_data
