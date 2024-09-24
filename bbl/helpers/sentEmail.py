@@ -1,119 +1,15 @@
-import re
-import json
-
-def process_container_data(data):
-    # Validate the container format
-    container = data.get("container", "")
-    valid_container = extract_valid_container(container)
-
-    if not valid_container:
-        return # Skip entries without valid containers
-
-    # Process Incoterm
-    incoterm = data.get("Incoterm", "")
-    incoterm_array = incoterm.split()  # Split into an array of strings
-
-    # Process Freight
-    freight = extract_numeric_value(data.get("Freight", "0 USD"))
-
-    # Process Vat 1 and Vat 2
-    vat1 = extract_numeric_value(data.get("Vat 1", "0 USD"))
-    vat2 = sum(extract_numeric_value(vat) for vat in data.get("Vat 2", "0 EUR").split("+"))
-
-    # Initialize totals
-    total_gross_weight = 0.0
-    total_net_weight = 0.0
-    total_packages = 0.0
-    total_devises = 0.0
-
-    # Process items and calculate totals
-    items = data.get("items", [])
-    for item in items:
-        total_gross_weight += extract_numeric_value(item.get("Gross Weight", "0"))
-        total_net_weight += extract_numeric_value(item.get("Net Weight", "0"))
-        total_packages += extract_numeric_value(item.get("Packages", "0"))
-        total_devises += extract_numeric_value(item.get("VALEUR", "0"))  # Assuming VALEUR is in devises
-
-    # Reconstruct the processed entry
-    processed_entry = {
-        "container": valid_container,
-        "Incoterm": incoterm_array,
-        "Freight": freight,
-        "Vat 1": vat1,
-        "Vat 2": vat2,
-        "items": items,
-        "totals": {
-            "Gross Weight": total_gross_weight,
-            "Net Weight": total_net_weight,
-            "Packages": total_packages,
-            "DEVISES": total_devises
-        }
-    }
-
-    return processed_entry
-
-def extract_valid_container(container_string):
-    container_arr = container_string.split(" ")
-    container = None
-    for str in container_arr:
-        # Check if the container matches the format 4 chars and 7 digits
-        pattern = r'^[A-Z]{4}\d{7}$'
-        if re.match(pattern, str):
-            container =  str
-
-    return container
-
-def extract_numeric_value(value):
-    # Extract numeric value from string and convert to float
-    match = re.search(r'[\d,.]+', value)
-    if match:
-        return float(match.group(0).replace(',', '.'))  # Replace comma with dot for float conversion
-    return 0.0
-
-
-# Example usage
-input_data = {
-            "container": "FICHE D INSTRUCTIONS GCXU6482664",
-            "Incoterm": "FOB NINGBO",
-            "Freight": "1822 USD",
-            "Vat 1": "238 USD",
-            "Vat 2": "21 EUR + 54 EUR",
-            "items": [
-                {
-                    "HSCODE": "8516792000",
-                    "VALEUR": "5909,48",
-                    "DEVISES": "EUR",
-                    "Gross Weight": "1310,95",
-                    "Net Weight": "780,29",
-                    "Packages": "157"
-                },
-                {
-                    "HSCODE": "8516797090",
-                    "VALEUR": "35053,74",
-                    "DEVISES": "EUR",
-                    "Gross Weight": "5910,8",
-                    "Net Weight": "3954,85",
-                    "Packages": "1194"
-                }
-            ]
-        }
-
-
-# Process the input data
-processed_output = process_container_data(input_data)
-
 import xml.etree.ElementTree as ET
 import json
 
 def json_to_xml(data):
-    
 
-  xml_template = r'''<?xml version="1.0" encoding="iso-8859-1"?>
-<SADImport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="V:\PCIL9\Bin\DevMcf\000\interfaces\definition\Customs\PLDA Standaard\SAD_DV1 v2.xsd">
+  xml_template = '''
+  <?xml version="1.0" encoding="iso-8859-1"?>
+<SADImport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="V:\PCIL9\Bin\DevMcf\\000\interfaces\definition\Customs\PLDA Standaard\SAD_DV1 v2.xsd">
   <functionCode>9</functionCode>
   <languageCode>NL</languageCode>
   <GoodsDeclaration>
-    <commercialReference>{container}</commercialReference>
+    <commercialReference>{Container}</commercialReference>
     <TransactionNature>
       <transactionNature1>1</transactionNature1>
       <transactionNature2>1</transactionNature2>
@@ -184,7 +80,7 @@ def json_to_xml(data):
   formatted_goods_items = []
   itemNumber = 1
   for data_items in data['items'] :
-    goods_items = r'''
+    goods_items = '''
           <GoodsItem>
     <sequence>{itemNbr}</sequence>
     <commodityCode>{hs}</commodityCode>
@@ -192,7 +88,7 @@ def json_to_xml(data):
     <grossMass>{grossweight}</grossMass>
     <Packaging>
       <marksNumber>NO AN</marksNumber>
-      <packages>{packages}}</packages>
+      <packages>{packages}</packages>
       <packageType>PA</packageType>
     </Packaging>
     <containerIdentifier>{container}</containerIdentifier>
@@ -260,7 +156,7 @@ def json_to_xml(data):
       itemNbr=itemNumber,
       hs=data_items["HSCODE"],
       dispatch=data["dispatch_country"],
-      Container=data["container"],
+      container=data["container"],
       grossweight=data_items["Gross Weight"],
       netweight=data_items["Net Weight"],
       packages=data_items["Packages"],
@@ -274,7 +170,7 @@ def json_to_xml(data):
 
   # Fill the XML template with the formatted goods items
   xml_filled = xml_template.format (
-      container=data["container"],
+      Container=data["container"],
       dispatchCountry=data["dispatch_country"],
       incoterm1=data["Incoterm"][0],
       incoterm2=data["Incoterm"][1],
@@ -284,13 +180,3 @@ def json_to_xml(data):
   )
 
   return xml_filled
-
-print(processed_output['container'])
-
-#print(json_to_xml(processed_output))
-
-
-
-
-
-
