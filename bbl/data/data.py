@@ -1,5 +1,6 @@
 ports = [
     {"Port": "BANGKOK", "Country": "Thailand", "Country Code": "TH"},
+    {"Port": "BATAM", "Country": "Indonesia", "Country Code": "ID"},
     {"Port": "BELAWAN", "Country": "Indonesia", "Country Code": "ID"},
     {"Port": "BUSAN", "Country": "South Korea", "Country Code": "KR"},
     {"Port": "CALCUTTA", "Country": "India", "Country Code": "IN"},

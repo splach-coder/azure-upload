@@ -18,7 +18,7 @@ def process_container_data(data):
     incoterm_array = incoterm.split()  # Split into an array of strings
 
     # Process Freight
-    freight = extract_numeric_value(data.get("Freight", "0 USD"))
+    freight = extract_freight(data.get("Freight", "0 USD"))
 
     # Process Vat 1 and Vat 2
     vat1 = extract_numeric_value(data.get("Vat 1", "0 USD"))
@@ -33,10 +33,10 @@ def process_container_data(data):
     # Process items and calculate totals
     items = data.get("items", [])
     for item in items:
-        total_gross_weight += extract_numeric_value(item.get("Gross Weight", "0"))
-        total_net_weight += extract_numeric_value(item.get("Net Weight", "0"))
+        total_gross_weight += item.get("Gross Weight", "0")
+        total_net_weight += item.get("Net Weight", "0")
         total_packages += extract_numeric_value(item.get("Packages", "0"))
-        total_devises += extract_numeric_value(item.get("VALEUR", "0"))  # Assuming VALEUR is in devises
+        total_devises += item.get("VALEUR", "0")  # Assuming VALEUR is in devises
 
     final_freight, final_vat = calculationVATndFREIGHT(total_devises, freight, vat1, vat2)
 
@@ -78,12 +78,43 @@ def extract_numeric_value(value):
         return float(match.group(0).replace(',', '.'))  # Replace comma with dot for float conversion
     return 0.0
 
+def extract_freight(value):
+    # Extract all numeric values from the string
+    matches = re.findall(r'[\d,.]+', value)
+    
+    # Convert the found numbers to floats and replace commas with dots
+    numbers = [float(match.replace(',', '.')) for match in matches]
+
+    # Return the list of numbers, limit to two if needed
+    return numbers[:2] if numbers else [0.0]
+
 def calculationVATndFREIGHT(price, freightUSD, vat1, vat2):
     EXCHANGE_RATE = 1.1116
 
-    insurance = price * 0.3/100
-    freightEUR = (freightUSD / EXCHANGE_RATE) + insurance
+    # First value in freightUSD array is in USD, convert to EUR
+    freight_in_usd = freightUSD[0] if len(freightUSD) > 0 else 0
+    freight_in_eur = freightUSD[1] if len(freightUSD) > 1 else 0
 
+    # Calculate insurance and freight in EUR
+    insurance = price * 0.3 / 100
+    freightEUR = (freight_in_usd / EXCHANGE_RATE) + insurance
+
+    # Add the EUR freight value (second value) to the final EUR freight
+    total_freightEUR = freightEUR + freight_in_eur
+
+    # Calculate VAT in EUR
     vatEUR = vat1 / EXCHANGE_RATE + vat2
 
-    return [freightEUR, vatEUR]
+    return [total_freightEUR, vatEUR]
+
+# Helper function to safely convert values to float
+def safe_float_conversion(value):
+    if value is None:
+        return 0.0  # Default to 0 if the value is None
+    if isinstance(value, (int, float)):  # If it's already a number, return as is
+        return float(value)
+    try:
+        return float(value.replace(",", "."))  # Try to replace and convert
+    except (ValueError, AttributeError):
+        print(f"Error converting value: {value}")
+        return 0.0  # Handle conversion error, default to 0 or other logic

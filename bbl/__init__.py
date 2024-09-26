@@ -5,7 +5,7 @@ import os
 import openpyxl
 import base64
 
-from bbl.helpers.functions import process_container_data
+from bbl.helpers.functions import process_container_data, safe_float_conversion
 from bbl.helpers.sentEmail import json_to_xml
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -42,8 +42,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         try:
             decoded_data = base64.b64decode(file_data)
 
-            # Save the uploaded file temporarily
-            uploaded_file_path = f'./temp/{filename}'
+            temp_dir = os.getenv('TEMP', '/tmp')
+            uploaded_file_path = os.path.join(temp_dir, filename)
+
+            # Write the file to the temporary path
             with open(uploaded_file_path, 'wb') as temp_file:
                 temp_file.write(decoded_data)
 
@@ -74,17 +76,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     net_weight = sheet.cell(row=11, column=column).value
                     packages = sheet.cell(row=12, column=column).value
 
+                    
                     # If any of the required cells are empty, break the loop
                     if not (hscode and valeur and devises and gross_weight and net_weight and packages):
                         break
+
+                    print(safe_float_conversion(valeur))
                     
                     # Create the item dictionary
                     item = {
                         "HSCODE": hscode,
-                        "VALEUR": valeur,
+                        "VALEUR": safe_float_conversion(valeur),
                         "DEVISES": devises,
-                        "Gross Weight": gross_weight,
-                        "Net Weight": net_weight,
+                        "Gross Weight": safe_float_conversion(gross_weight),
+                        "Net Weight": safe_float_conversion(net_weight),
                         "Packages": packages
                     }
 
@@ -126,5 +131,5 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     return func.HttpResponse(
         body=response_body,
         status_code=200,
-        mimetype="application/json"
+        mimetype="application/xml"
     )

@@ -4,8 +4,23 @@ import json
 def json_to_xml(data):
 
   xml_template = '''
-  <?xml version="1.0" encoding="iso-8859-1"?>
-<SADImport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="V:\PCIL9\Bin\DevMcf\\000\interfaces\definition\Customs\PLDA Standaard\SAD_DV1 v2.xsd">
+  <PldaSswDeclaration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:///C:/Users/luc.dekerf/Desktop/XSD%20Schema/PLDASSW.xsd">
+    <typeDeclaration>PI</typeDeclaration>
+    <linkIdERP>ETA - AN </linkIdERP>
+    <CustomsStreamliner>
+        <template>SEB IMAH</template>
+        <company>IDEAL</company>
+        <status>LUC</status>
+        <createDeclaration>T</createDeclaration>
+          <ControlValues>
+            <ControlPrice>{globalPrice}</ControlPrice>
+            <ControlPackages>{globalPkgs}</ControlPackages>
+            <ControlGrossmass>{globalGross}</ControlGrossmass>
+            <ControlNetmass>{globalNet}</ControlNetmass>
+          </ControlValues>
+    </CustomsStreamliner>
+    <MessageBody>
+<SADImport>
   <functionCode>9</functionCode>
   <languageCode>NL</languageCode>
   <GoodsDeclaration>
@@ -75,6 +90,8 @@ def json_to_xml(data):
   </GoodsDeclaration>
   {goodsItems}
 </SADImport>
+    </MessageBody>
+</PldaSswDeclaration>
   '''
 
   formatted_goods_items = []
@@ -176,6 +193,10 @@ def json_to_xml(data):
       incoterm2=data["Incoterm"][1],
       freight=data["Freight"],
       vat=data["Vat"],
+      globalPkgs=data["totals"]["Gross Weight"],
+      globalGross=data["totals"]["Net Weight"],
+      globalNet=data["totals"]["Packages"],
+      globalPrice=data["totals"]["DEVISES"],
       goodsItems = formatted_goods_items_str
   )
 
