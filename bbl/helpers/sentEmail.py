@@ -12,12 +12,12 @@ def json_to_xml(data):
         <company>IDEAL</company>
         <status>LUC</status>
         <createDeclaration>T</createDeclaration>
-          <ControlValues>
-            <ControlPrice>{globalPrice}</ControlPrice>
-            <ControlPackages>{globalPkgs}</ControlPackages>
-            <ControlGrossmass>{globalGross}</ControlGrossmass>
-            <ControlNetmass>{globalNet}</ControlNetmass>
-          </ControlValues>
+        <ControlValues>
+          <totalPrice>{globalPrice}</totalPrice>
+          <totalGrossmass>{globalGross}</totalGrossmass>
+          <totalNetmass>{globalNet}</totalNetmass>
+          <totalPackages>{globalPkgs}</totalPackages>
+        </ControlValues>
     </CustomsStreamliner>
     <MessageBody>
 <SADImport>
@@ -193,9 +193,9 @@ def json_to_xml(data):
       incoterm2=data["Incoterm"][1],
       freight=data["Freight"],
       vat=data["Vat"],
-      globalPkgs=data["totals"]["Gross Weight"],
-      globalGross=data["totals"]["Net Weight"],
-      globalNet=data["totals"]["Packages"],
+      globalPkgs=data["totals"]["Packages"],
+      globalGross=data["totals"]["Gross Weight"],
+      globalNet=data["totals"]["Net Weight"],
       globalPrice=data["totals"]["DEVISES"],
       goodsItems = formatted_goods_items_str
   )
