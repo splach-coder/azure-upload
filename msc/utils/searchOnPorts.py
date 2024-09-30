@@ -7,4 +7,4 @@ def search_ports(search_value):
             return port["Country Code"]
     
     # If no match is found, return a message
-    return "Value not found"
+    return ""

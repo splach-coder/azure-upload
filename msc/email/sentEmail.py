@@ -98,6 +98,7 @@ def json_to_xml(json_data):
       <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
       <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
       <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
+      <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
     </Header>
   </GoodsDeclaration>
     {GoodsItems}

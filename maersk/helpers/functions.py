@@ -10,11 +10,6 @@ def process_container_data(data_json):
         total_net_weight = 0.0
         total_packages = 0.0
 
-        if data["Quay"] == "1742": 
-            data["Quay"] = "BEANRAZ03318002"
-        if data["Quay"] == "1700": 
-            data["Quay"] = "BEANRAZ03318002"
-
         newItems = []
 
         # Process items and calculate totals

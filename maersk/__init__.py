@@ -56,6 +56,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 row = row[:13]
                 loyds, stay, vessel_name, container, origin_country, container_packages, net_weight, gross_weight, article_number, bl_number, item, quay, description = row
+
+                if not (loyds and  stay and  vessel_name and  container and  origin_country and  container_packages and  net_weight and  gross_weight and  article_number and  bl_number and  item and  quay and  description) :
+                    break
         
                 # If we encounter a new container, save the current container data
                 if container != current_container:
