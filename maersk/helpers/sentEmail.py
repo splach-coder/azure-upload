@@ -24,14 +24,14 @@ def json_to_xml(json_data):
     <Principal>
       <id>CASAINTERN</id>
       <ContactPerson>
-        <contactPersonCode>MSC NCTS</contactPersonCode>
+        <contactPersonCode>MAERSK NCTS</contactPersonCode>
       </ContactPerson>
     </Principal>
     <IntegratedLogisticStreamliner>
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71100</dossierId>
+        <dossierId>71266</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>

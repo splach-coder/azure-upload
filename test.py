@@ -135,15 +135,4 @@ data = [
     ]
 
 
-total_gross_weight = 0.0
-total_net_weight = 0.0
-total_packages = 0.0   
 
- # Process items and calculate totals
-items = data[0].get("items", [])
-for item in items:
-    print(item.get("Gross Weight", 0))
-    total_gross_weight += float(item.get("Gross Weight", 0))
-
-print(total_gross_weight)    
- 

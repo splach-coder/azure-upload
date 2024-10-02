@@ -89,7 +89,8 @@ def extract_freight(value):
     return numbers[:2] if numbers else [0.0]
 
 def calculationVATndFREIGHT(price, freightUSD, vat1, vat2):
-    EXCHANGE_RATE = 1.1116
+    EXCHANGE_RATE = 1.1124 
+
 
     # First value in freightUSD array is in USD, convert to EUR
     freight_in_usd = freightUSD[0] if len(freightUSD) > 0 else 0

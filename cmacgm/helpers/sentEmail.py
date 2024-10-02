@@ -22,21 +22,21 @@ def json_to_xml(json_data):
     <Principal>
       <id>CASAINTERN</id>
       <ContactPerson>
-        <contactPersonCode>MSC NCTS</contactPersonCode>
+        <contactPersonCode>BCTN</contactPersonCode>
       </ContactPerson>
     </Principal>
     <IntegratedLogisticStreamliner>
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71100</dossierId>
+        <dossierId>71266</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
       <ControlArticles>0</ControlArticles>
       <ControlPackages>{globalPkgs}</ControlPackages>
       <ControlGrossmass>{globalWeight}</ControlGrossmass>
-      <ControlNetmass>{globalWeight}</ControlNetmass>
+      <ControlNetmass>0</ControlNetmass>
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
@@ -47,6 +47,7 @@ def json_to_xml(json_data):
       <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
       <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
       <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
+      <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
     </Header>
   </GoodsDeclaration>
     {GoodsItems}
@@ -60,7 +61,7 @@ def json_to_xml(json_data):
             <itemNumber>{itemNmber}</itemNumber>
             <goodsDescription language="EN">{Description}</goodsDescription>
             <grossMass>{GrossWeight}</grossMass>
-            <netMass>{NetWeight}</netMass>
+            <netMass>0</netMass>
             <PreviousAdministrativeReferences>
                 <previousDocumentType>126E</previousDocumentType>
                 <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>

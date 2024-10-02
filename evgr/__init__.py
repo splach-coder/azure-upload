@@ -1,35 +1,12 @@
-import base64
 import azure.functions as func
 import logging
 import json
 import os
-import fitz
+import base64
 
-def search_text_with_coords(pdf_path, search_text):
-    results = []
-    pdf_document = fitz.open(pdf_path)
+from evgr.service.extractdata import extract_text_from_page_2, extract_text_from_pages
+from evgr.config.coords import coordinates, coordinates_2
 
-    for page in pdf_document:
-        blocks = page.get_text("blocks")
-        for block in blocks:
-            text = block[4]  # Accessing the text content of the block (index 4)
-            if search_text in text:
-                # Access coordinates by index (avoiding unpacking issue)
-                x0 = block[0]
-                y0 = block[1]
-                x1 = block[2]
-                y1 = block[3]
-
-                result = {
-                    "text": text,
-                    "x0": x0,
-                    "y0": y0,
-                    "x1": x1,
-                    "y1": y1,
-                }
-                results.append(result)
-
-    return results
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -52,10 +29,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-    for file in files:
-        file_content_base64 = file.get('file')
-        text_param = file.get('text')
-        filename = file.get('filename', 'temp.pdf')
+    for file_info in files:
+        file_content_base64 = file_info.get('file')
+        filename = file_info.get('filename', 'temp.pdf')
 
         if not file_content_base64:
             continue
@@ -77,19 +53,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Write the file to the temporary path
         with open(uploaded_file_path, 'wb') as temp_file:
             temp_file.write(file_content)
-            
-        results = search_text_with_coords(uploaded_file_path, text_param)
 
-        # Delete the temporary uploaded file
-        os.remove(uploaded_file_path)    
+        # Actual code logic
+        extracted_data = extract_text_from_page_2(uploaded_file_path, coordinates)
 
-    # Construct the JSON response manually using the `json` module
-    response_body = json.dumps({
-        "message": results
-    })
+        extracted_data = extract_text_from_pages(uploaded_file_path, coordinates_2)
+        
+    try:
+        # Prepare the JSON response
+        response = {
+            "xml_files": extracted_data  # Sending the array of XML strings
+        }
 
-    return func.HttpResponse(
-        body=response_body,
-        status_code=200,
-        mimetype="application/json"
-    )
+        return func.HttpResponse(
+            extracted_data,
+            mimetype="application/json",
+            status_code=200
+        )
+    
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error processing request: {e}", status_code=500
+        )

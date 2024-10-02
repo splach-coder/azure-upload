@@ -22,7 +22,7 @@ def transform_json(input_data):
         })
 
         if input_data.get("Quay") == "1742" : 
-            transformed_data[currentIndex]["Quay"] = "BEANRAZ03318002"
+            transformed_data[currentIndex]["Quay"] = "BEDELAZ03318001"
         
         for item in container.get("items", []):
             item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
@@ -80,14 +80,14 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71100</dossierId>
+        <dossierId>71266</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
       <ControlArticles>0</ControlArticles>
       <ControlPackages>{globalPkgs}</ControlPackages>
       <ControlGrossmass>{globalWeight}</ControlGrossmass>
-      <ControlNetmass>{globalWeight}</ControlNetmass>
+      <ControlNetmass>0</ControlNetmass>
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
@@ -112,7 +112,7 @@ def json_to_xml(json_data):
             <itemNumber>{itemNmber}</itemNumber>
             <goodsDescription language="EN">{Description}</goodsDescription>
             <grossMass>{GrossWeight}</grossMass>
-            <netMass>{NetWeight}</netMass>
+            <netMass>0</netMass>
             <PreviousAdministrativeReferences>
                 <previousDocumentType>126E</previousDocumentType>
                 <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
