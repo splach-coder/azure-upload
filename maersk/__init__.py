@@ -51,11 +51,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             containers = []
             current_container = None
             container_data = {}
+
+            print("here")
         
             # Iterate over rows in the Excel sheet, assuming headers are in the first row
             for row in sheet.iter_rows(min_row=2, values_only=True):
                 row = row[:13]
                 loyds, stay, vessel_name, container, origin_country, container_packages, net_weight, gross_weight, article_number, bl_number, item, quay, description = row
+
+                print(row)
 
                 if not (loyds and  stay and  vessel_name and  container and  origin_country and  container_packages and  net_weight and  gross_weight and  article_number and  bl_number and  item and  quay and  description) :
                     break
@@ -100,6 +104,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=500,
                 mimetype="application/json"
             )
+        
+    print(containers)    
 
     # Process the extracted data if necessary (e.g., further processing or conversion)
     processed_output = process_container_data(containers)

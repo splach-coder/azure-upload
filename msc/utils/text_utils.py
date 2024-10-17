@@ -29,6 +29,15 @@ def extract_numbers(input_string):
     numbers = re.sub(r'\D', '', input_string)
     return numbers
 
+def extract_numbers_from_string(input_string):
+    # Use regular expression to find all numbers in the string
+    numbers = re.findall(r'\d+', input_string)
+    
+    # Convert the numbers from string to integers
+    numbers = [int(num) for num in numbers]
+    
+    return numbers
+
 def update_object(json_object):
      # If the input is a string, convert it to a dictionary
     if isinstance(json_object, str):

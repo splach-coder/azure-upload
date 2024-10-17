@@ -28,7 +28,7 @@ def process_container_data(data_json):
 
             item_data = {
                 "ArrivalNotice1": f"1{data['Stay']}{data['LoydsNumber']}*{str(data['Article']).zfill(4)}",
-                "ArrivalNotice2": f"maersk*{item_number}*{data['BL number']}",
+                "ArrivalNotice2": f"MAERSK*{item_number}*{data['BL number']}",
                 "Container": data["container"],
                 "Packages": packages,
                 "Description": description,
@@ -42,7 +42,7 @@ def process_container_data(data_json):
         Quay = ""
 
         if data["Quay"] == 1742: 
-            Quay = "BEANRAZ03318002"
+            Quay = "BEDELAZ03318001"
         if data["Quay"] == 1700: 
             Quay = "BEANRAZ03318002"
         if data["Quay"] == 913: 

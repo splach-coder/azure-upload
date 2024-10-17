@@ -4,8 +4,9 @@ import json
 import os
 import base64
 
-from evgr.service.extractdata import extract_text_from_page_2, extract_text_from_pages
+from evgr.service.extractdata import extract_text_from_pages, extract_text_from_pdf
 from evgr.config.coords import coordinates, coordinates_2
+
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -55,9 +56,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             temp_file.write(file_content)
 
         # Actual code logic
-        extracted_data = extract_text_from_page_2(uploaded_file_path, coordinates)
+        #extracted_data = extract_text_from_pdf(uploaded_file_path, coordinates, coordinates_2)
 
-        extracted_data = extract_text_from_pages(uploaded_file_path, coordinates_2)
+        # Actual code logic
+        extracted_data = extract_text_from_pages(uploaded_file_path, coordinates)
         
     try:
         # Prepare the JSON response

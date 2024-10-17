@@ -7,7 +7,7 @@ import base64
 from msc.service.pdf_service import extract_text_from_coordinates, process
 from msc.config.coords import coordinates
 from msc.config.data_structure import key_map
-from msc.utils.text_utils import update_object
+from msc.utils.text_utils import update_object, extract_numbers_from_string
 from msc.email.sentEmail import json_to_xml
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -69,13 +69,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             parsed_data = json.loads(extracted_data['data'])  # Parse the string in 'data'
             del extracted_data['data']  # Remove the 'data' key
             extracted_data.update(parsed_data)  # Merge parsed 'data' at the top level
-        
+
+        #change the quay to absolute numbers     
+        extracted_data['Quay'] = extract_numbers_from_string(extracted_data['Quay'])[0]
+
         # Now add containers to the extracted_data
         extracted_data["containers"] = process(uploaded_file_path)
 
         # Step 2: Print the final JSON with proper formatting
         formatted_json = json.dumps(extracted_data, indent=4)
 
+        #adding the some proper formatting
         formatted_json = update_object(formatted_json)
 
         # Delete the temporary uploaded file

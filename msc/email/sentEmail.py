@@ -2,6 +2,14 @@ import xml.etree.ElementTree as ET
 import json
 from msc.utils.searchOnPorts import search_ports
 
+def escape_xml_chars(text):
+    return (text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&apos;"))
+
+
 def transform_json(input_data):
     transformed_data = []
 
@@ -21,8 +29,12 @@ def transform_json(input_data):
             "items" : []
         })
 
-        if input_data.get("Quay") == "1742" : 
+        if input_data.get("Quay") == 1742 : 
             transformed_data[currentIndex]["Quay"] = "BEDELAZ03318001"
+        if input_data.get("Quay") == 1700 : 
+            transformed_data[currentIndex]["Quay"] = "BEKOUAZ03318024"
+        if input_data.get("Quay") == 913 : 
+            transformed_data[currentIndex]["Quay"] = "BEANRAZ03318002"
         
         for item in container.get("items", []):
             item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
@@ -80,7 +92,7 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71266</dossierId>
+        <dossierId>71539</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
@@ -137,7 +149,7 @@ def json_to_xml(json_data):
           
             # Format goods items with the given data
             formatted_goods_items.append(goods_items.format(
-                Description=data_items["Description"],
+                Description=escape_xml_chars(data_items["Description"]), 
                 GrossWeight=data_items["Gross Weight"],
                 NetWeight=data_items["Net Weight"],
                 ArrivalNotice1=data_items["ArrivalNotice1"],

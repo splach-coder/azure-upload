@@ -31,14 +31,14 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71266</dossierId>
+        <dossierId>71539</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
       <ControlArticles>0</ControlArticles>
       <ControlPackages>{globalPkgs}</ControlPackages>
-      <ControlGrossmass>{globalWeight}</ControlGrossmass>
-      <ControlNetmass>{globalWeight}</ControlNetmass>
+      <ControlGrossmass>{globalGROSSWeight}</ControlGrossmass>
+      <ControlNetmass>{globalNETWeight}</ControlNetmass>
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
@@ -49,6 +49,7 @@ def json_to_xml(json_data):
       <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
       <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
       <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
+      <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
     </Header>
   </GoodsDeclaration>
     {GoodsItems}
@@ -112,7 +113,8 @@ def json_to_xml(json_data):
             Vissel=container_data["vissel"],
             DispatchCountry=container_data["dispatch_country"],
             Quay=container_data["Quay"],
-            globalWeight=container_data["totals"]["Gross Weight"],
+            globalGROSSWeight=container_data["totals"]["Gross Weight"],
+            globalNETWeight=container_data["totals"]["Net Weight"],
             globalPkgs=container_data["totals"]["Packages"],
             GoodsItems=formatted_goods_items_str
         )
