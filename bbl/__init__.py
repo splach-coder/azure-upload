@@ -75,13 +75,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     gross_weight = sheet.cell(row=10, column=column).value
                     net_weight = sheet.cell(row=11, column=column).value
                     packages = sheet.cell(row=12, column=column).value
-
                     
                     # If any of the required cells are empty, break the loop
                     if not (hscode and valeur and devises and gross_weight and net_weight and packages):
                         break
-
-                    print(safe_float_conversion(valeur))
                     
                     # Create the item dictionary
                     item = {

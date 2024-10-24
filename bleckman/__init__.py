@@ -3,8 +3,10 @@ import logging
 import json
 import os
 import base64
+import zipfile
 
-from export.helpers.functions import write_to_excel, extract_key_value_pairs, extract_text_from_pdf, modify_and_correct_amounts, extract_body_text, extract_office_value, updateBTWnumber, updateAdress
+from bleckman.service.extractors import extract_text_from_first_page
+from bleckman.config.keywords import key_map, coordinates
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -28,18 +30,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-
+    
     for file_info in files:
         file_content_base64 = file_info.get('file')
-        body = file_info.get('body')
-        filename = file_info.get('filename', 'temp.pdf')
+        filename = file_info.get('filename', 'temp.zip')  # Assuming zip file
 
         if not file_content_base64:
             logging.warning(f"File '{filename}' has no content. Skipping.")
-            continue
-
-        if not body:
-            logging.warning(f"Body has no content. Skipping.")
             continue
         
         # Decode the base64-encoded content
@@ -54,7 +51,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             )
         
         # Save the uploaded file temporarily
-        temp_dir = os.getenv('TEMP', '/tmp')
+        temp_dir = os.getenv('TEMP', '/tmp')  # Use temp directory
         uploaded_file_path = os.path.join(temp_dir, filename)
 
         # Write the file to the temporary path
@@ -69,49 +66,44 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=500,
                 mimetype="application/json"
             )
+        
+        # Initialize a list to store extracted PDF data
+        extracted_data = []
+        
+        # Unzip the file and process PDFs
+        try:
+            with zipfile.ZipFile(uploaded_file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)  # Extract files to temp directory
 
-    # Proceed with data processing
-    try:
-        # Extract text from the PDF
-        pdf_text = extract_text_from_pdf(uploaded_file_path)
+                for file_name in zip_ref.namelist():
+                    logging.info(f"Found file: {file_name}")
+                    # Check if the file is a PDF
+                    if file_name.endswith('.pdf'):
+                        pdf_path = os.path.join(temp_dir, file_name)
+                        
+                        if "Voorblad" in file_name:
+                            logging.info(f"Processing Voorblad PDF: {file_name}")
+                            # Process Voorblad PDFs (custom logic here)
 
-        # Parse the extracted text into key-value pairs
-        parsed_data = extract_key_value_pairs(pdf_text)
+                            extracted_data = extract_text_from_first_page(pdf_path, coordinates, key_map)
+                        else:
+                            logging.info(f"Processing regular PDF: {file_name}")
+                            # Process regular PDFs  
+                        
+        except zipfile.BadZipFile as e:
+            logging.error(f"Failed to unzip file '{filename}': {e}")
+            return func.HttpResponse(
+                body=json.dumps({"error": "Failed to unzip file", "details": str(e)}),
+                status_code=400,
+                mimetype="application/json"
+            )
 
-        parsed_data = modify_and_correct_amounts(parsed_data)
-
-        parsed_data = updateBTWnumber(parsed_data)
-
-        parsed_data = updateAdress(parsed_data)
-
-        body_number = extract_office_value(extract_body_text(body))
-
-        # Write the extracted data to an Excel file
-        excel_file = write_to_excel(parsed_data, body_number)
-
-        logging.info("Generated Excel file.")
-
-        # Set response headers for the Excel file download
-        headers = {
-            'Content-Disposition': 'attachment; filename="invoice_data.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-
-        # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-
-    except TypeError as te:
-        logging.error(f"TypeError during processing: {te}")
-        return func.HttpResponse(
-            body=json.dumps({"error": "Data processing failed due to type error", "details": str(te)}),
-            status_code=500,
-            mimetype="application/json"
-        )
+        # Cleanup temp file
+        os.remove(uploaded_file_path)
     
-    except Exception as e:
-        logging.error(f"Unexpected error during processing: {e}")
-        return func.HttpResponse(
-            body=json.dumps({"error": "An unexpected error occurred", "details": str(e)}),
-            status_code=500,
-            mimetype="application/json"
-        )
+    # Set response as JSON with extracted data
+    return func.HttpResponse(
+        body=extracted_data,
+        status_code=200,
+        mimetype="application/json"
+    )

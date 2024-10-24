@@ -51,8 +51,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             containers = []
             current_container = None
             container_data = {}
-
-            print("here")
         
             # Iterate over rows in the Excel sheet, assuming headers are in the first row
             for row in sheet.iter_rows(min_row=2, values_only=True):

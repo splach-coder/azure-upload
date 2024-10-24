@@ -3,6 +3,9 @@ import openpyxl
 import json
 from io import BytesIO
 import re
+from bs4 import BeautifulSoup
+
+from export.helpers.adresseExtractor import extract_address_components
 
 def extract_key_value_pairs(text):
     lines = text.strip().splitlines()  # Split the text into individual lines
@@ -60,6 +63,62 @@ def extract_text_from_pdf(pdf_path):
 
     return text
 
+def insert_after_key(data, insert_key, insert_value, target_key):
+    new_data = {}
+
+    for key, value in data.items():
+        new_data[key] = value
+
+        # Check if we have reached the target key to insert after
+        if key == target_key:
+            # Insert the new key-value pair after the target key
+            new_data[insert_key] = insert_value
+
+    return new_data
+
+def updateBTWnumber(json_string):
+    data = json.loads(json_string)
+
+    # Check if the key exists
+    for key, value in data.items():
+        if key == "BTW-nummer":
+            # Find the split point for the "BTW-nummer"
+            parts = value.split(' ', 2)  # Split into at most 3 parts
+
+            # Construct the new value for "BTW-nummer" from the first two parts
+            new_value = ' '.join(parts[:2]).strip()  # Combine the first two parts
+
+            # Construct the new value for "Exportformaliteiten te verrichten op een"
+            remaining_address = value[len(new_value):].strip()  # Get the remaining address
+
+            # Update the fields
+            data["BTW-nummer"] = new_value
+            data = insert_after_key(data, "Adress", remaining_address, "BTW-nummer")
+
+            break  # Exit loop once the key is found
+
+    return json.dumps(data)  # Return the updated dictionary directly
+
+def updateAdress(json_string):
+    data = json.loads(json_string)
+
+    keys = ["COUNTRY", "POSTALCODE",  "City", "Street", "Name"]
+
+    # Check if the key exists
+    for key, value in data.items():
+        if key == "Adress":
+            arr = extract_address_components(value)[::-1]
+            
+            i = 0
+            for item  in arr :
+                data = insert_after_key(data, keys[i], item, "BTW-nummer")
+                i += 1
+                
+            data.pop('Adress')
+            break  # Exit loop once the key is found
+
+    return json.dumps(data)  # Return the updated dictionary directly
+
 def write_to_excel(json_string, number):
     # Create a new workbook and select the active sheet
     wb = openpyxl.Workbook()
@@ -68,12 +127,10 @@ def write_to_excel(json_string, number):
     data = json.loads(json_string)
 
     # Prepare row keys (headers) and row values
+    row_string_exit_office = ["Exit office"]
+    row_number = [number]
     row_keys = []
     row_values = []
-    row_supp = []
-    row_empty = []
-    row_number = [number]
-
 
     for key, value in data.items():
         if key == "Exportformaliteiten te verrichten op een":
@@ -86,29 +143,22 @@ def write_to_excel(json_string, number):
             if len(value) > 0:
                 row_values.append(value[0])
                 if len(value) > 1:
-                    row_supp.append(value[1])  # Add second element of array to supplemental row
-                else:
-                    row_supp.append("")  # Add empty string if no second element
+                    row_keys.append(key + " valuta")
+                    row_values.append(value[1])  # Add second element of array to supplemental row
             else:
                 row_values.append("")
-                row_supp.append("")
         else:
-            row_values.append(value)
-            row_supp.append("")
+            row_values.append(value)    
+
+    # Add values to the second row
+    ws.append(row_string_exit_office)          
+    ws.append(row_number)
 
     # Add keys (headers) to the first row
     ws.append(row_keys)
 
     # Add values to the second row
     ws.append(row_values)
-
-    # Add supplemental row if there are values for it
-    if any(row_supp):
-        ws.append(row_supp)
-
-    # Add values to the second row
-    ws.append(row_empty)  
-    ws.append(row_number)  
 
     # Optionally, adjust column widths for better formatting
     for col in ws.columns:
@@ -162,22 +212,31 @@ def modify_and_correct_amounts(data):
 
     return json.dumps(data, indent=2)
 
-def extract_kantoor_number(email_body: str) -> str:
-    """
-    This function searches for the number immediately following 'Kantoor;' 
-    in the email body and returns it. It stops at the first non-digit character.
-    
-    :param email_body: The text containing the email body
-    :return: The extracted number as a string or 'None' if not found
-    """
-    # Regex pattern to match "Kantoor;" followed by a number, stopping at the first space or non-digit character
-    pattern = r"Kantoor;\s*(\d+)\b"
-    
-    # Search for the pattern in the email body
-    match = re.search(pattern, email_body)
-    
-    # Return the number if found, otherwise return None
-    if match:
-        return match.group(1)
-    return None
+# Regex patterns for 'Exit office' and 'Kantoor'
+exit_office_pattern = r"Exit\s+office[:;]?\s*(BE?\d{5,8})"
+kantoor_pattern = r"Kantoor[:;]?\s*(BE?\d{5,8})"
 
+def extract_body_text(html_content):
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, 'lxml')
+    
+    # Extract text from the body tag, if it exists
+    if soup.body:
+        body_text = soup.body.get_text(separator="\n").strip()
+        return body_text
+    else:
+        return "No body tag found."
+
+# Function to extract the values
+def extract_office_value(text):
+    # Search for 'Exit office'
+    exit_office_match = re.search(exit_office_pattern, text, re.IGNORECASE)
+    if exit_office_match:
+        return exit_office_match.group(1)
+    
+    # Search for 'Kantoor'
+    kantoor_match = re.search(kantoor_pattern, text, re.IGNORECASE)
+    if kantoor_match:
+        return kantoor_match.group(1)
+    
+    return None

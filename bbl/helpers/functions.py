@@ -1,5 +1,4 @@
 import re
-import json
 import requests
 import xml.etree.ElementTree as ET
 
@@ -90,8 +89,6 @@ def extract_freight(value):
     # Return the list of numbers, limit to two if needed
     return numbers[:2] if numbers else [0.0]
 
-
-
 def fetch_exchange_rate(currency_code):
     url = "https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd202410.xml"
     
@@ -114,7 +111,7 @@ def fetch_exchange_rate(currency_code):
 def calculationVATndFREIGHT(price, freightUSD, vat1, vat2):
     # Example usage
     currency = 'USD'  # Replace with the desired currency code
-    EXCHANGE_RATE = fetch_exchange_rate(currency)
+    EXCHANGE_RATE = safe_float_conversion(fetch_exchange_rate(currency))
 
     # First value in freightUSD array is in USD, convert to EUR
     freight_in_usd = freightUSD[0] if len(freightUSD) > 0 else 0
