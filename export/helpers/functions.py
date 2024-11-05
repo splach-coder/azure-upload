@@ -184,7 +184,7 @@ def correct_number_format(value):
     # Remove periods and replace commas with periods
     corrected_value = re.sub(r'\.', '', value)  # Remove periods
     corrected_value = re.sub(r'(?<=\d),(?=\d)', '.', corrected_value)  # Replace comma with period if it’s between numbers
-    return float(corrected_value)
+    return corrected_value if corrected_value == "" else float(corrected_value)
 
 def modify_and_correct_amounts(data):
     # Ensure the input is a string and convert to dictionary
@@ -214,7 +214,7 @@ def modify_and_correct_amounts(data):
 
 # Regex patterns for 'Exit office' and 'Kantoor'
 exit_office_pattern = r"Exit\s+office[:;]?\s*(BE?\d{5,8})"
-kantoor_pattern = r"Kantoor[:;]?\s*(BE?\d{5,8})"
+kantoor_pattern = r"Kantoor[:;]?\s*(B?E?\d{5,8})"
 
 def extract_body_text(html_content):
     # Parse the HTML content

@@ -81,7 +81,7 @@ ports = [
     {"Port": "XIAMEN", "Country": "China", "Country Code": "CN"},
     {"Port": "XIAN", "Country": "China", "Country Code": "CN"},
     {"Port": "XINHUI", "Country": "China", "Country Code": "CN"},
-    {"Port": "XINGANG/TIANJIN", "Country": "China", "Country Code": "CN"},
+    {"Port": "TIANJINXINGANG", "Country": "China", "Country Code": "CN"},
     {"Port": "YANTIAN", "Country": "China", "Country Code": "CN"},
     {"Port": "YANGZHOU", "Country": "China", "Country Code": "CN"},
     {"Port": "ZHANJIANG", "Country": "China", "Country Code": "CN"},

@@ -52,7 +52,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=400,
                 mimetype="application/json"
             )
-        
+
         # Save the uploaded file temporarily
         temp_dir = os.getenv('TEMP', '/tmp')
         uploaded_file_path = os.path.join(temp_dir, filename)
@@ -84,6 +84,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         parsed_data = updateAdress(parsed_data)
 
+        Referentienummer = json.loads(parsed_data)["Referentienummer"]
+
         body_number = extract_office_value(extract_body_text(body))
 
         # Write the extracted data to an Excel file
@@ -93,7 +95,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Set response headers for the Excel file download
         headers = {
-            'Content-Disposition': 'attachment; filename="invoice_data.xlsx"',
+            'Content-Disposition': 'attachment; filename="' + Referentienummer + '.xlsx"',
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         }
 

@@ -90,7 +90,7 @@ def extract_freight(value):
     return numbers[:2] if numbers else [0.0]
 
 def fetch_exchange_rate(currency_code):
-    url = "https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd202410.xml"
+    url = "https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd202411.xml"
     
     # Fetch XML content from the URL
     response = requests.get(url)

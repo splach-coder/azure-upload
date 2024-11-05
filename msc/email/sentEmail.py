@@ -64,6 +64,7 @@ def transform_json(input_data):
 
 def json_to_xml(json_data):
     json_data = json.loads(transform_json(json_data))
+
     xml_files = []
 
     for data in json_data:
@@ -92,7 +93,7 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71539</dossierId>
+        <dossierId>71721</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>
@@ -175,6 +176,6 @@ def json_to_xml(json_data):
             GoodsItems = formatted_goods_items_str
         )
 
-        xml_files.append(xml_filled)
+        xml_files.append({"xml" : xml_filled, "container" : data["Container"]})
 
     return xml_files
