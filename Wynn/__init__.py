@@ -5,7 +5,8 @@ import os
 import openpyxl
 import base64
 
-from Wynn.helpers.functions import extract_currency_symbol, extract_valid_container, format_float_values, write_to_excel
+from Wynn.helpers.functions import find_wy_ref, extract_valid_container, format_float_values, get_value_with_search, write_to_excel, handle_invoice_Curency, handle_invoice_Value
+from Wynn.helpers.adressExtractor import find_address_data
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -51,34 +52,45 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 wb = openpyxl.load_workbook(uploaded_file_path, data_only=True)
                 sheet = wb.active  # Get the active sheet
 
-                container = extract_valid_container(sheet.cell(row=26, column=5).value)
-                sealNumber = sheet.cell(row=27, column=5).value
+                container = extract_valid_container(get_value_with_search(sheet, "31.4 Containernrs."))
+                print(container)
+                ref = get_value_with_search(sheet, "7 Referentienr." )
+                if ref == "":
+                    ref = find_wy_ref(sheet)
 
-                # Extract static values (those not in the items)
+                # Find and parse address data
+                address_data = find_address_data(sheet)
+
+                company = address_data['company']
+                street = address_data['street']
+                city = address_data['city']
+                country = address_data['country']
+
+                # Define the data extraction dictionary
                 data = {
-                    "Goods Validation office": sheet.cell(row=5, column=5).value,  
-                    "office of validaton": sheet.cell(row=6, column=5).value,      
-                    "Goods Location": sheet.cell(row=7, column=5).value,           
-                    "Consignee Name": sheet.cell(row=10, column=5).value,          
-                    "Cosnginee street": sheet.cell(row=11, column=5).value,        
-                    "consignee city": sheet.cell(row=13, column=5).value + ' ' + sheet.cell(row=12, column=5).value,  
-                    "Consignee country": sheet.cell(row=14, column=5).value,       
-                    "Reference": sheet.cell(row=16, column=5).value,               
-                    "Inco Term": sheet.cell(row=17, column=5).value,               
-                    "Inco Term Place": sheet.cell(row=17, column=6).value,         
-                    "Exit Office": sheet.cell(row=18, column=5).value,             
-                    "e-AD": sheet.cell(row=19, column=4).value,                    
-                    "Marks and numbers": sheet.cell(row=20, column=5).value,       
-                    "transport identity departure": sheet.cell(row=21, column=5).value,  
-                    "transport identity border": sheet.cell(row=22, column=5).value,     
-                    "Invoice Value": sheet.cell(row=23, column=5).value,  
-                    "Invoice value currency": extract_currency_symbol(sheet.cell(row=23, column=5)),  
-                    "Transportmode border": sheet.cell(row=24, column=5).value,    
-                    "Transportmode inland": sheet.cell(row=25, column=5).value,    
-                    "Freight cost  SEA": sheet.cell(row=24, column=7).value,       
-                    "Freight cost ROAD": sheet.cell(row=25, column=7).value,       
-                    "Containernumber": container if container != False else "",
-                    "Seals": sealNumber if len(sealNumber) > 5 != False else "",
+                    "Goods Validation office": get_value_with_search(sheet, "54 plaats van aangifte" ),
+                    "office of validation": get_value_with_search(sheet, "A Kantoor van validatie" ),
+                    "Goods Location": get_value_with_search(sheet, "30 plaats goederen",),
+                    "Consignee Name": company if company else "",
+                    "Consignee street": street if street else "",
+                    "Consignee city": city if city else "",
+                    "Consignee country": country if country else "",
+                    "Reference": ref,
+                    "Inco Term": get_value_with_search(sheet, "20 Leveringsvoorwaarde" ),
+                    "Inco Term Place": get_value_with_search(sheet, "20 Leveringsvoorwaarde", offset=4),
+                    "Exit Office": get_value_with_search(sheet, "29 Kantoor van uitgang: " ),
+                    "e-AD": get_value_with_search(sheet, "e-AD",  offset=2),
+                    "Marks and numbers": get_value_with_search(sheet, "31.3 Merken en nummers"),
+                    "transport identity departure": get_value_with_search(sheet, "18.1 Identiteit vervoermiddel vertrek" ),
+                    "transport identity border": get_value_with_search(sheet, "21.1 Identiteit vervoermiddel grens" ),
+                    "Invoice Value": handle_invoice_Value(sheet),
+                    "Invoice value currency": handle_invoice_Curency(sheet),
+                    "Transportmode border": get_value_with_search(sheet, "25 Vervoerswijze grens" ),
+                    "Transportmode inland": get_value_with_search(sheet, "26 Binnenlandse vervoerswijze" ),
+                    "Freight cost SEA": get_value_with_search(sheet, "25 Vervoerswijze grens", offset=5),
+                    "Freight cost ROAD": get_value_with_search(sheet, "26 Binnenlandse vervoerswijze", offset=5),
+                    "Containernumber": container if container else "",
+                    "Seals": get_value_with_search(sheet, "D Zegels")
                 }
 
                 # Search for the specific header text in the first column to find the start of the table
@@ -142,9 +154,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             excel_file = write_to_excel(data)
             logging.info("Generated Excel file.")
 
+            reference = data["Reference"] if data["Reference"] else '#No_Ref#'
+
             # Set response headers for the Excel file download
             headers = {
-                'Content-Disposition': 'attachment; filename=Reference.xlsx',
+                'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             }
 
