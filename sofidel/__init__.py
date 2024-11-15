@@ -6,8 +6,8 @@ import base64
 
 from sofidel.helpers.adress_extractors import get_address_structure
 from sofidel.helpers.excel_operations import write_to_excel
-from sofidel.helpers.functions import combine_data_with_material_code, combine_data_with_material_code_collis, detect_pdf_type, find_page_with_cmr_data, handle_cmr_data, handle_invoice_data, list_to_json
-from sofidel.service.extractors import extract_table_data_with_dynamic_coordinates, extract_text_from_coordinates, handle_body_request, extract_cmr_collis_data_with_dynamic_coordinates
+from sofidel.helpers.functions import combine_data_with_material_code_or_pieces, combine_data_with_material_code_collis, detect_pdf_type, find_page_with_cmr_data, handle_cmr_data, handle_invoice_data, list_to_json, validate_data
+from sofidel.service.extractors import extract_rex_number, extract_table_data_with_dynamic_coordinates, extract_text_from_coordinates, handle_body_request, extract_cmr_collis_data_with_dynamic_coordinates
 from sofidel.config.coords import cmr_coordinates, invoice_coordinates, cmr_adress_coords, cmr_totals_coords
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -77,7 +77,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             cmr_data = extract_text_from_coordinates(uploaded_file_path, cmr_coordinates, page_number=page[0])
             cmr_data = handle_cmr_data(cmr_data)
 
-            cmr_data_glb = combine_data_with_material_code(cmr_data, cmr_collis)
+            cmr_data_glb = combine_data_with_material_code_or_pieces(cmr_data, cmr_collis)
 
         elif pdf_type == "INVOICE":
             #work on the the invoice
@@ -85,10 +85,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             table_data = extract_table_data_with_dynamic_coordinates(uploaded_file_path)
             table_data = handle_invoice_data(table_data)
 
+            #gettin that shitty rex please
+            rex_number = extract_rex_number(uploaded_file_path)
+
+
         # Delete the temporary uploaded file
         os.remove(uploaded_file_path)
 
     combined_data = combine_data_with_material_code_collis(cmr_data_glb, table_data)
+
+    #print(combined_data)
 
     body = handle_body_request(email_body)
 
@@ -96,6 +102,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     json_result = {**list_to_json(inv_data), **body}
     json_result["address"] = address
     json_result["items"] = combined_data
+
+    #add the rex number
+    json_result["rex"] = rex_number
 
     if totals:
         #add the totals to the json data
@@ -111,6 +120,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Write the extracted data to an Excel file
     excel_file = write_to_excel(json_result)
     logging.info("Generated Excel file.")
+
+    message = validate_data(json_result)
 
     ref = json_result["Reference"] + "-" + json_result["inv reference"]
 

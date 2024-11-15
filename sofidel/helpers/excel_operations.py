@@ -4,7 +4,7 @@ from openpyxl.styles import Font, PatternFill
 import re
 import openpyxl
 
-from sofidel.utils.number_handlers import clean_string, normalize_number_format
+from sofidel.utils.number_handlers import clean_string, normalize_number_format, safe_int_conversion, safe_float_conversion
 
 
 def write_to_excel(json_string):
@@ -115,22 +115,25 @@ def write_to_excel(json_string):
     ws.append(row_empty)
     ws.append(row_empty)
 
-    # Add values to the second row
+    # Add values 
     ws.append(["Total invoices"])
-    ws.append([normalize_number_format(data['total amount'])])
+    total_invoices = safe_float_conversion(normalize_number_format(data.get('total amount', 0)))
+    ws.append([total_invoices])
     ws.append(row_empty)
 
-    # Add values to the second row
+    # Add values 
     ws.append(["Total Collis"])
-    ws.append([normalize_number_format(data['total pallets'])])
+    total_pallets = safe_int_conversion(normalize_number_format(data.get('total pallets', 0)))
+    ws.append([total_pallets])
     ws.append(row_empty)
 
-    # Add values to the second row
+    # Add values 
     ws.append(["Total Gross"])
-    ws.append([normalize_number_format(data['total weight'])])
+    total_weight = safe_float_conversion(normalize_number_format(data.get('total weight', 0)))
+    ws.append([total_weight])
     ws.append(row_empty)
 
-    # Add values to the second row
+    # Add values
     ws.append(["Items"])
     ws.append(header2)
 

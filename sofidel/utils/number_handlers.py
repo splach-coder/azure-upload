@@ -52,3 +52,16 @@ def clean_string(input_string):
     # Use regex to replace non-alphanumeric characters and spaces with an empty string
     cleaned_string = re.sub(r'[^a-zA-Z0-9 ]', '', input_string)
     return cleaned_string
+
+def safe_int_conversion(value, default=0):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_float_conversion(value, default=0):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+

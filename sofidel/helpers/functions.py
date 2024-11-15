@@ -121,46 +121,89 @@ def convert_to_json_array_invoice(data):
     return json_array
 
 def combine_data_with_material_code_collis(cmr_data, table_data):
-    # Create a dictionary to index cmr_data by (material_code, collis) for quick look-up
-    cmr_dict = {
-        (entry['material_code']): entry for entry in cmr_data
-    }
+    """
+    Combine data from cmr_data and table_data based on matching material_code or collis.
+    Table data fields overwrite CMR data fields when conflicts occur.
+    
+    Parameters:
+        cmr_data (list): List of dictionaries containing CMR data.
+        table_data (list): List of dictionaries containing table data.
+        
+    Returns:
+        list: Combined result with entries from both datasets.
+    """
+    # Step 1: Create a dictionary to index cmr_data by material_code and collis
+    cmr_dict = {}
+    for entry in cmr_data:
+        # Use material_code and collis as keys if they exist
+        key_material_code = entry.get('material_code')
+        key_collis = entry.get('Pieces')
+        if key_material_code:
+            cmr_dict[key_material_code] = entry
+        if key_collis:
+            cmr_dict[key_collis] = entry
 
     combined_result = []
 
     for table_entry in table_data:
-        # Create a key tuple for lookup
-        key = (table_entry['material_code'])
-        
-        # Look up the matching entry in cmr_data
-        if key in cmr_dict:
+        # Attempt to match by material_code or collis
+        material_code = table_entry.get('material_code')
+        collis = table_entry.get('Pieces')
+
+        # Check if either material_code or collis exists in the cmr_dict
+        matching_entry = cmr_dict.get(material_code) or cmr_dict.get(collis)
+
+        if matching_entry:
+            # Combine the matching entry with the current table entry
+            # Table data fields will overwrite CMR data fields in case of conflicts
             combined_entry = {
-                **cmr_dict[key],  # Include all fields from cmr_data
-                **table_entry     # Add or overwrite with fields from table_data (like 'amount')
+                **matching_entry,  # Include all fields from CMR data
+                **table_entry      # Add or overwrite with fields from table_data
             }
             combined_result.append(combined_entry)
 
     return combined_result
 
-def combine_data_with_material_code(cmr_data, table_data):
+def combine_data_with_material_code_or_pieces(cmr_data, table_data):
+    """
+    Combine data from cmr_data and table_data based on matching material_code or Pieces.
+    
+    Parameters:
+        cmr_data (list): List of dictionaries containing CMR data.
+        table_data (list): List of dictionaries (or JSON strings) containing table data.
+        
+    Returns:
+        list: Combined result with entries from both datasets.
+    """
     # Step 1: Convert string entries in table_data to dictionaries if needed
     table_data = [json.loads(entry) if isinstance(entry, str) else entry for entry in table_data]
 
-    # Step 2: Create a dictionary to index cmr_data by material_code for quick look-up
-    cmr_dict = {entry['material_code']: entry for entry in cmr_data}
+    # Step 2: Create a dictionary to index cmr_data by both material_code and Pieces for quick look-up
+    cmr_dict = {}
+    for entry in cmr_data:
+        key_material_code = entry.get('material_code')
+        key_pieces = entry.get('Pieces')
+        if key_material_code:
+            cmr_dict[key_material_code] = entry
+        if key_pieces:
+            cmr_dict[key_pieces] = entry
 
     # Step 3: Initialize the combined result
     combined_result = []
 
     for table_entry in table_data:
-        # Create a key for lookup using only material_code
-        material_code = table_entry['material_code']
+        # Attempt to match by material_code or Pieces
+        material_code = table_entry.get('material_code')
+        pieces = table_entry.get('Pieces')
         
-        # Look up the matching entry in cmr_data
-        if material_code in cmr_dict:
+        # Check if either material_code or Pieces exists in the cmr_dict
+        matching_entry = cmr_dict.get(material_code) or cmr_dict.get(pieces)
+        
+        if matching_entry:
+            # Combine the matching entry with the current table entry
             combined_entry = {
-                **cmr_dict[material_code],  # Include all fields from cmr_data
-                **table_entry               # Add or overwrite with fields from table_data (like 'Qty')
+                **matching_entry,  # Include all fields from cmr_data
+                **table_entry      # Add or overwrite with fields from table_data
             }
             combined_result.append(combined_entry)
 
@@ -182,3 +225,31 @@ def list_to_json(data_list):
     result_json = dict(zip(keys, data_list))
     
     return result_json
+
+def validate_data(data):
+    try:
+        # Extracting data from the dictionary
+        items = data.get("items", [])
+        total_pallets = int(data.get("total pallets", 0))
+        total_amount = float(data.get("total amount", "0").replace(".", "").replace(",", "."))
+        
+        # Calculating sums
+        sum_collis = sum(item.get("Collis", 0) for item in items)
+        sum_invoice_value = sum(item.get("Invoice value", 0) for item in items)
+        
+        # Validation
+        pallets_match = sum_collis == total_pallets
+        amount_match = round(sum_invoice_value, 2) == round(total_amount, 2)
+        
+        # Preparing the message
+        if pallets_match and amount_match:
+            return "Validation successful! The total pallets and total amount match the items data."
+        else:
+            message = "Validation failed:"
+            if not pallets_match:
+                message += f"\n- Total pallets mismatch: Expected {total_pallets}, but calculated {sum_collis}."
+            if not amount_match:
+                message += f"\n- Total amount mismatch: Expected {total_amount}, but calculated {round(sum_invoice_value, 2)}."
+            return message
+    except Exception as e:
+        return f"An error occurred during validation: {e}"

@@ -151,7 +151,7 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
         str: A JSON string containing the extracted text from the first page.
     """
     y0, y1 = (273, 286)  # Initial Y coordinates for the first row
-    x_coords = [(38, 84), (555, 580)]  # X coordinates for columns
+    x_coords = [(38, 84), (515, 550), (555, 580)]  # X coordinates for columns
     gap = 20  # Vertical gap to move to the next row
 
     pdf_document = fitz.open(pdf_path)
@@ -174,7 +174,8 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
         
         json_obj = json.dumps({
             "material_code": row_text[0],
-            "Collis": int(row_text[1] if len(row_text) > 1 and row_text[1] else 0)
+            "Pieces":int(row_text[1] if len(row_text) > 1 and row_text[1] else 0),
+            "Collis": int(row_text[2] if len(row_text) > 2 and row_text[2] else 0)
         })
         
         page_text.append(json_obj)  # Add the row to the page's text data
@@ -182,3 +183,38 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
 
     return page_text  # Return the data as a JSON string
 
+def extract_rex_number(pdf_path):
+    """
+    Extract the REX number from a PDF containing the pattern:
+    (Exporter Reference Number  REX : BEREXBE0889448824)
+    
+    Parameters:
+        pdf_path (str): Path to the PDF file.
+    
+    Returns:
+        str: The extracted REX number, or an error message if not found.
+    """
+    try:
+        # Open the PDF file
+        pdf_document = fitz.open(pdf_path)
+        
+        # Define the regex pattern for the REX number
+        rex_pattern = r"Exporter Reference Number\s+REX\s*:\s*([A-Z0-9]+)"
+        
+        # Iterate through pages to find the text
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            page_text = page.get_text("text")
+            
+            # Search for the REX number using the regex
+            match = re.search(rex_pattern, page_text)
+            if match:
+                # Return the first capture group (the REX number)
+                return match.group(1)
+        
+        # If no match was found
+        return "REX number not found in the document."
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+  
