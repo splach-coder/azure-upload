@@ -34,14 +34,14 @@ def find_page_with_cmr_data(pdf_path, keywords=["Marques es num", "Nombre des co
         if len(pdf_document) < 1:
             return "The PDF is empty or has no pages."
 
-        # Search for pages containing any of the keywords
+        # Search for pages containing all the keywords
         pages_with_data = []
         for page_number in range(len(pdf_document)):
             page = pdf_document[page_number]
             page_text = page.get_text("text")
 
-            # Check if any keyword is found on this page
-            if any(keyword in page_text for keyword in keywords):
+            # Check if all keywords are found on this page
+            if all(keyword in page_text for keyword in keywords):
                 pages_with_data.append(page_number + 1)  # Page numbers are 1-based
             
         if pages_with_data:

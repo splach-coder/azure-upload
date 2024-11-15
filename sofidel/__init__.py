@@ -66,7 +66,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #work on cmr
             page = find_page_with_cmr_data(uploaded_file_path)
             page_dn = find_page_with_cmr_data(uploaded_file_path, keywords=["PRODUCT CODE", "CUSTOMER PART NUMBER", "DESCRIPTION", "u.o.M.", "QUANTITY", "H.U"])
-            page_totals = find_page_with_cmr_data(uploaded_file_path, keywords=["DELIVERY NOTE", "TOTAL WEIGHT ", "UNITS TOTAL WEIGHT ", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
+            page_totals = find_page_with_cmr_data(uploaded_file_path, keywords=["DELIVERY NOTE", "TOTAL WEIGHT", "UNITS TOTAL WEIGHT", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
 
             cmr_collis = extract_cmr_collis_data_with_dynamic_coordinates(uploaded_file_path, page_dn[0])
             cmr_adress = extract_text_from_coordinates(uploaded_file_path, cmr_adress_coords, page_dn[0])
@@ -103,7 +103,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result["total weight"] = totals[1] if totals[1] else ""
 
     #logic here for  exit office and export office and goods location
-    if json_result["Exit Port BE"] == "Zeebrugge" :
+    if json_result["Exit Port BE"].lower() == "Zeebrugge".lower() :
         json_result["Export office"] = "BEZEE216010"
     else :
         json_result["Export office"] = "BEHSS216000"

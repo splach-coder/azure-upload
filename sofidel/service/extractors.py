@@ -151,7 +151,7 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
         str: A JSON string containing the extracted text from the first page.
     """
     y0, y1 = (273, 286)  # Initial Y coordinates for the first row
-    x_coords = [(38, 84), (555, 575)]  # X coordinates for columns
+    x_coords = [(38, 84), (555, 580)]  # X coordinates for columns
     gap = 20  # Vertical gap to move to the next row
 
     pdf_document = fitz.open(pdf_path)
@@ -169,12 +169,12 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
                 row_text.append(remove_spaces_from_numeric_strings(text))
         
         # If no text is found for a row, break the loop
-        if not row_text or len(row_text) <= 1:
+        if not row_text:
             break
         
         json_obj = json.dumps({
             "material_code": row_text[0],
-            "Collis": int(row_text[1])
+            "Collis": int(row_text[1] if len(row_text) > 1 and row_text[1] else 0)
         })
         
         page_text.append(json_obj)  # Add the row to the page's text data
