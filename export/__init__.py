@@ -82,7 +82,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         parsed_data = updateBTWnumber(parsed_data)
 
-        parsed_data = updateAdress(parsed_data)
+        parsed_data = updateAdress(parsed_data, pdf_text)
 
         Referentienummer = json.loads(parsed_data)["Referentienummer"]
 

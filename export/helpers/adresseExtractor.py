@@ -122,51 +122,53 @@ postal_code_patterns = [
     r'\b\d{7}\b',  # e.g., 6100000
 ]
 
-# Function to detect country
-def detect_country(address):
-    for country in countries:
-        # Check if the country is found in the address (case-insensitive)
-        if country.lower() in address.lower():
-            # Find the starting index of the country in the address
-            start_index = address.lower().index(country.lower())
-            # Find the ending index by adding the length of the country
-            end_index = start_index + len(country)
-            # Return the exact substring from the address
-            return address[start_index:end_index].strip()  # Trim any extra spaces
-    return None
-
 # Function to detect postal code
 def detect_postal_code(address):
-    for pattern in postal_code_patterns:
-        match = re.search(pattern, address)
-        if match:
-            return match.group(0)
+    """
+    Detect and return the postal code from a given address.
+    
+    Parameters:
+    address (str or list[str]): The address or list of address strings to search.
+    
+    Returns:
+    str or None: The detected postal code, or None if not found.
+    """
+    # Ensure address is a list
+    if isinstance(address, str):
+        address = [address]
+    
+    # Iterate through the address list in reverse order
+    for addr in reversed(address):
+        for pattern in postal_code_patterns:
+            match = re.search(pattern, addr)
+            if match:
+                return match.group(0)
+    
+    # If no postal code found, return None
     return None
 
-# Function to extract company name heuristically
-def extract_company_name(address):
-    if ',' in address:
-        return address.split(',')[0].strip()
-    return ' '.join(address.split()[:2]).strip()
+# Function to extract a specific section by its title
+def extract_specific_section(text, section_title):
+    # Split by lines of underscores
+    sections = re.split(r'_{2,}', text)
+    
+    # Iterate through each section to find the one that starts with the title
+    for section in sections:
+        lines = section.strip().splitlines()
+        if lines and lines[0].strip() == section_title:
+            # Return the section title and its content
+            content = "\n".join(lines[1:]).strip()
+            return f"{section_title}:\n{content}".split('\n')[2:]
 
-# Custom parsing rules for address components
-def extract_address_components(address):
-    company_name = extract_company_name(address) if extract_company_name(address) else ""
-    street = None
-    city = None
-    postal_code = detect_postal_code(address)
-    country = detect_country(address)
+    return f"{section_title} section not found."
 
-    # Remove company name and postal code from the address for further processing
-    address_without_company = address.replace(company_name, "").replace(postal_code if postal_code else "", "").strip()
+def get_adress_structure(text):
+    arr = extract_specific_section(text, "BTW-nummer")
 
-    # Remove company name and postal code from the address for further processing
-    address_without_company = address_without_company.replace(country if country else "", "")
+    company_name = arr[0]
+    street_name = arr[1]
+    code_postal = detect_postal_code(arr)
+    city = arr[2].replace(code_postal, "")
+    country = arr[-1].replace("Ver.", "").strip()
 
-    # Split the remaining address into parts using commas or multiple spaces
-    middle_adress = address_without_company.strip().split(' ')
-
-    city = middle_adress[-1]
-    street = ' '.join(middle_adress[:-1])
-
-    return [company_name.strip(), street.strip(' .,') if street else None, city.strip() if city else None, postal_code.strip() if postal_code else None, country.strip() if country else None]
+    return [company_name, street_name, city, code_postal, country]

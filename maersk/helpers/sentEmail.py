@@ -31,7 +31,7 @@ def json_to_xml(json_data):
       <createDossier>F</createDossier>
       <IlsDossier>
         <iLSCompany>DKM</iLSCompany>
-        <dossierId>71664</dossierId>
+        <dossierId>71993</dossierId>
       </IlsDossier>
     </IntegratedLogisticStreamliner>
     <ControlValues>

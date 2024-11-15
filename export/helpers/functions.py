@@ -5,7 +5,7 @@ from io import BytesIO
 import re
 from bs4 import BeautifulSoup
 
-from export.helpers.adresseExtractor import extract_address_components
+from export.helpers.adresseExtractor import get_adress_structure
 
 def extract_key_value_pairs(text):
     lines = text.strip().splitlines()  # Split the text into individual lines
@@ -99,7 +99,7 @@ def updateBTWnumber(json_string):
 
     return json.dumps(data)  # Return the updated dictionary directly
 
-def updateAdress(json_string):
+def updateAdress(json_string, text):
     data = json.loads(json_string)
 
     keys = ["COUNTRY", "POSTALCODE",  "City", "Street", "Name"]
@@ -107,10 +107,10 @@ def updateAdress(json_string):
     # Check if the key exists
     for key, value in data.items():
         if key == "Adress":
-            arr = extract_address_components(value)[::-1]
+            arr = get_adress_structure(text)
             
             i = 0
-            for item  in arr :
+            for item  in list(reversed(arr)) :
                 data = insert_after_key(data, keys[i], item, "BTW-nummer")
                 i += 1
                 
@@ -213,8 +213,8 @@ def modify_and_correct_amounts(data):
     return json.dumps(data, indent=2)
 
 # Regex patterns for 'Exit office' and 'Kantoor'
-exit_office_pattern = r"Exit\s+office[:;]?\s*(BE?\d{5,8})"
-kantoor_pattern = r"Kantoor[:;]?\s*(B?E?\d{5,8})"
+exit_office_pattern = r"Exit\s*office[:;]?\s*(BE?\s*\d{5,8})"
+kantoor_pattern = r"Kantoor[:;]?\s*(B?E?\s*\d{5,8})"
 
 def extract_body_text(html_content):
     # Parse the HTML content
@@ -232,11 +232,11 @@ def extract_office_value(text):
     # Search for 'Exit office'
     exit_office_match = re.search(exit_office_pattern, text, re.IGNORECASE)
     if exit_office_match:
-        return exit_office_match.group(1)
+        return exit_office_match.group(1).replace(" ", "")
     
     # Search for 'Kantoor'
     kantoor_match = re.search(kantoor_pattern, text, re.IGNORECASE)
     if kantoor_match:
-        return kantoor_match.group(1)
+        return kantoor_match.group(1).replace(" ", "")
     
     return None

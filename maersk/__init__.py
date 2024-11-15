@@ -57,8 +57,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 row = row[:13]
                 loyds, stay, vessel_name, container, origin_country, container_packages, net_weight, gross_weight, article_number, bl_number, item, quay, description = row
 
-                print(row)
-
                 if not (loyds and  stay and  vessel_name and  container and  origin_country and  container_packages and  net_weight and  gross_weight and  article_number and  bl_number and  item and  quay and  description) :
                     break
         
