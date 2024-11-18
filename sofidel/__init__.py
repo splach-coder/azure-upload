@@ -6,7 +6,7 @@ import base64
 
 from sofidel.helpers.adress_extractors import get_address_structure
 from sofidel.helpers.excel_operations import write_to_excel
-from sofidel.helpers.functions import combine_data_with_material_code_or_pieces, combine_data_with_material_code_collis, detect_pdf_type, find_page_with_cmr_data, find_page_with_cmr_data_any, handle_cmr_data, handle_invoice_data, list_to_json, validate_data
+from sofidel.helpers.functions import combine_data_with_material_code_or_pieces, combine_data_with_material_code_collis, detect_pdf_type, find_page_with_cmr_data, find_page_with_cmr_data_any, find_page_with_cmr_data_fallback, handle_cmr_data, handle_invoice_data, list_to_json, validate_data
 from sofidel.service.extractors import extract_rex_number, extract_table_data_with_dynamic_coordinates, extract_text_from_coordinates, handle_body_request, extract_cmr_collis_data_with_dynamic_coordinates
 from sofidel.config.coords import cmr_coordinates, invoice_coordinates, cmr_adress_coords, cmr_totals_coords
 
@@ -65,8 +65,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if pdf_type == "CMR":
             #work on cmr
             page = find_page_with_cmr_data(uploaded_file_path)
-            page_dn = find_page_with_cmr_data_any(uploaded_file_path, keywords=["PRODUCT CODE", "CUSTOMER PART NUMBER", "DESCRIPTION", "u.o.M.", "QUANTITY", "H.U"])
-            page_totals = find_page_with_cmr_data(uploaded_file_path, keywords=["DELIVERY NOTE", "TOTAL WEIGHT", "UNITS TOTAL WEIGHT", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
+            page_dn = find_page_with_cmr_data_any(uploaded_file_path, keywords=["PRODUCT CODE", "CUSTOMER PART NUMBER", "DESCRIPTION", "u.o.M", "QUANTITY", "H.U"])
+            page_totals = find_page_with_cmr_data_fallback(uploaded_file_path, keywords=["DELIVERY NOTE", "TOTAL WEIGHT", "UNITS TOTAL WEIGHT", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
 
             cmr_collis = extract_cmr_collis_data_with_dynamic_coordinates(uploaded_file_path, page_dn[0])
             cmr_adress = extract_text_from_coordinates(uploaded_file_path, cmr_adress_coords, page_dn[0])

@@ -86,6 +86,44 @@ def find_page_with_cmr_data_any(pdf_path, keywords=["Marques es num", "Nombre de
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
+def find_page_with_cmr_data_fallback(pdf_path, keywords=["Marques es num", "Nombre des colis"]):
+    try:
+        # Get the file name from the path
+        file_name = os.path.basename(pdf_path)
+        
+        # Check if "CMR" is in the file name (case-insensitive)
+        if "CMR" not in file_name.upper():
+            return "This file is not identified as a CMR document."
+
+        # Open the PDF file
+        pdf_document = fitz.open(pdf_path)
+        
+        # Ensure the PDF has at least 1 page
+        if len(pdf_document) < 1:
+            return "The PDF is empty or has no pages."
+
+        # Search for pages containing all the keywords
+        pages_with_data = []
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            page_text = page.get_text("text")
+
+            # Check if all keywords are found on this page
+            if all(keyword in page_text for keyword in keywords):
+                pages_with_data.append(page_number + 1)  # Page numbers are 1-based
+            
+        if pages_with_data:
+            return pages_with_data
+        elif find_page_with_cmr_data_any(pdf_path, keywords=keywords):
+            return find_page_with_cmr_data_any(pdf_path, keywords=keywords)
+        else:
+            return "No relevant data found in this document."
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+
+
+
 def handle_cmr_data(cmr_data):
     result = []
 

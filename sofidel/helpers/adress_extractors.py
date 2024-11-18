@@ -8,7 +8,7 @@ postal_code_patterns = [
     r'\b[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d\b',  # e.g., K1A 0B1 or K1A-0B1
 
     # UK (various formats such as SW1A 1AA, M1 1AA, etc.)
-    r'\b[A-Za-z]{1,2}\d[A-Za-z\d]?[ ]?\d[A-Za-z]{2}\b',  # e.g., SW1A 1AA, M1 1AA
+    r'\b([A-Za-z]{1,2}\d[A-Za-z\d]?|\d[A-Za-z]{1,2})\s?\d[A-Za-z]{2}\b',  # e.g., SW1A 1AA, M1 1AA
 
     # Japan (postal code in the format 123-4567)
     r'\b\d{3}-\d{4}\b',  # e.g., 123-4567
