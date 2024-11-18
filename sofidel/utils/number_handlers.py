@@ -65,3 +65,19 @@ def safe_float_conversion(value, default=0):
     except (ValueError, TypeError):
         return default
 
+def filter_numeric_strings(input_list):
+    def is_number(s):
+        s = s.strip()  # Remove leading/trailing whitespace
+        # Exclude strings that are purely alphabetic (like 'g', 'abc')
+        if re.fullmatch(r'[a-zA-Z]+', s):
+            return False
+        # Allow numbers, decimals, commas, and optional "NR"
+        return True
+    
+    # Process the list of lists
+    cleaned_list = []
+    for sublist in input_list:
+        filtered_sublist = [item for item in sublist if is_number(item)]
+        cleaned_list.append(filtered_sublist)
+    
+    return cleaned_list

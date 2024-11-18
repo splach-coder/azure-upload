@@ -4,7 +4,8 @@ from openpyxl.styles import Font, PatternFill
 import re
 import openpyxl
 
-from sofidel.utils.number_handlers import clean_string, normalize_number_format, safe_int_conversion, safe_float_conversion
+from sofidel.service.extractors import remove_spaces_from_numeric_strings
+from sofidel.utils.number_handlers import clean_string, normalize_number_format, remove_non_numeric_chars, safe_int_conversion, safe_float_conversion
 
 
 def write_to_excel(json_string):
@@ -129,7 +130,7 @@ def write_to_excel(json_string):
 
     # Add values 
     ws.append(["Total Gross"])
-    total_weight = safe_float_conversion(normalize_number_format(data.get('total weight', 0)))
+    total_weight = safe_float_conversion(normalize_number_format(re.sub(r'[^0-9.,]', '', data.get('total weight', 0))))
     ws.append([total_weight])
     ws.append(row_empty)
 

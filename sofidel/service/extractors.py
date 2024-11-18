@@ -150,8 +150,8 @@ def extract_cmr_collis_data_with_dynamic_coordinates(pdf_path, page_number):
     Returns:
         str: A JSON string containing the extracted text from the first page.
     """
-    y0, y1 = (273, 286)  # Initial Y coordinates for the first row
-    x_coords = [(38, 84), (515, 550), (555, 580)]  # X coordinates for columns
+    y0, y1 = (271, 286)  # Initial Y coordinates for the first row
+    x_coords = [(38, 85), (515, 550), (555, 580)]  # X coordinates for columns
     gap = 20  # Vertical gap to move to the next row
 
     pdf_document = fitz.open(pdf_path)

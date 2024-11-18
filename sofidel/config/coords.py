@@ -7,7 +7,7 @@ cmr_coordinates = [
 
 cmr_adress_coords = [(39, 212, 206, 240)]
 
-cmr_totals_coords = [(41, 572, 104, 582), (533, 573, 576, 583)]
+cmr_totals_coords = [(41, 572, 110, 582), (533, 573, 576, 583)]
 
 invoice_coordinates = [
     (42, 115, 99, 123),#btw
