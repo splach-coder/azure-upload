@@ -132,6 +132,9 @@ def get_address_structure(text):
     else:
         address = text
 
+    if "UNITED KINGDOM" in text:
+        address = address.replace("UNITED KINGDOM", '')   
+
     address_lines = address.split('\n')
 
     # Ensure there are enough lines to avoid index errors

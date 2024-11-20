@@ -71,6 +71,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             cmr_collis = extract_cmr_collis_data_with_dynamic_coordinates(uploaded_file_path, page_dn[0])
             cmr_adress = extract_text_from_coordinates(uploaded_file_path, cmr_adress_coords, page[0])
             address = get_address_structure(cmr_adress)
+            print(address)
 
             totals = extract_text_from_coordinates(uploaded_file_path, cmr_totals_coords, page_totals[0])
 

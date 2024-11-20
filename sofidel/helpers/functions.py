@@ -18,7 +18,7 @@ def detect_pdf_type(pdf_path):
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-def find_page_with_cmr_data(pdf_path, keywords=["Marques es num", "Nombre des colis"]):
+def find_page_with_cmr_data(pdf_path, keywords=["Marques es num", "Nombre des colis", "Art der Verpacku", "Nature de la", "No statistique"]):
     try:
         # Get the file name from the path
         file_name = os.path.basename(pdf_path)
@@ -121,8 +121,6 @@ def find_page_with_cmr_data_fallback(pdf_path, keywords=["Marques es num", "Nomb
 
     except Exception as e:
         return f"An error occurred: {str(e)}"
-
-
 
 def handle_cmr_data(cmr_data):
     result = []
