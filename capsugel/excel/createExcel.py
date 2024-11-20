@@ -121,7 +121,7 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    total_invoices = float(data.get('Invoice Total', [])[0])
+    total_invoices = float(data.get('Invoice Total', [])[0]) if data.get('Invoice Total', []) else 0
     ws.append([total_invoices])
     ws.append(row_empty)
 

@@ -7,7 +7,7 @@ import base64
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
 from capsugel.helpers.functions import calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list
-from capsugel.service.extractors import extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, merge_incomplete_records_invoice
+from capsugel.service.extractors import extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, find_page_in_invoice, merge_incomplete_records_invoice
 
 from capsugel.config.coords import coordinates, coordinates_lastpage, key_map, inv_keyword_params, packingList_keyword_params
 from capsugel.data.countries import countries
@@ -104,7 +104,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_1["ship to"] = get_address_structure(data_1["ship to"])
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
 
-                data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, ["invoice"]))
+                page = find_page_in_invoice(uploaded_file_path)
+                data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, page[0], ["invoice"]))
+                logging.error(data_2)
                 data_2 = clean_invoice_total(data_2)
 
                 data_3 = merge_incomplete_records_invoice(extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params), inv_keyword_params)

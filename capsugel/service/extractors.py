@@ -1,3 +1,4 @@
+import os
 import re
 import fitz
 import json
@@ -72,12 +73,12 @@ def extract_text_from_first_page(pdf_path, coordinates, key_map):
 
     return json.dumps(data_dict, indent=2)
 
-def extract_text_from_last_page(pdf_path, coordinates, key_map):
+def extract_text_from_last_page(pdf_path, coordinates, page, key_map):
     pdf_document = fitz.open(pdf_path)
     extracted_text = []
 
     # Get the last page
-    last_page = pdf_document[-1]  # Index -1 gives the last page
+    last_page = pdf_document[page-1]  # Index -1 gives the last page
 
     # Extract text from specific coordinates on the last page
     for (x0, y0, x1, y1) in coordinates:
@@ -219,3 +220,30 @@ def extract_exitoffices_from_body(text):
             return match
     
     return ""
+
+def find_page_in_invoice(pdf_path, keywords=["Invoice Total Net", "Total VAT", "Total Value Due", "* Last Page"]):
+    try:
+        # Open the PDF file
+        pdf_document = fitz.open(pdf_path)
+        
+        # Ensure the PDF has at least 1 page
+        if len(pdf_document) < 1:
+            return "The PDF is empty or has no pages."
+
+        # Search for pages containing all the keywords
+        pages_with_data = []
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            page_text = page.get_text("text")
+
+            # Check if all keywords are found on this page
+            if any(keyword in page_text for keyword in keywords):
+                pages_with_data.append(page_number + 1)  # Page numbers are 1-based
+            
+        if pages_with_data:
+            return pages_with_data
+        else:
+            return "No relevant data found in this document."
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
