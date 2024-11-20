@@ -168,9 +168,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(merged_data)
         logging.info("Generated Excel file.")
 
+        reference = merged_data.get('Inv Ref', '')
+
         # Set response headers for the Excel file download
         headers = {
-            'Content-Disposition': 'attachment; filename="invoice_data.xlsx"',
+            'Content-Disposition': 'attachment; filename=""' + reference + '".xlsx"',
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         }
 
