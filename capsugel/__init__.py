@@ -170,9 +170,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         reference = merged_data.get('Inv Ref', '')
 
+        print(merged_data.get('Inv Ref', ''))
+
         # Set response headers for the Excel file download
         headers = {
-            'Content-Disposition': 'attachment; filename=""' + reference + '".xlsx"',
+            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         }
 
