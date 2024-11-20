@@ -4,10 +4,14 @@ import json
 import os
 import base64
 
-from plicosa.excel.createExcel import writeExcel
-from plicosa.helpers.functions import detect_pdf_type
-from plicosa.service.extractors import extract_data_from_pdf, extract_text_from_last_page, extract_text_from_first_page
-from plicosa.config.coords import coordinates, coordinates_lastpage, key_map, inv_keyword_params, packingList_keyword_params
+from capsugel.excel.createExcel import write_to_excel
+from capsugel.helpers.adress_extractors import get_address_structure
+from capsugel.helpers.functions import calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list
+from capsugel.service.extractors import extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, merge_incomplete_records_invoice
+
+from capsugel.config.coords import coordinates, coordinates_lastpage, key_map, inv_keyword_params, packingList_keyword_params
+from capsugel.data.countries import countries
+from capsugel.data.keys import invoice_keys, packing_list_keys
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -16,6 +20,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         files = req_body.get('files', [])
+        body = req_body.get('body', {})
+
     except ValueError:
         logging.error("Invalid JSON in request body.")
         return func.HttpResponse(
@@ -81,7 +87,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.error(f"Extraction failed for Packing List PDF: {filename}")
                 continue  # Or handle as needed
             try:
-                data_packinglist = json.loads(extracted_data)
+                data_packinglist = clean_packing_list_data(json.loads(extracted_data))
+                data_packinglist = change_keys(data_packinglist, packing_list_keys)
+                data_packinglist = clean_grand_totals_in_packing_list(data_packinglist)
                 logging.info(f"Extracted Packing List data from '{filename}'.")
             except json.JSONDecodeError as jde:
                 logging.error(f"JSON decoding failed for Packing List PDF '{filename}': {jde}")
@@ -93,10 +101,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif pdf_type == "Invoice":
             try:
                 data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coordinates, key_map))
+                data_1["ship to"] = get_address_structure(data_1["ship to"])
+                data_1["Inco"] = data_1["Inco"].split(' ', 1)
+
                 data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, ["invoice"]))
-                data_3 = json.loads(extract_data_from_pdf(uploaded_file_path, inv_keyword_params))
+                data_2 = clean_invoice_total(data_2)
+
+                data_3 = merge_incomplete_records_invoice(extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params), inv_keyword_params)
+                data_3 = clean_invoice_data(data_3, countries)
+
                 combined_data = {**data_1, **data_2, "items": data_3}
+
+                combined_data = change_keys(combined_data, invoice_keys)
+
                 logging.info(f"Extracted Invoice data from '{filename}'.")
+
+
             except json.JSONDecodeError as jde:
                 logging.error(f"JSON decoding failed for Invoice PDF '{filename}': {jde}")
                 return func.HttpResponse(
@@ -133,71 +153,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Proceed with data processing
     try:
-        # Create a new "items" list, matching based on Batches and DN Nbr
-        updated_items = []
-        for item in combined_data['items']:
-            for entry in data_packinglist:
-                if (item.get('Batches:', '') == entry.get('Batch Number:', '')) or (item.get('DN Nbr:', '') == entry.get('Delivery Note', '')):
-                    # Merge matching item and entry into one
-                    merged_item = {**item, **entry}
-                    updated_items.append(merged_item)
+        merged_data = merge_invoice_with_packing_list(combined_data, data_packinglist)
 
-        # Update the original dictionary with the new items
-        combined_data['items'] = updated_items
-        logging.info("Merged Packing List data with Invoice items.")
-
-        # Process the Grand Total and update the items
-        for item in combined_data['items']:
-            # Split the 'Grand Total' by space and newline
-            grand_total_split = item.get('Grand Total', '').replace('\n', ' ').split()
-
-            # Assign the first part to 'quantity', second part to 'gross_weight', and third part to 'net_weight'
-            if len(grand_total_split) >= 5:
-                item['quantity'] = grand_total_split[0]
-                item['gross_weight'] = grand_total_split[2]
-                item['net_weight'] = grand_total_split[4]
-            else:
-                logging.warning(f"Unexpected format in 'Grand Total' for item: {item.get('Grand Total', '')}")
-
-            # Remove the original 'Grand Total' field as it's no longer needed
-            item.pop('Grand Total', None)
-
-        # Process 'ship to' field
-        ship_to = combined_data.get('ship to', '')
-        shipping_address = ship_to.split('\n') if ship_to else []
-        if shipping_address:
-            combined_data['ship to'] = shipping_address
-            logging.info("Processed 'ship to' address.")
-
-        # Initialize totals
-        total_gross_weight = 0.0
-        total_net_weight = 0.0
-        total_quantity = 0.0
-
-        # Iterate over the items and process each one
-        for item in combined_data['items']:
-            try:
-                total_quantity += float(item.get('Total Pallet', '0').replace('.', '').replace(',', '.'))
-                total_gross_weight += float(item.get('gross_weight', '0').replace('.', '').replace(',', '.'))
-                total_net_weight += float(item.get('net_weight', '0').replace('.', '').replace(',', '.'))
-            except ValueError as ve:
-                logging.warning(f"Failed to convert values to float for item: {item}. Error: {ve}")
-
-            # Remove unwanted fields from the items
-            item.pop('Batch Number:', None)
-            item.pop('Delivery Note', None)
-            item.pop('Net Weight:', None)
-            item.pop('Batches:', None)
-            item.pop('DN Nbr:', None)
-
-        # Add the totals to the combined_data dictionary
-        combined_data['total_quantity'] = total_quantity
-        combined_data['total_gross_weight'] = total_gross_weight
-        combined_data['total_net_weight'] = total_net_weight
-        logging.info("Calculated totals for quantity, gross weight, and net weight.")
+        #calculate totals and merge them with the json data
+        totals = calculate_totals(merged_data)
+        merged_data = {**merged_data, **totals}
+        
+        # Extract valid codes from the body texts
+        valid_codes = extract_exitoffices_from_body(body)
+        #asssign it to the global json data
+        merged_data['Exit Port BE'] = valid_codes
 
         # Call writeExcel to generate the Excel file in memory
-        excel_file = writeExcel(combined_data)
+        excel_file = write_to_excel(merged_data)
         logging.info("Generated Excel file.")
 
         # Set response headers for the Excel file download

@@ -66,10 +66,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #work on cmr
             page = find_page_with_cmr_data(uploaded_file_path)
             page_dn = find_page_with_cmr_data_any(uploaded_file_path, keywords=["PRODUCT CODE", "CUSTOMER PART NUMBER", "DESCRIPTION", "u.o.M", "QUANTITY", "H.U"])
-            page_totals = find_page_with_cmr_data_fallback(uploaded_file_path, keywords=["DELIVERY NOTE", "TOTAL WEIGHT", "UNITS TOTAL WEIGHT", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
+            page_totals = find_page_with_cmr_data_fallback(uploaded_file_path, keywords=["TOTAL WEIGHT", "UNITS TOTAL WEIGHT", "PALLETS TOTAL WEIGHT", "VOLUME", "PALLETS"])
 
             cmr_collis = extract_cmr_collis_data_with_dynamic_coordinates(uploaded_file_path, page_dn[0])
-            cmr_adress = extract_text_from_coordinates(uploaded_file_path, cmr_adress_coords, page_dn[0])
+            cmr_adress = extract_text_from_coordinates(uploaded_file_path, cmr_adress_coords, page[0])
             address = get_address_structure(cmr_adress)
 
             totals = extract_text_from_coordinates(uploaded_file_path, cmr_totals_coords, page_totals[0])
@@ -85,8 +85,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             table_data = extract_table_data_with_dynamic_coordinates(uploaded_file_path)
             table_data = handle_invoice_data(table_data)
 
-            print(table_data)
-
             #gettin that shitty rex please
             rex_number = extract_rex_number(uploaded_file_path)
 
@@ -99,6 +97,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     body = handle_body_request(email_body)
 
     #combine the invoice and cmr and body extracted data extra we change inv_data list to json
+
     json_result = {**list_to_json(inv_data), **body}
     json_result["address"] = address
     json_result["items"] = combined_data

@@ -44,7 +44,7 @@ def process_container_data(data_json):
         if data["Quay"] == 1742: 
             Quay = "BEDELAZ03318001"
         if data["Quay"] == 1700: 
-            Quay = "BEANRAZ03318002"
+            Quay = "BEKOUAZ03318024"
         if data["Quay"] == 913: 
             Quay = "BEANRAZ03318002"     
 

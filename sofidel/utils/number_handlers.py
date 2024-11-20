@@ -81,3 +81,25 @@ def filter_numeric_strings(input_list):
         cleaned_list.append(filtered_sublist)
     
     return cleaned_list
+
+def normalize_number_format_global_weight(s):
+    """
+    Converts number format by removing the first period if there are multiple periods
+    and converting commas to periods.
+    
+    Args:
+        s (str): Input string in number format.
+        
+    Returns:
+        str: Normalized string with commas as decimal points and handling of periods.
+    """
+    # Count the number of periods in the string
+    period_count = s.count('.')
+    
+    if period_count > 1:
+        # Remove the first period
+        first_period_index = s.find('.')
+        s = s[:first_period_index] + s[first_period_index + 1:]
+    
+    # Replace commas with periods for decimal
+    return s.replace(",", ".")    

@@ -41,7 +41,7 @@ def find_page_with_cmr_data(pdf_path, keywords=["Marques es num", "Nombre des co
             page_text = page.get_text("text")
 
             # Check if all keywords are found on this page
-            if all(keyword in page_text for keyword in keywords):
+            if any(keyword in page_text for keyword in keywords):
                 pages_with_data.append(page_number + 1)  # Page numbers are 1-based
             
         if pages_with_data:
@@ -166,7 +166,7 @@ def handle_invoice_data(cmr_data):
 
     for item in cmr_data:
         material_code, qty, amount = item
-        result.append([material_code, qty, normalize_number_format(amount)])
+        result.append([material_code, normalize_number_format(qty), normalize_number_format(amount)])
 
     return convert_to_json_array_invoice(result)
 
@@ -293,7 +293,7 @@ def combine_data_with_material_code_or_pieces(cmr_data, table_data):
 def list_to_json(data_list):
     # Define the keys for each item in the list
     keys = [
-        "btw", "reference_number_1", "order",
+        "btw",  "order",
         "delivery", "address", "wagon",
         "currency", "inv date", "inv reference", "term", "total amount"
     ]

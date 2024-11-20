@@ -5,13 +5,12 @@ cmr_coordinates = [
     (433, 370, 504, 501)
 ]
 
-cmr_adress_coords = [(39, 212, 206, 240)]
+cmr_adress_coords = [(50, 150, 275, 189)]
 
 cmr_totals_coords = [(41, 572, 110, 582), (533, 573, 576, 583)]
 
 invoice_coordinates = [
     (42, 115, 99, 123),#btw
-    (445, 375, 485, 387), #ref
     (353, 374, 399, 387), #order
     (79, 374, 133, 386), #delivery
     (81, 387, 443, 399), #delivery To
@@ -19,6 +18,6 @@ invoice_coordinates = [
     (211, 157, 263, 169), #currency
     (154, 157, 209, 170), #date
     (56, 158, 130, 169), #Number
-    (23, 225, 131, 237), #inco
+    (23, 225, 231, 237), #inco
     (434, 770, 510, 783) #total
 ]

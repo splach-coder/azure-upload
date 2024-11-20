@@ -217,4 +217,4 @@ def extract_rex_number(pdf_path):
 
     except Exception as e:
         return f"An error occurred: {str(e)}"
-  
+
