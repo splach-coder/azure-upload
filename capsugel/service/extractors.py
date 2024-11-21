@@ -216,7 +216,7 @@ def is_valid_code(code):
 
 def extract_exitoffices_from_body(text):   
     # Regex to find potential codes in the text
-    potential_codes_pattern = r'[A-Z]{2}\d{6}'
+    potential_codes_pattern = r'[A-Z]{2}\s?\d{6}'
     
     # Find all matches in the text
     matches = re.findall(potential_codes_pattern, text)
