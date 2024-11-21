@@ -1,6 +1,6 @@
 coordinates = [
     #vat number
-    (50, 45, 120, 55),
+    (50, 49, 122, 57),
     #invoice date
     (180, 105, 235, 115),
     #invoice ref
