@@ -101,7 +101,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif pdf_type == "Invoice":
             try:
                 data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coordinates, key_map))
-                print(data_1)
                 data_1["ship to"] = get_address_structure(data_1["ship to"])
                 if("(INCOTERMS 2010)" in data_1["Inco"]):
                     data_1["Inco"] = data_1["Inco"].replace("(INCOTERMS 2010)", '')
