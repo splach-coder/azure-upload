@@ -102,11 +102,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             try:
                 data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coordinates, key_map))
                 data_1["ship to"] = get_address_structure(data_1["ship to"])
+                if("(INCOTERMS 2010)" in data_1["Inco"]):
+                    data_1["Inco"] = data_1["Inco"].replace("(INCOTERMS 2010)", '')
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
 
                 page = find_page_in_invoice(uploaded_file_path)
                 data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, page[0], ["invoice"]))
-                logging.error(data_2)
                 data_2 = clean_invoice_total(data_2)
 
                 data_3 = merge_incomplete_records_invoice(extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params), inv_keyword_params)
@@ -171,8 +172,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info("Generated Excel file.")
 
         reference = merged_data.get('Inv Ref', '')
-
-        print(merged_data.get('Inv Ref', ''))
 
         # Set response headers for the Excel file download
         headers = {

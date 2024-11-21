@@ -16,5 +16,7 @@ packing_list_keys = {
     "Total Pallet" : "Collis",
     "Grand Total" : "Item Totals",
     "Batch Number:": "Batch",
-    "Delivery Note" : "DN Number"
+    "Delivery Note" : "DN Number",
+    "Cust. Mat No:" : "Article",
+    "Cust Mat Name:" : "Description"
 }

@@ -183,7 +183,7 @@ def merge_incomplete_records_invoice(extracted_data, keyword_params):
     # Loop through all extracted records
     for i, record in enumerate(extracted_data):
         # If the record is incomplete, we store it for merging
-        if len(record) < len(keyword_params):
+        if len(record) < len(keyword_params) and (not (len(extracted_data) == i+1)):
             if incomplete_record is None:
                 incomplete_record = record
             else:

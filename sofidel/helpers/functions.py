@@ -3,7 +3,7 @@ import os
 import fitz  # PyMuPDF
 import os
 
-from sofidel.utils.number_handlers import filter_numeric_strings, normalize_number_format, remove_non_numeric_chars, remove_spaces_from_numeric_strings, safe_float_conversion
+from sofidel.utils.number_handlers import filter_numeric_strings, normalize_number_format, remove_non_numeric_chars, remove_spaces_from_numeric_strings, safe_float_conversion, safe_int_conversion
 
 def detect_pdf_type(pdf_path):
     try:
@@ -150,7 +150,7 @@ def convert_to_json_array_cmr(data):
     for i in range(len(material_codes)):
         json_object = {
             "material_code": remove_spaces_from_numeric_strings(material_codes[i]),
-            "Pieces": int(remove_non_numeric_chars(collis[i])),
+            "Pieces": safe_int_conversion(remove_non_numeric_chars(collis[i])),
             "Commodity": remove_spaces_from_numeric_strings(hs_codes[i]),
             "Net": safe_float_conversion(normalize_number_format(remove_spaces_from_numeric_strings(gross_weights[i])))
         }

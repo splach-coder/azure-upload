@@ -171,7 +171,6 @@ def merge_invoice_with_packing_list(invoice_data, packing_list):
                 for key, value in packing_item.items():
                     if key not in invoice_item:  # Avoid overwriting existing keys
                         invoice_item[key] = value
-    
     return invoice_data
 
 def calculate_totals(invoice_data):

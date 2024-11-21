@@ -9,8 +9,6 @@ def write_to_excel(json_string):
     wb = openpyxl.Workbook()
     ws = wb.active
 
-    logging.error(json_string)
-
     data = json_string
 
     header1 = [
@@ -37,8 +35,6 @@ def write_to_excel(json_string):
     name, street, city, code_postal, country = data['Adress']
 
     term, place = data.get('Inco', ('', ''))
-
-    logging.info(data.get('Totals Freight Value', ''))
 
     values1 = [
         data.get('VAT', ''),
@@ -75,7 +71,8 @@ def write_to_excel(json_string):
         "Pieces",
         "Invoicenumber",
         "Invoice date",
-        "Rex/other"
+        "Rex/other",
+        "Batch"
     ]
     
     rows_data = []  # To store the processed rows for "items"
@@ -129,13 +126,11 @@ def write_to_excel(json_string):
     total_pallets = data.get('Totals Collis', 0)
     ws.append([total_pallets])
     ws.append(row_empty)
-    logging.info(f'Appended total collis: {total_pallets}')
 
     ws.append(["Total Gross"])
     total_weight = data.get('Totals Gross', 0)
     ws.append([total_weight])
     ws.append(row_empty)
-    logging.info(f'Appended total gross: {total_weight}')
 
     # Add items
     ws.append(["Items"])
@@ -143,7 +138,6 @@ def write_to_excel(json_string):
 
     for arr in rows_data:
         ws.append(arr)
-        logging.info(f'Appended row_data: {arr}')
 
     # Optionally, adjust column widths for better formatting
     for col in ws.columns:
@@ -164,3 +158,4 @@ def write_to_excel(json_string):
     file_stream.seek(0)
 
     return file_stream
+
