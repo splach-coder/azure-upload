@@ -75,10 +75,10 @@ def clean_invoice_data (result, countries):
                 obj[key] = get_abbreviation_by_country(countries, value)
             elif key == "Net Weight:":
                 #clean and update the net weight
-                obj[key] = float(normalize_number_format(remove_non_numeric_chars(value)))
+                obj[key] = safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value)))
             elif key == "All in Price":
                 #clean and update the quantity
-                obj[key] = int(float(normalize_number_format(remove_non_numeric_chars(value))))
+                obj[key] = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value))))
             elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:":
                 #clean and update the invoice
                 price_arr = value.split(' ')
@@ -109,9 +109,9 @@ def clean_packing_list_data (result) :
                 #clean and update the invoice
                 arr = value.split('\n')
                 if len(arr) > 3:
-                    quantitty = int(float(normalize_number_format(remove_non_numeric_chars(arr[0]))))
-                    gross = float(normalize_number_format(arr[1]))
-                    net = float(normalize_number_format(arr[3]))
+                    quantitty = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(arr[0]))))
+                    gross = safe_float_conversion(normalize_number_format(arr[1]))
+                    net = safe_float_conversion(normalize_number_format(arr[3]))
 
                     obj[key] = [quantitty, gross, net]
 
@@ -184,17 +184,17 @@ def calculate_totals(invoice_data):
         # Add Collis if available
         collis = item.get("Collis")
         if collis is not None:
-            totals["Totals Collis"] += int(collis)
+            totals["Totals Collis"] += safe_int_conversion(collis)
 
         # Add Gross if available
         gross = item.get("Gross")
         if gross is not None:
-            totals["Totals Gross"] += round(float(gross), 1)
+            totals["Totals Gross"] += round(safe_float_conversion(gross), 1)
 
         # Add Freight Item Value if available
         freight_item = item.get("Freight Item")
         if freight_item is not None and len(freight_item) > 1:
-            totals["Totals Freight Value"][0] += round(float(freight_item[0]), 1)
+            totals["Totals Freight Value"][0] += round(safe_float_conversion(freight_item[0]), 1)
             # Set currency (assumes consistent currency across items)
             if not totals["Totals Freight Value"][1]:
                 totals["Totals Freight Value"][1] = freight_item[1]
@@ -209,3 +209,15 @@ def validate_string(input_string):
     if input_string and isinstance(input_string, str) and input_string.strip():
         return input_string
     return ""
+
+def safe_int_conversion(value, default=0):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+def safe_float_conversion(value, default=0):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default           

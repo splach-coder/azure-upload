@@ -1,4 +1,3 @@
-import os
 import re
 import fitz
 import json
@@ -176,24 +175,32 @@ def merge_incomplete_records_invoice(extracted_data, keyword_params):
     """
 
     extracted_data = json.loads(extracted_data)
+
     # Iterate through the list of extracted records
     merged_results = []
     incomplete_record = None
 
     # Loop through all extracted records
-    for i, record in enumerate(extracted_data):
-        # If the record is incomplete, we store it for merging
-        if len(record) < len(keyword_params) and (not (len(extracted_data) == i+1)):
+    for record in extracted_data:
+        # Check if the record is incomplete
+        is_record_missing = len(record) < len(keyword_params)
+
+        if is_record_missing:
             if incomplete_record is None:
+                # Store the incomplete record for future merging
                 incomplete_record = record
             else:
-                # Merge with the next record (incomplete + next complete)
+                # Merge with the next incomplete record
                 incomplete_record.update(record)
                 merged_results.append(incomplete_record)
-                incomplete_record = None
+                incomplete_record = None  # Reset for the next potential merge
         else:
-            # Add a complete record
-            merged_results.append(record)
+            # Add the complete record directly to results
+            merged_results.append(record)    
+
+    # Handle any remaining incomplete record if at the end
+    if incomplete_record is not None:
+        merged_results.append(incomplete_record)
 
     return merged_results
 

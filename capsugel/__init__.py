@@ -38,7 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
     
-    data_packinglist = None
+    data_packinglist = []
     combined_data = None
 
     for file_info in files:
@@ -87,9 +87,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.error(f"Extraction failed for Packing List PDF: {filename}")
                 continue  # Or handle as needed
             try:
-                data_packinglist = clean_packing_list_data(json.loads(extracted_data))
-                data_packinglist = change_keys(data_packinglist, packing_list_keys)
-                data_packinglist = clean_grand_totals_in_packing_list(data_packinglist)
+                extracted_data = clean_packing_list_data(json.loads(extracted_data))
+                extracted_data = change_keys(extracted_data, packing_list_keys)
+                data_packinglist.extend(clean_grand_totals_in_packing_list(extracted_data))
                 logging.info(f"Extracted Packing List data from '{filename}'.")
             except json.JSONDecodeError as jde:
                 logging.error(f"JSON decoding failed for Packing List PDF '{filename}': {jde}")
@@ -110,15 +110,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, page[0], ["invoice"]))
                 data_2 = clean_invoice_total(data_2)
 
-                data_3 = merge_incomplete_records_invoice(extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params), inv_keyword_params)
+                data_3 = extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params)
+                data_3 = merge_incomplete_records_invoice(data_3, inv_keyword_params)
                 data_3 = clean_invoice_data(data_3, countries)
+                
 
-                combined_data = {**data_1, **data_2, "items": data_3}
+                combined_invoice_data = {**data_1, **data_2, "items": data_3}
 
-                combined_data = change_keys(combined_data, invoice_keys)
+                combined_data = change_keys(combined_invoice_data, invoice_keys)
 
                 logging.info(f"Extracted Invoice data from '{filename}'.")
-
 
             except json.JSONDecodeError as jde:
                 logging.error(f"JSON decoding failed for Invoice PDF '{filename}': {jde}")

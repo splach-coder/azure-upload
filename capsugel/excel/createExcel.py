@@ -2,7 +2,7 @@ from io import BytesIO
 import logging
 import openpyxl
 
-from capsugel.helpers.functions import validate_string
+from capsugel.helpers.functions import safe_float_conversion, safe_int_conversion, validate_string
 
 def write_to_excel(json_string):
     # Create a new workbook and select the active sheet
@@ -88,7 +88,7 @@ def write_to_excel(json_string):
                     if ordered_key == "Commodity":
                         mini_row.append(obj.get("HS Code", ''))
                     elif ordered_key == "Collis":
-                        mini_row.append(int(obj.get("Collis", '')))
+                        mini_row.append(safe_int_conversion(obj.get("Collis", '')))
                     elif ordered_key == "Currency":
                         mini_row.append(obj.get("Item value", '')[1])
                     elif ordered_key == "Invoice value":
@@ -118,7 +118,7 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    total_invoices = float(data.get('Invoice Total', [])[0]) if data.get('Invoice Total', []) else 0
+    total_invoices = safe_float_conversion(data.get('Invoice Total', [])[0]) if data.get('Invoice Total', []) else 0
     ws.append([total_invoices])
     ws.append(row_empty)
 
