@@ -4,8 +4,11 @@ import json
 import os
 import base64
 
+from marken.config.keys import keys
 from marken.config.coords import coords
+from marken.helpers.functions import list_to_json, merge_json_objects
 from marken.service.extractors import extract_and_clean, extract_email_data, extract_text_from_coordinates
+from marken.helpers.adress_extractors import get_address_structure
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -70,14 +73,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Proceed with data processing
     try:
         #process the pdf file
-        extracted_text = extract_text_from_coordinates(uploaded_file_path, coords)
-        print(extracted_text)
+        marken_extracted_text = extract_text_from_coordinates(uploaded_file_path, coords)
+        #make json from the pdf extracted data
+        marken_json_data = list_to_json(marken_extracted_text, keys)
+        marken_json_data['Adress'] = get_address_structure(marken_json_data['Adress'])
 
         #process the email body
         # Extract data from the email body
-        extracted_data = extract_and_clean(email_body)
-        extracted_data = extract_email_data(extracted_data)
-        print(extracted_data)
+        email_extracted_data = extract_and_clean(email_body)
+        email_extracted_data = extract_email_data(email_extracted_data)
+        
+        
+        #merged the email and marken pdf data together
+        merged_data = merge_json_objects(marken_json_data, email_extracted_data)
+        print(merged_data)
 
         #get the excel file
         excel_file = ""
@@ -91,7 +100,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         }
 
         # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return func.HttpResponse(excel_file, headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except TypeError as te:
         logging.error(f"TypeError during processing: {te}")

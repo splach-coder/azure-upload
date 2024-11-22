@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import fitz  # PyMuPDF
 import os
@@ -132,6 +133,22 @@ def handle_cmr_data(cmr_data):
 
     return convert_to_json_array_cmr(result)
 
+def clean_and_normalize_sublists(list_of_lists):
+    cleaned_list = []
+    max_length = 0
+
+    for sublist in list_of_lists:
+        cleaned_sublist = [item for item in sublist if any(char.isdigit() for char in item)]
+        cleaned_list.append(cleaned_sublist)
+        max_length = max(max_length, len(cleaned_sublist))
+
+    for sublist in cleaned_list:
+        while len(sublist) < max_length:
+            sublist.append('0')
+
+    return cleaned_list
+
+
 def convert_to_json_array_cmr(data):
     """
     Converts a 2D array into a list of JSON objects, mapping each sub-array element to specific fields.
@@ -144,7 +161,8 @@ def convert_to_json_array_cmr(data):
     """
     json_array = []
     # Unpack sub-arrays for each attribute (assuming they are in the correct order)
-    material_codes, collis, hs_codes, gross_weights = data
+    data = clean_and_normalize_sublists(data)
+    material_codes, collis, hs_codes, gross_weights = clean_and_normalize_sublists(data)
 
     # Loop through the arrays to construct each JSON object
     for i in range(len(material_codes)):

@@ -42,7 +42,7 @@ def extract_text_from_coordinates(pdf_path, coordinates, page_number=None):
                                       If None, extracts from all pages.
     
     Returns:
-        str: A JSON string containing the extracted text from the specified pages.
+        list: A list of extracted text from the specified pages.
     """
     pdf_document = fitz.open(pdf_path)
 
@@ -53,8 +53,11 @@ def extract_text_from_coordinates(pdf_path, coordinates, page_number=None):
         # If page_number is provided, process only that page (1-based index)
         pages_to_process = [page_number - 1]  # Convert to 0-based index
 
+    extracted_text = []
+
     for page_num in pages_to_process:
         page = pdf_document[page_num]
+
         page_text = []
 
         for idx, (x0, y0, x1, y1) in enumerate(coordinates):
@@ -64,5 +67,9 @@ def extract_text_from_coordinates(pdf_path, coordinates, page_number=None):
             # If there is any text in this block, add it to the results
             if text:
                 page_text.append(text)
+            else:
+                page_text.append("")
 
-    return page_text
+        extracted_text.extend(page_text)
+
+    return extracted_text
