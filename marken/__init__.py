@@ -7,8 +7,9 @@ import base64
 from marken.config.keys import keys
 from marken.config.coords import coords
 from marken.helpers.functions import list_to_json, merge_json_objects
-from marken.service.extractors import extract_and_clean, extract_email_data, extract_text_from_coordinates
+from marken.service.extractors import extract_and_clean, extract_email_data, extract_text_from_coordinates, find_correct_pdf
 from marken.helpers.adress_extractors import get_address_structure
+from marken.excel.excel import write_to_excel
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -72,35 +73,36 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Proceed with data processing
     try:
-        #process the pdf file
-        marken_extracted_text = extract_text_from_coordinates(uploaded_file_path, coords)
-        #make json from the pdf extracted data
-        marken_json_data = list_to_json(marken_extracted_text, keys)
-        marken_json_data['Adress'] = get_address_structure(marken_json_data['Adress'])
+        #check if the right pdf or ignore
+        if find_correct_pdf(uploaded_file_path) :
+            #process the pdf file
+            marken_extracted_text = extract_text_from_coordinates(uploaded_file_path, coords)
+            #make json from the pdf extracted data
+            marken_json_data = list_to_json(marken_extracted_text, keys)
+            marken_json_data['Adress'] = get_address_structure(marken_json_data['Adress'])
 
-        #process the email body
-        # Extract data from the email body
-        email_extracted_data = extract_and_clean(email_body)
-        email_extracted_data = extract_email_data(email_extracted_data)
-        
-        
-        #merged the email and marken pdf data together
-        merged_data = merge_json_objects(marken_json_data, email_extracted_data)
-        print(merged_data)
+            #process the email body
+            # Extract data from the email body
+            email_extracted_data = extract_and_clean(email_body)
+            email_extracted_data = extract_email_data(email_extracted_data)
 
-        #get the excel file
-        excel_file = ""
+            #merged the email and marken pdf data together
+            merged_data = merge_json_objects(marken_json_data, email_extracted_data)
 
-        Referentienummer = "invoice"
+            # Write the extracted data to an Excel file
+            excel_file = write_to_excel(merged_data)
+            logging.info("Generated Excel file.")
 
-        # Set response headers for the Excel file download
-        headers = {
-            'Content-Disposition': 'attachment; filename="' + Referentienummer + '.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
+            Referentienummer = marken_json_data.get('Marken_reference', '')
 
-        # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file, headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            # Set response headers for the Excel file download
+            headers = {
+                'Content-Disposition': 'attachment; filename="' + Referentienummer + '.xlsx"',
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+
+            # Return the Excel file as an HTTP response
+            return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except TypeError as te:
         logging.error(f"TypeError during processing: {te}")

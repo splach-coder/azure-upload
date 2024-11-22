@@ -142,4 +142,4 @@ def get_address_structure(text):
     city = address_lines[-2] if len(address_lines) > 2 else ''
     country = address_lines[-1]
 
-    return [company_name, street_name, city, code_postal, country]
+    return [company_name.strip(), street_name.strip(), city.strip(), code_postal.strip(), country.strip()]

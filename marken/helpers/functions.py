@@ -30,4 +30,13 @@ def merge_json_objects(marken_data, email_data):
     for key in email_data:
         if key not in marken_data:
             merged_data[key] = email_data[key]
-    return merged_data  
+    return merged_data 
+
+def normalize_number_format(value):
+    return value.replace(".", "").replace(",", ".") 
+
+def clean_number(value):
+    value = value.replace(",", ".")
+    return "".join(char for char in value if char.isdigit() or char == ".")
+
+

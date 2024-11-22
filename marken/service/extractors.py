@@ -73,3 +73,26 @@ def extract_text_from_coordinates(pdf_path, coordinates, page_number=None):
         extracted_text.extend(page_text)
 
     return extracted_text
+
+def find_correct_pdf(pdf_path, keywords=["AIRWAYBILL", "Marken Benelux", "Waybill Number", "Schd Collection"]):
+    try:
+        # Open the PDF file
+        pdf_document = fitz.open(pdf_path)
+        
+        # Ensure the PDF has at least 1 page
+        if len(pdf_document) < 1:
+            return False
+
+        # Search for pages containing all the keywords
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            page_text = page.get_text("text")
+
+            # Check if all keywords are found on this page
+            if all(keyword in page_text for keyword in keywords):
+                return True
+            
+        return False
+
+    except Exception as e:
+        return False
