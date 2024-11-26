@@ -25,7 +25,7 @@ def detect_pdf_type(pdf_path):
         # Check for the keywords 'Packing List' and 'Invoice'
         if "Packing List" in first_page_text:
             return "Packing List"
-        elif "Invoice" in first_page_text:
+        elif "Invoice" in first_page_text or "Proforma Rechnung" in first_page_text:
             return "Invoice"
         else:
             return "I can't detect which PDF it is."
@@ -69,7 +69,7 @@ def get_abbreviation_by_country(countries, country_name):
     for entry in countries:
         if entry["country"].lower() == country_name.lower():
             return entry["abbreviation"]
-    return None 
+    return country_name 
 
 def clean_invoice_data (result, countries):
 
@@ -78,13 +78,13 @@ def clean_invoice_data (result, countries):
             if key == "Country of Origin: ":
                 #clean and update the country
                 obj[key] = get_abbreviation_by_country(countries, value)
-            elif key == "Net Weight:":
+            elif key == "Net Weight:" or key == "Nettogewicht:":
                 #clean and update the net weight
                 obj[key] = safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value)))
-            elif key == "All in Price":
+            elif key == "All in Price" or key == "Pauschalpreis":
                 #clean and update the quantity
                 obj[key] = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value))))
-            elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:" or key == "Temp Reco Surchg":
+            elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:" or key == "Temp Reco Surchg" or key == "Total für Produkt" or key == "Total für die Position" or key == "Gesamttransportzuschläge für den Artikel:" :
                 #clean and update the invoice
                 price_arr = value.split(' ')
                 if len(price_arr) > 1:
@@ -98,9 +98,12 @@ def clean_invoice_data (result, countries):
 def clean_invoice_total (value):
 
     price_arr = value['invoice'].split(' ')
+    
+    def clean_numbers(s):
+        return re.sub(r'[^\d.,]', '', s)
 
     if len(price_arr) > 1:
-        price = price_arr[0]
+        price =  clean_numbers(price_arr[0])
         currency = price_arr[1]
         return {'invoice' : [normalize_number_format(price), currency] } 
     
@@ -224,4 +227,8 @@ def safe_float_conversion(value, default=0):
     try:
         return float(value)
     except (ValueError, TypeError):
-        return default           
+        return default   
+    
+    
+def remove_g_from_date(date_str):
+    return date_str.replace("g", "").replace("\n", "")           

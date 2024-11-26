@@ -6,12 +6,13 @@ import base64
 
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
-from capsugel.helpers.functions import print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list
+from capsugel.helpers.functions import print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date
 from capsugel.service.extractors import extract_customs_code_from_pdf_invoice, extract_customs_code_from_text, extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, find_page_in_invoice, merge_incomplete_records_invoice
 
-from capsugel.config.coords import coordinates, coordinates_lastpage, key_map, inv_keyword_params, fallback_inv_keywords, packingList_keyword_params
+from capsugel.config.coords import coordinates, coordinates_be, coordinates_lastpage, key_map, inv_keyword_params, inv_keyword_params_de, fallback_inv_keywords, packingList_keyword_params
 from capsugel.data.countries import countries
-from capsugel.data.keys import invoice_keys, packing_list_keys
+from capsugel.data.keys import invoice_keys, packing_list_keys, invoice_keys_de
+from capsugel.service.language_detection import detect_language
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -76,7 +77,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=500,
                 mimetype="application/json"
             )
-
+        
+        language = detect_language(uploaded_file_path)
+        
         pdf_type = detect_pdf_type(uploaded_file_path)
         logging.info(f"Detected PDF type for '{filename}': {pdf_type}")
 
@@ -100,28 +103,43 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 )
         elif pdf_type == "Invoice":
             try:
-                data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coordinates, key_map))
+                coors_for_invoice = coordinates_be if language == "de" else coordinates
+                data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coors_for_invoice, key_map))
+                data_1["Inv Date"] = remove_g_from_date(data_1["Inv Date"])
                 data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
+                
                 if("(INCOTERMS 2010)" in data_1["Inco"]):
                     data_1["Inco"] = data_1["Inco"].replace("(INCOTERMS 2010)", '')
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
+                
+                if language == "de":
+                    keywords=["Rechnungsbetrag", "MwSt", "Fälliger Rechnungsbetrag", "* Letzte Seite"]
+                else:
+                    keywords=["Invoice Total Net", "Total VAT", "Total Value Due", "* Last Page"]
 
-                page = find_page_in_invoice(uploaded_file_path)
+                page = find_page_in_invoice(uploaded_file_path, keywords)
                 data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, page[0], ["invoice"]))
                 data_2 = clean_invoice_total(data_2)
 
-                data_3 = extract_structured_data_from_pdf_invoice(uploaded_file_path, inv_keyword_params, fallback_inv_keywords)
+                items_inv_keywords_params = inv_keyword_params_de if language == "de" else inv_keyword_params
+                data_3 = extract_structured_data_from_pdf_invoice(uploaded_file_path, items_inv_keywords_params, fallback_inv_keywords)
                 data_3 = merge_incomplete_records_invoice(data_3)
                 data_3 = clean_invoice_data(data_3, countries)
                 
-                data_4 = extract_customs_code_from_pdf_invoice(uploaded_file_path)
+                logging.error(data_3)
                 
-                data_4 = extract_customs_code_from_text(data_4.get("Preferential Text:", ""))
+                keyword_params={"Bevorzugter Text:" : ((700, 30), -200)} if language == "de" else {"Preferential Text:" : ((700, 30), -200)}
+                data_4 = extract_customs_code_from_pdf_invoice(uploaded_file_path, keyword_params)
+                
+                customs_code = "Bevorzugter Text:" if language == "de" else "Preferential Text:"
+                
+                data_4 = extract_customs_code_from_text(data_4.get(customs_code, ""))
                 
                 combined_invoice_data = {**data_1, **data_2, "customs_code": data_4.replace(" ", ""), "items": data_3}
-
-                combined_data = change_keys(combined_invoice_data, invoice_keys)
-
+                
+                keys_general_inv = invoice_keys_de if language == "de" else invoice_keys
+                combined_data = change_keys(combined_invoice_data, keys_general_inv)
+                
                 logging.info(f"Extracted Invoice data from '{filename}'.")
 
             except json.JSONDecodeError as jde:

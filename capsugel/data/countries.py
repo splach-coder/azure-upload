@@ -80,6 +80,10 @@ countries = [
         "abbreviation": "BE"
     },
     {
+        "country": "Belgien",
+        "abbreviation": "BE"
+    },
+    {
         "country": "Belize",
         "abbreviation": "BZ"
     },
@@ -889,6 +893,10 @@ countries = [
     },
     {
         "country": "Turkey",
+        "abbreviation": "TR"
+    },
+    {
+        "country": "TÜRKIYE",
         "abbreviation": "TR"
     },
     {

@@ -165,7 +165,7 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks
 
     return json.dumps(results, indent=4)
 
-def extract_customs_code_from_pdf_invoice(pdf_path, keyword_params={"Preferential Text:" : ((700, 30), -200)}):
+def extract_customs_code_from_pdf_invoice(pdf_path, keyword_params):
     """
     Extract structured data from a PDF based on specific keywords and relative coordinates.
 
