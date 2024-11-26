@@ -7,13 +7,14 @@ invoice_keys = {
     "Batches:": "Batch",
     "Net Weight:": "Net",
     "Total freight related surcharges for the item:": "Freight Item",
+    "Temp Reco Surchg": "Freight Item",
     "Total for the line item": "Item value",
     "All in Price" : "Quantity",
     "DN Nbr:" : "DN Number"
 }
 
 packing_list_keys = {
-    "Total Pallet" : "Collis",
+    "Tot. Carton" : "Collis",
     "Grand Total" : "Item Totals",
     "Batch Number:": "Batch",
     "Delivery Note" : "DN Number",

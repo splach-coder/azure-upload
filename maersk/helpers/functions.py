@@ -65,3 +65,28 @@ def process_container_data(data_json):
         json_response.append(processed_entry)
 
     return json.dumps(json_response, indent=4)
+
+
+def search_json(data, search_term):
+    """
+    Search for entries in the JSON array based on the search term.
+    
+    Parameters:
+    - data: List of dictionaries (the JSON array).
+    - search_term: The term to search for in the JSON entries.
+
+    Returns:
+    - JSON object of matching entries.
+    """
+    results = {}
+    
+    # Iterate through each entry in the data
+    for entry in data:
+        # Check if the search term is in any of the values (case insensitive)
+        if (search_term.lower() in str(entry['container']).lower() or
+            search_term.lower() in str(entry['package']).lower() or
+            search_term.lower() in str(entry['net']).lower() or
+            search_term.lower() in str(entry['gross']).lower()):
+            results = entry
+    
+    return results

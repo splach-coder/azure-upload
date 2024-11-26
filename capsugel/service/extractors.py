@@ -1,3 +1,4 @@
+import logging
 import re
 import fitz
 import json
@@ -94,7 +95,7 @@ def extract_text_from_last_page(pdf_path, coordinates, page, key_map):
 
     return json.dumps(data_dict, indent=2)
 
-def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params):
+def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks):
     """
     Extract structured data from a PDF based on specific keywords and relative coordinates.
 
@@ -102,8 +103,9 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params):
         pdf_path (str): Path to the PDF file.
         keyword_params (dict): Keywords and parameters for extraction.
             Format: {keyword: (search_radius, space)}
-            - search_radius: (width, height) of the extraction rectangle.
-            - space: Horizontal space from the keyword to start the extraction area.
+                - search_radius: (width, height) of the extraction rectangle.
+                - space: Horizontal space from the keyword to start the extraction area.
+        fallbacks (dict): Fallback keywords and parameters.
 
     Returns:
         str: JSON-formatted string containing structured extracted data.
@@ -119,41 +121,42 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params):
         # Find all occurrences of the keywords on the page
         keyword_occurrences = {}
 
-        for keyword in keyword_params.keys():
-            # Find all rectangles matching the keyword
-            keyword_occurrences[keyword] = page.search_for(keyword)
+        for keyword, params in keyword_params.items():
+            rects = page.search_for(keyword)
+            if rects:
+                keyword_occurrences[keyword] = (rects, params)
+            elif keyword in fallbacks:
+                # Attempt to use fallback keyword
+                fallback = list(fallbacks[keyword].items())[0]
+                fallback_keyword, fallback_params = fallback
+                rects = page.search_for(fallback_keyword)
+                if rects:
+                    keyword_occurrences[fallback_keyword] = (rects, fallback_params)
 
-        # Keep extracting data while occurrences exist for all keywords
-        while True:
-            # Initialize a structured object for the current group of keywords
+        # Extract data for all found keywords
+        while any(keyword_occurrences.values()):  # While there are rects to process
             record = {}
-            found_any = False
-
-            for keyword, rects in keyword_occurrences.items():
+            for keyword, (rects, params) in list(keyword_occurrences.items()):
                 if not rects:
-                    continue  # No occurrences left for this keyword
-                
-                found_any = True  # Mark that we found at least one keyword
+                    continue  # No more rects for this keyword
 
-                # Get the first occurrence's rectangle
-                rect = rects.pop(0)
+                # Process the first rectangle for this keyword
+                rect = rects.pop(0)  # Remove the first rectangle
                 x0, y0, x1, y1 = rect
+                search_radius, space = params
 
-                # Get the search parameters for this keyword
-                search_radius, space = keyword_params[keyword]
-
-                # Define the area next to the keyword to extract the text
-                extract_rect = fitz.Rect(x1 + space, y0, x1 + space + search_radius[0], y1 + search_radius[1])
+                # Define extraction rectangle relative to the keyword's position
+                extract_rect = fitz.Rect(
+                    x1 + space, y0, x1 + space + search_radius[0], y1 + search_radius[1]
+                )
                 extracted_text = page.get_text("text", clip=extract_rect).strip()
-
-                # Add the extracted text to the record under the keyword
                 record[keyword] = extracted_text
 
-            # Stop if no keywords were found in this iteration
-            if not found_any:
-                break
+                # Remove keyword if no more rectangles exist
+                if not rects:
+                    del keyword_occurrences[keyword]
 
-            # Only append the record if it contains data for all specified keywords
+            # Append record only if it contains data
             if record:
                 results.append(record)
 
@@ -162,7 +165,66 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params):
 
     return json.dumps(results, indent=4)
 
-def merge_incomplete_records_invoice(extracted_data, keyword_params):
+def extract_customs_code_from_pdf_invoice(pdf_path, keyword_params={"Preferential Text:" : ((700, 30), -200)}):
+    """
+    Extract structured data from a PDF based on specific keywords and relative coordinates.
+
+    Parameters:
+        pdf_path (str): Path to the PDF file.
+        keyword_params (dict): Keywords and parameters for extraction.
+            Format: {keyword: (search_radius, space)}
+                - search_radius: (width, height) of the extraction rectangle.
+                - space: Horizontal space from the keyword to start the extraction area.
+
+    Returns:
+        str: JSON-formatted string containing structured extracted data.
+    """
+
+    # Open the PDF file
+    doc = fitz.open(pdf_path)
+
+    # Iterate over each page in the PDF
+    for page in doc:
+        # Find all occurrences of the keywords on the page
+        keyword_occurrences = {}
+
+        for keyword, params in keyword_params.items():
+            rects = page.search_for(keyword)
+            if rects:
+                keyword_occurrences[keyword] = (rects, params)
+
+        # Extract data for all found keywords
+        while any(keyword_occurrences.values()):  # While there are rects to process
+            record = {}
+            for keyword, (rects, params) in list(keyword_occurrences.items()):
+                if not rects:
+                    continue  # No more rects for this keyword
+
+                # Process the first rectangle for this keyword
+                rect = rects.pop(0)  # Remove the first rectangle
+                x0, y0, x1, y1 = rect
+                search_radius, space = params
+
+                # Define extraction rectangle relative to the keyword's position
+                extract_rect = fitz.Rect(
+                    x1 + space, y0, x1 + space + search_radius[0], y1 + search_radius[1]
+                )
+                extracted_text = page.get_text("text", clip=extract_rect).strip()
+                record[keyword] = extracted_text
+
+                # Remove keyword if no more rectangles exist
+                if not rects:
+                    del keyword_occurrences[keyword]
+
+            # Append record only if it contains data
+            if record:
+                return record
+    # Close the PDF file
+    doc.close()
+
+    return {}
+
+def merge_incomplete_records_invoice(extracted_data):
     """
     Merges incomplete records with the next record that has the missing data.
 
@@ -183,7 +245,7 @@ def merge_incomplete_records_invoice(extracted_data, keyword_params):
     # Loop through all extracted records
     for record in extracted_data:
         # Check if the record is incomplete
-        is_record_missing = len(record) < len(keyword_params)
+        is_record_missing = len(record) < 7
 
         if is_record_missing:
             if incomplete_record is None:
@@ -192,8 +254,10 @@ def merge_incomplete_records_invoice(extracted_data, keyword_params):
             else:
                 # Merge with the next incomplete record
                 incomplete_record.update(record)
-                merged_results.append(incomplete_record)
-                incomplete_record = None  # Reset for the next potential merge
+
+                if(len(incomplete_record) >= 7):
+                    merged_results.append(incomplete_record)
+                    incomplete_record = None  # Reset for the next potential merge
         else:
             # Add the complete record directly to results
             merged_results.append(record)    
@@ -220,6 +284,31 @@ def extract_exitoffices_from_body(text):
     
     # Find all matches in the text
     matches = re.findall(potential_codes_pattern, text)
+    
+    # Filter valid matches using is_valid_code
+    for match in matches:
+        if is_valid_code(match):
+            return match
+    
+    return ""
+
+
+def extract_customs_code_from_text(text):
+    #regex to find potential codes in the text
+    potential_codes_pattern = r'[A-Z]{2}\s?\d{4}'
+    
+    # Find all matches in the text
+    matches = re.findall(potential_codes_pattern, text)
+    
+    def is_valid_code(code):
+        pattern = r'[A-Z]{2}\s?\d{4}'
+        
+        # Use re.match with the re.IGNORECASE flag
+        if re.match(pattern, code, re.IGNORECASE):
+            return True
+        else:
+            return False
+        
     
     # Filter valid matches using is_valid_code
     for match in matches:

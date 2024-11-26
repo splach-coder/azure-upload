@@ -54,7 +54,7 @@ def write_to_excel(json_string):
         place if 'place' in locals() else '',
         data.get('Container', ''),
         data.get('wagon', ''),
-        data.get('rex', ''),
+        data.get('customs_code', ''),
     ]
 
     header2 = [
@@ -83,6 +83,10 @@ def write_to_excel(json_string):
         if key == "items":
             for obj in value:
                 mini_row = []
+                
+                obj_money = obj.get("Item value")[0] if obj.get("Item value") is not None and len(obj.get("Item value")) > 0 else 0
+                obj_currency = obj.get("Item value")[1] if obj.get("Item value") is not None and len(obj.get("Item value")) > 0 else ""
+                
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
@@ -90,9 +94,9 @@ def write_to_excel(json_string):
                     elif ordered_key == "Collis":
                         mini_row.append(safe_int_conversion(obj.get("Collis", '')))
                     elif ordered_key == "Currency":
-                        mini_row.append(obj.get("Item value", '')[1])
+                        mini_row.append(obj_currency)
                     elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("Item value", '')[0])
+                        mini_row.append(obj_money)
                     elif ordered_key == "Invoicenumber":
                         mini_row.append(data.get("Inv Ref", ''))
                     elif ordered_key == "Invoice date":
@@ -100,7 +104,7 @@ def write_to_excel(json_string):
                     elif ordered_key == "Pieces":
                         mini_row.append(obj.get("Quantity", ''))
                     elif ordered_key == "Rex/other":
-                        mini_row.append(data.get("rex", ''))
+                        mini_row.append(data.get("customs_code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)

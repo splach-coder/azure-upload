@@ -1,5 +1,7 @@
 import re
 
+from capsugel.helpers.functions import get_abbreviation_by_country
+
 postal_code_patterns = [
     # US-style ZIP codes (5 digits, optionally followed by a dash and 4 digits)
     r'\b\d{5}(?:-\d{4})?\b',  # e.g., 12345 or 12345-6789
@@ -123,7 +125,7 @@ def detect_postal_code(address):
     # If no postal code found, return None
     return None
 
-def get_address_structure(text):
+def get_address_structure(text, countries):
     text = text
     code_postal = detect_postal_code(text)
 
@@ -139,5 +141,7 @@ def get_address_structure(text):
     street_name = ' '.join(address_lines[1:3]) if len(address_lines) > 1 else ''
     city = address_lines[-2] if len(address_lines) > 2 else ''
     country = address_lines[-1]
+    
+    country = get_abbreviation_by_country(countries, country)
 
     return [company_name, street_name, city, code_postal, country]

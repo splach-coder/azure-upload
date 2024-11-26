@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import json
-from msc.utils.searchOnPorts import search_ports
+from msc.utils.searchOnPorts import search_json, search_ports
 
 def escape_xml_chars(text):
     return (text.replace("&", "&amp;")
@@ -23,6 +23,7 @@ def transform_json(input_data):
             "Vissel": input_data.get("Vissel"),
             "Container": container.get("container"),
             "globalWeight": 0,
+            "globalWeight2": 0,
             "globalPkgs": 0,
             "Quay" : "",
             "DispatchCountry" : dispatch_country,
@@ -36,15 +37,35 @@ def transform_json(input_data):
         if input_data.get("Quay") == 913 : 
             transformed_data[currentIndex]["Quay"] = "BEANRAZ03318002"
         
+        data = search_json(container.get("container"))
+        
         for item in container.get("items", []):
             item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
             packages = ''.join([i for i in item.get("Packages", "") if i.isdigit()])
             description = item.get("desc", "")
             gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
-            net_weight = gross_weight
+            net_weight = data.get("net", 0)
 
             transformed_data[currentIndex]["globalWeight"] += int(gross_weight)
+            transformed_data[currentIndex]["globalWeight2"] += safe_float_conversion(net_weight)
             transformed_data[currentIndex]["globalPkgs"] += int(packages)
+            
+            correctIMAH = False
+            
+            def compare_weights(weight1, weight2):
+              abs_value = abs(weight1 - weight2)
+              return -2.5 <= abs_value and abs_value <= 2.5
+            
+            def safe_float_conversion(value):
+              try:
+                return float(value)
+              except ValueError:
+                return 0.0
+            
+            if data :
+              #check net
+              if compare_weights(safe_float_conversion(data.get("gross")), safe_float_conversion(gross_weight)) and int(data.get("package")) == int(packages) :
+                correctIMAH = True
 
             item = {
                 "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
@@ -53,7 +74,7 @@ def transform_json(input_data):
                 "Packages": packages,
                 "Description": description,
                 "Gross Weight": gross_weight,
-                "Net Weight": net_weight
+                "Net Weight": net_weight if correctIMAH else 0
             }
 
             # Construct transformed data for each item in each container
@@ -86,7 +107,7 @@ def json_to_xml(json_data):
     <Principal>
       <id>CASAINTERN</id>
       <ContactPerson>
-        <contactPersonCode>MSC NCTS</contactPersonCode>
+        <contactPersonCode>BCTN</contactPersonCode>
       </ContactPerson>
     </Principal>
     <IntegratedLogisticStreamliner>
@@ -100,7 +121,7 @@ def json_to_xml(json_data):
       <ControlArticles>0</ControlArticles>
       <ControlPackages>{globalPkgs}</ControlPackages>
       <ControlGrossmass>{globalWeight}</ControlGrossmass>
-      <ControlNetmass>0</ControlNetmass>
+      <ControlNetmass>{globalWeight2}</ControlNetmass>
     </ControlValues>
   </CustomsStreamliner>
   <MessageBody>
@@ -125,7 +146,7 @@ def json_to_xml(json_data):
             <itemNumber>{itemNmber}</itemNumber>
             <goodsDescription language="EN">{Description}</goodsDescription>
             <grossMass>{GrossWeight}</grossMass>
-            <netMass>0</netMass>
+            <netMass>{NetWeight}</netMass>
             <PreviousAdministrativeReferences>
                 <previousDocumentType>126E</previousDocumentType>
                 <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
@@ -172,6 +193,7 @@ def json_to_xml(json_data):
             DispatchCountry=data["DispatchCountry"],
             Quay=data["Quay"],
             globalWeight=data["globalWeight"],
+            globalWeight2=data["globalWeight2"],
             globalPkgs=data["globalPkgs"],
             GoodsItems = formatted_goods_items_str
         )

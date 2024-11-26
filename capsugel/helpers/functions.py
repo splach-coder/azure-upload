@@ -1,6 +1,11 @@
 from datetime import datetime
+import logging
 import fitz
 import re
+
+def print_json_to_file(data, filename="output.txt"):
+    with open(filename, 'w') as f:
+        f.write(data)
 
 def detect_pdf_type(pdf_path):
     try:
@@ -79,14 +84,14 @@ def clean_invoice_data (result, countries):
             elif key == "All in Price":
                 #clean and update the quantity
                 obj[key] = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value))))
-            elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:":
+            elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:" or key == "Temp Reco Surchg":
                 #clean and update the invoice
                 price_arr = value.split(' ')
                 if len(price_arr) > 1:
                     price = price_arr[0]
                     currency = price_arr[1]
 
-                    obj[key] = [normalize_number_format(price), currency]
+                    obj[key] = [safe_float_conversion(normalize_number_format(price)), currency]
 
     return result              
 
@@ -108,12 +113,11 @@ def clean_packing_list_data (result) :
             if key == "Grand Total":
                 #clean and update the invoice
                 arr = value.split('\n')
-                if len(arr) > 3:
+                if len(arr) >= 3:
                     quantitty = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(arr[0]))))
                     gross = safe_float_conversion(normalize_number_format(arr[1]))
-                    net = safe_float_conversion(normalize_number_format(arr[3]))
 
-                    obj[key] = [quantitty, gross, net]
+                    obj[key] = [quantitty, gross]
 
     return  result           
 
@@ -142,13 +146,12 @@ def change_keys(data, key_map):
 def clean_grand_totals_in_packing_list(packinglist):
     for item in packinglist:
         # Check if 'Grand Total' exists and is a list with more than 2 elements
-        if "Item Totals" in item and isinstance(item["Item Totals"], list) and len(item["Item Totals"]) > 2:
+        if "Item Totals" in item and isinstance(item["Item Totals"], list) and len(item["Item Totals"]) > 1:
             grand_total = item["Item Totals"]
 
             # Add new keys for Quantity, Gross, and Net
             item["Quantity"] = grand_total[0]
             item["Gross"] = grand_total[1]
-            item["Net"] = grand_total[2]
 
             # Remove the 'Grand Total' key
             del item["Item Totals"]
@@ -164,13 +167,14 @@ def merge_invoice_with_packing_list(invoice_data, packing_list):
         
         for packing_item in packing_list:
             if (
-                packing_item.get("Batch") == batch_number
-                and packing_item.get("DN Number") == dn_number
+                (packing_item.get("Batch") == batch_number
+                and packing_item.get("DN Number") == dn_number) or packing_item.get("Batch") == batch_number
             ):
                 # Merge non-duplicate fields from packing list into invoice item
                 for key, value in packing_item.items():
                     if key not in invoice_item:  # Avoid overwriting existing keys
                         invoice_item[key] = value
+                        
     return invoice_data
 
 def calculate_totals(invoice_data):
