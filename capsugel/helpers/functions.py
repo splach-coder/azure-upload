@@ -231,4 +231,16 @@ def safe_float_conversion(value, default=0):
     
     
 def remove_g_from_date(date_str):
-    return date_str.replace("g", "").replace("\n", "")           
+    return date_str.replace("g", "").replace("\n", "")    
+
+def clean_number(s):
+    """
+    Removes all non-numeric characters from a string, leaving only numbers.
+    
+    Args:
+        s (str): Input string.
+        
+    Returns:
+        str: String with only numeric characters.
+    """
+    return re.sub(r'[^0-9.,]', '', s) 

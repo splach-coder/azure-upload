@@ -135,6 +135,10 @@ def get_address_structure(text, countries):
         address = text
 
     address_lines = address.split('\n')
+    
+    for i in range(len(address_lines) - 1, -1, -1):
+        if len(address_lines[i]) <= 2:
+            address_lines.pop(i)
 
     # Ensure there are enough lines to avoid index errors
     company_name = address_lines[0] if len(address_lines) > 0 else ''

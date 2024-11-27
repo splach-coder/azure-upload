@@ -1,5 +1,6 @@
 import fitz  # PyMuPDF
 from googletrans import Translator
+import logging
 
 def read_pdf(file_path):
     text = ''
@@ -10,6 +11,13 @@ def read_pdf(file_path):
 
 def detect_language(file_path):
     text = read_pdf(file_path)
+    if not text.strip():
+        logging.error("No text found in the PDF.")
+        return None
+    
     translator = Translator()
-    result = translator.detect(text)
-    return result.lang
+    try:
+        result = translator.detect(text)
+        return result.lang
+    except Exception as e:
+        return None
