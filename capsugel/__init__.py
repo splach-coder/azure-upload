@@ -112,7 +112,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_1["Inv Ref"] = clean_number(data_1["Inv Ref"])
                 data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
                 
-                if("(INCOTERMS 2010)" in data_1["Inco"]) or ("Incoterms:" in data_1["Inco"]):
+                if("(INCOTERMS 2010)" in data_1["Inco"]) or ("Incoterms:" in data_1["Inco"]) or ("(INCOTERMS 2010" in data_1["Inco"]):
                     data_1["Inco"] = data_1["Inco"].replace("(INCOTERMS 2010)", '')
                     data_1["Inco"] = data_1["Inco"].replace("Incoterms:", '')
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)

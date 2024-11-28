@@ -1,3 +1,4 @@
+import logging
 import re
 
 def clean_VAT(VAT_number):
@@ -43,15 +44,20 @@ def normalize_the_items_numbers(result):
     for item in result:
         item["Net"] = safe_float_conversion(normalize_numbers(item["Net"]))
         item["Value"] = safe_float_conversion(normalize_numbers(item["Value"]))
-        item["Quantity"] = safe_int_conversion(item["Quantity"])
+        item["Quantity"] = safe_int_conversion(normalize_numbers(item["Quantity"]))
+    return result
+
+def add_inv_date_to_items(result, inv_date):
+    for item in result:
+        item["Inv No"] = inv_date
     return result
 
 def normalize_the_totals_type(result):
     for key, value in result.items():
         if key == "Weight" : result[key] = safe_float_conversion(normalize_numbers(value))
         if key == "Total Value" : result[key] = safe_float_conversion(normalize_numbers(value))
-        if key == "Quantity" : result[key] = safe_int_conversion(value)
-        if key == "Package" : result[key] = safe_int_conversion(value)
+        if key == "Quantity" : result[key] = safe_int_conversion(normalize_numbers(value))
+        if key == "Package" : result[key] = safe_int_conversion(normalize_numbers(value))
         
     return result
 
@@ -70,12 +76,14 @@ def merge_pdf_data(pdf_data_list):
     for data in pdf_data_list[1:]:
         for key, value in data.items():
             if key == "items":  # Special handling for 'items'
-                merged_data[key].extend(value)
+                merged_data[key].extend(value) 
             elif isinstance(value, list):  # Handle lists (e.g., Address, Terms)
-                merged_data[key] = list(set(merged_data[key] + value))
+                if len(merged_data[key]) == len(value):
+                    merged_data[key] = merged_data[key]
+                else:
+                    merged_data[key] = ['', '', '', '', '']  # Assign an empty list if lengths are not the same
             elif isinstance(value, (int, float)):  # Handle numerical fields
-                if merged_data[key] != value:
-                    merged_data[key] = f"{merged_data[key]}+{value}"
+                merged_data[key] += value
             else:  # Handle strings or other types
                 if merged_data[key] != value:
                     merged_data[key] = f"{merged_data[key]}+{value}" if merged_data[key] else value

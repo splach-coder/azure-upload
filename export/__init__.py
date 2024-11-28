@@ -77,7 +77,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Parse the extracted text into key-value pairs
         parsed_data = extract_key_value_pairs(pdf_text)
-
+        
         parsed_data = modify_and_correct_amounts(parsed_data)
 
         parsed_data = updateBTWnumber(parsed_data)

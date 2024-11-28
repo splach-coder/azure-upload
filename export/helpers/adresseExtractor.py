@@ -168,7 +168,7 @@ def get_adress_structure(text):
     company_name = arr[0]
     street_name = arr[1]
     code_postal = detect_postal_code(arr)
-    city = arr[2].replace(code_postal, "")
+    city = arr[2].replace(code_postal, "") if code_postal is not None else arr[2]
     country = arr[-1].replace("Ver.", "").strip()
 
     return [company_name, street_name, city, code_postal, country]

@@ -232,11 +232,15 @@ def extract_office_value(text):
     # Search for 'Exit office'
     exit_office_match = re.search(exit_office_pattern, text, re.IGNORECASE)
     if exit_office_match:
-        return exit_office_match.group(1).replace(" ", "")
+        resultat = exit_office_match.group(1)
+        resultat = resultat if not resultat else resultat.replace(" ", "")
+        return resultat
     
     # Search for 'Kantoor'
     kantoor_match = re.search(kantoor_pattern, text, re.IGNORECASE)
     if kantoor_match:
-        return kantoor_match.group(1).replace(" ", "")
+        resultat = kantoor_match.group(1)
+        resultat = resultat if not resultat else resultat.replace(" ", "")
+        return resultat
     
     return None

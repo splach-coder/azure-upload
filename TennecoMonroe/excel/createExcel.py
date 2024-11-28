@@ -37,9 +37,9 @@ def write_to_excel(json_string):
     values1 = [
         data.get('Vat', ''),
         data.get('Principal', ''),
-        data.get('Inv Ref', ''),
-        data.get('Reference', ''),
-        data.get('Totals Freight Value', '')[0],
+        data.get('Customer NO', ''),
+        data.get('Our ref', ''),
+        data.get('Totals Freight Value', ''),
         data.get('Parking trailer', ''),
         data.get('Export office', ''),
         data.get('Exit Port BE', ''),
@@ -69,8 +69,7 @@ def write_to_excel(json_string):
         "Pieces",
         "Invoicenumber",
         "Invoice date",
-        "Rex/other",
-        "Batch"
+        "Rex/other"
     ]
     
     rows_data = []  # To store the processed rows for "items"
@@ -85,21 +84,19 @@ def write_to_excel(json_string):
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
-                        mini_row.append(obj.get("HS Code", ''))
+                        mini_row.append(obj.get("HS code", ''))
                     elif ordered_key == "Collis":
                         mini_row.append(obj.get("Collis", ''))
-                    elif ordered_key == "Currency":
-                        mini_row.append(obj_currency)
                     elif ordered_key == "Invoice value":
-                        mini_row.append(obj_money)
+                        mini_row.append(obj.get("Value", ""))
+                    elif ordered_key == "Currency":
+                        mini_row.append(data.get("Currency", ""))
                     elif ordered_key == "Invoicenumber":
-                        mini_row.append(data.get("Inv Ref", ''))
+                        mini_row.append(obj.get("Inv No", ''))
                     elif ordered_key == "Invoice date":
                         mini_row.append(data.get("Inv Date", ''))
                     elif ordered_key == "Pieces":
                         mini_row.append(obj.get("Quantity", ''))
-                    elif ordered_key == "Rex/other":
-                        mini_row.append(data.get("customs_code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -117,17 +114,16 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    total_invoices = safe_float_conversion(data.get('Invoice Total', [])[0]) if data.get('Invoice Total', []) else 0
-    ws.append([total_invoices])
+    ws.append([data.get("Total Value", 0)])
     ws.append(row_empty)
 
     ws.append(["Total Collis"])
-    total_pallets = data.get('Totals Collis', 0)
+    total_pallets = data.get('Package', 0)
     ws.append([total_pallets])
     ws.append(row_empty)
 
     ws.append(["Total Gross"])
-    total_weight = data.get('Totals Gross', 0)
+    total_weight = data.get('Weight', 0)
     ws.append([total_weight])
     ws.append(row_empty)
 

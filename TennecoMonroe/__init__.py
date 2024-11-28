@@ -4,9 +4,10 @@ import json
 import os
 import base64
 
-from TennecoMonroe.helpers.functions import abbr_countries_in_items, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
+from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
 from TennecoMonroe.service.extractors import extract_dynamic_text_from_pdf, extract_text_from_first_page, find_customs_authorisation_coords, find_page_in_invoice
 from TennecoMonroe.helpers.adress_extractors import get_address_structure
+from TennecoMonroe.excel.createExcel import write_to_excel
 
 from TennecoMonroe.config.coords import first_page_coords, totals_page_coords
 from TennecoMonroe.config.key_maps import first_page_key_map, totals_page_key_map, table_page_key_map
@@ -111,6 +112,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result = abbr_countries_in_items(result, countries)
         #update the numbers type
         result = normalize_the_items_numbers(result)
+        result = add_inv_date_to_items(result, first_page_data.get("Inv No", ""))
         
         
         '''------------------- Extract the Code BE70 from its page ---------------------------'''
@@ -125,13 +127,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         multiple_invoices.append(all_data)
         
     '''------------------- merging the data to be one object --------------------------'''
-    merged_data = merge_pdf_data(multiple_invoices)    
+    merged_data = merge_pdf_data(multiple_invoices)  
         
     # Proceed with data processing
     try:
-        excel_file = ""
+        # Call writeExcel to generate the Excel file in memory
+        excel_file = write_to_excel(merged_data)
+        logging.info("Generated Excel file.")
         
-        reference = "TEST"
+        reference = merged_data.get("Customer NO", "")
 
         # Set response headers for the Excel file download
         headers = {
@@ -140,7 +144,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         }
 
         # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file, headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except TypeError as te:
         logging.error(f"TypeError during processing: {te}")
