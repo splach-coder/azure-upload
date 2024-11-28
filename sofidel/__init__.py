@@ -127,8 +127,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     message = validate_data(json_result)
 
-    ref = json_result["Reference"] + "-" + json_result["inv reference"]
-
+    ref = json_result.get("Reference", "") + "-" + json_result.get("inv reference", "")
     reference = ref if ref else '#No_Ref#'
 
     # Set response headers for the Excel file download

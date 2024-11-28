@@ -72,12 +72,21 @@ def get_abbreviation_by_country(countries, country_name):
     return country_name 
 
 def clean_invoice_data (result, countries):
-
     for obj in result:
         for key, value in obj.items():
+            if key == "Commodity Code of country of dispatch:" or key == "DN Nbr:" or key == "Batches:":
+                obj[key] = clean_number(value)
+                
             if key == "Country of Origin: ":
+                
+                country = value.split('\n')
+                for item in country:
+                    if len(item) <= 3:
+                        country.remove(item) 
+                country = ''.join(country)
+                
                 #clean and update the country
-                obj[key] = get_abbreviation_by_country(countries, value)
+                obj[key] = get_abbreviation_by_country(countries, country)
             elif key == "Net Weight:" or key == "Nettogewicht:":
                 #clean and update the net weight
                 obj[key] = safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value)))
@@ -123,6 +132,12 @@ def clean_packing_list_data (result) :
                     obj[key] = [quantitty, gross]
 
     return  result           
+
+def vat_validation(vat_number):
+    pattern = re.compile(r'^[A-Z]{2}\s?\d{10}$')
+    if pattern.match(vat_number):
+        return vat_number
+    return ""
 
 def change_keys(data, key_map):
     """

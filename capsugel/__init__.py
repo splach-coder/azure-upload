@@ -6,7 +6,7 @@ import base64
 
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
-from capsugel.helpers.functions import print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number
+from capsugel.helpers.functions import print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number, vat_validation
 from capsugel.service.extractors import extract_customs_code_from_pdf_invoice, extract_customs_code_from_text, extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, find_page_in_invoice, merge_incomplete_records_invoice
 
 from capsugel.config.coords import coordinates, coordinates_be, coordinates_lastpage, key_map, inv_keyword_params, inv_keyword_params_de, fallback_inv_keywords, packingList_keyword_params
@@ -106,13 +106,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             try:
                 coors_for_invoice = coordinates_be if language == "de" else coordinates
                 data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coors_for_invoice, key_map))
+                
+                data_1["Vat"] = vat_validation(data_1["Vat"])
                 data_1["Inv Date"] = remove_g_from_date(data_1["Inv Date"])
                 data_1["Inv Ref"] = clean_number(data_1["Inv Ref"])
                 data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
                 
-                if("(INCOTERMS 2010)" in data_1["Inco"]):
+                if("(INCOTERMS 2010)" in data_1["Inco"]) or ("Incoterms:" in data_1["Inco"]):
                     data_1["Inco"] = data_1["Inco"].replace("(INCOTERMS 2010)", '')
+                    data_1["Inco"] = data_1["Inco"].replace("Incoterms:", '')
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
+                
+                if len(data_1["Inco"]) == 1:
+                    data_1["Inco"].append("")  
                 
                 if language == "de":
                     lst_keywords=["Rechnungsbetrag", "MwSt", "Fälliger Rechnungsbetrag", "* Letzte Seite"]
@@ -193,7 +199,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(merged_data)
         logging.info("Generated Excel file.")
 
-        reference = merged_data.get('Inv Ref', '')
+        ref = merged_data.get('Inv Ref', '')
+        reference = "no-ref" if ref == '' else ref
 
         # Set response headers for the Excel file download
         headers = {

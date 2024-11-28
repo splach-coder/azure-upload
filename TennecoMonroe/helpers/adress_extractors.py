@@ -1,6 +1,6 @@
 import re
 
-from capsugel.helpers.functions import get_abbreviation_by_country
+from TennecoMonroe.helpers.functions import get_abbreviation_by_country
 
 postal_code_patterns = [
     # US-style ZIP codes (5 digits, optionally followed by a dash and 4 digits)
@@ -135,10 +135,6 @@ def get_address_structure(text, countries):
         address = text
 
     address_lines = address.split('\n')
-    
-    for item in address_lines:
-        if item == "Ship To:":
-            address_lines.remove(item)
     
     for i in range(len(address_lines) - 1, -1, -1):
         if len(address_lines[i]) <= 2:
