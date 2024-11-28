@@ -120,9 +120,9 @@ def find_customs_authorisation_coords(pdf_path, page_number):
         import re
         match = re.search(r'\b([A-Z]{2}\s?\d{2})\b', text)
         if match:
-            return (x0, y0, x1, y1), match.group(0)
+            return match.group(0)
         else:
-            return (x0, y0, x1, y1), None
+            return None
     else:
         return ""
 

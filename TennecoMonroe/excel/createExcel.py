@@ -52,7 +52,7 @@ def write_to_excel(json_string):
         place if 'place' in locals() else '',
         data.get('Container', ''),
         data.get('wagon', ''),
-        data.get('customs_code', ''),
+        data.get("Customs Code", '')
     ]
 
     header2 = [
@@ -97,6 +97,8 @@ def write_to_excel(json_string):
                         mini_row.append(data.get("Inv Date", ''))
                     elif ordered_key == "Pieces":
                         mini_row.append(obj.get("Quantity", ''))
+                    elif ordered_key == "Rex/other":
+                        mini_row.append(data.get("Customs Code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
