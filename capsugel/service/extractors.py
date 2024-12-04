@@ -95,6 +95,139 @@ def extract_text_from_last_page(pdf_path, coordinates, page, key_map):
 
     return json.dumps(data_dict, indent=2)
 
+def another_version(pdf_path, keyword_params, fallbacks):
+    """
+    Extract structured data from each page of a PDF based on specific keywords and relative coordinates.
+    The function processes keywords based on their Y-coordinate position to follow the order in the PDF.
+
+    Parameters:
+        pdf_path (str): Path to the PDF file.
+        keyword_params (dict): Keywords and parameters for extraction.
+            Format: {keyword: (search_radius, space)}
+                - search_radius: (width, height) of the extraction rectangle.
+                - space: Horizontal space from the keyword to start the extraction area.
+        fallbacks (dict): Fallback keywords and parameters.
+
+    Returns:
+        str: JSON-formatted string containing structured extracted data.
+    """
+    big_array = []  # This will hold all page arrays
+
+    # Open the PDF file
+    doc = fitz.open(pdf_path)
+
+    # Iterate over each page in the PDF
+    for page_num, page in enumerate(doc):
+        logging.info(f"Processing page {page_num + 1}")
+
+        page_data = []  # List to store the extracted fields for the current page
+        current_item = []  # To store fields for the current item
+
+        # Track keyword occurrences on the page
+        keyword_occurrences = []
+
+        # Search for each keyword on the current page and store their occurrences
+        for keyword, params in keyword_params.items():
+            rects = page.search_for(keyword)
+            if rects:
+                for rect in rects:
+                    keyword_occurrences.append({
+                        'keyword': keyword,
+                        'rect': rect,
+                        'params': params
+                    })
+            elif keyword in fallbacks:
+                # Attempt to use fallback keyword if primary is not found
+                fallback_key, fallback_params = list(fallbacks[keyword].items())[0]
+                fallback_rects = page.search_for(fallback_key)
+                if fallback_rects:
+                    for rect in fallback_rects:
+                        keyword_occurrences.append({
+                            'keyword': fallback_key,
+                            'rect': rect,
+                            'params': fallback_params
+                        })
+
+        # Sort all occurrences by their y0 coordinate (top-left Y position)
+        keyword_occurrences.sort(key=lambda x: x['rect'][1])
+
+        # Extract the data for each keyword on the current page in the order determined by y0
+        for item in keyword_occurrences:
+            keyword = item['keyword']
+            rect = item['rect']
+            params = item['params']
+
+            x0, y0, x1, y1 = rect
+            search_radius, space = params
+
+            # Define extraction rectangle relative to the keyword's position
+            extract_rect = fitz.Rect(
+                x1 + space, y0, x1 + space + search_radius[0], y1 + search_radius[1]
+            )
+            extracted_text = page.get_text("text", clip=extract_rect).strip()
+
+            # Add the extracted field to the current item
+            current_item.append({keyword: extracted_text})
+
+            # If we reach 'Country of Origin', mark the item as complete
+            if "Country of Origin: " in current_item[-1]:
+                page_data.append(current_item)
+                current_item = []  # Reset for the next item
+
+        # After processing the page, append the collected page data to the big array
+        if current_item:
+            page_data.append(current_item)
+
+        big_array.append(page_data)
+
+    # Close the PDF file
+    doc.close()
+
+    # Return the final results as JSON
+    return big_array
+
+def merge_incomplete_objects_invoice(page_data):
+    """
+    Merges incomplete objects into the next object, ensuring that each object is fully populated.
+    
+    Parameters:
+        page_data (list): List of items for the current page, with each item as a dictionary of fields.
+    
+    Returns:
+        list: A list of merged complete objects for the page.
+    """
+    all_data = []
+    merged_page_data = []  # To hold the final merged page data
+    current_item = {}  # To store fields for the current item
+    
+    # Iterate through the page data
+    for item in page_data:
+        for field_dict in item:
+            for obj in field_dict:
+                for field, value in obj.items():
+                    # Merge the field into the current_item if not already present
+                    all_data.append({field : value})                
+    
+    open_object = False
+                
+    for item in all_data:
+        for field, value in item.items():
+            if(field == "DN Nbr:"):
+                open_object = True
+                
+            if open_object:
+                # If the field is not already in the current_item, add it
+                current_item[field] = value
+                if (field == "Country of Origin: "):
+                    open_object = False
+                
+        if not open_object :
+            merged_page_data.append(current_item)
+            current_item = {}
+    
+    return merged_page_data
+
+#original function
 def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks):
     """
     Extract structured data from a PDF based on specific keywords and relative coordinates.
@@ -115,6 +248,8 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks
 
     # Open the PDF file
     doc = fitz.open(pdf_path)
+    
+    lost_object = None
 
     # Iterate over each page in the PDF
     for page in doc:
@@ -131,7 +266,7 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks
                 fallback_keyword, fallback_params = fallback
                 rects = page.search_for(fallback_keyword)
                 if rects:
-                    keyword_occurrences[fallback_keyword] = (rects, fallback_params)
+                    keyword_occurrences[fallback_keyword] = (rects, fallback_params)          
 
         # Extract data for all found keywords
         while any(keyword_occurrences.values()):  # While there are rects to process
@@ -154,11 +289,20 @@ def extract_structured_data_from_pdf_invoice(pdf_path, keyword_params, fallbacks
 
                 # Remove keyword if no more rectangles exist
                 if not rects:
-                    del keyword_occurrences[keyword]
+                    del keyword_occurrences[keyword]   
 
             # Append record only if it contains data
-            if record:
+            #logging.error(type(record))
+            if len(record) >= 7:
                 results.append(record)
+            else:
+                lost_object = record
+                
+            if len(record) >= 7 and lost_object:
+                rcrd = {**record, **lost_object}
+                results.append(rcrd)
+                lost_object = None   
+                        
 
     # Close the PDF file
     doc.close()
@@ -292,30 +436,23 @@ def extract_exitoffices_from_body(text):
     
     return ""
 
-
-def extract_customs_code_from_text(text):
-    #regex to find potential codes in the text
-    potential_codes_pattern = r'[A-Z]{2}\s?\d{4}'
+def extract_customs_code_from_text(text_obj, text):
+    # Extract the text value from the dictionary
+    text_value = text_obj.get(text, '')
     
-    # Find all matches in the text
-    matches = re.findall(potential_codes_pattern, text)
+    # Use regex to find text inside parentheses
+    matches = re.findall(r'\((.*?)\)', text_value)
     
-    def is_valid_code(code):
-        pattern = r'[A-Z]{2}\s?\d{4}'
-        
-        # Use re.match with the re.IGNORECASE flag
-        if re.match(pattern, code, re.IGNORECASE):
-            return True
-        else:
-            return False
-        
+    string_to_remove = ['Exporter Reference No', 'customs authorization No']
     
-    # Filter valid matches using is_valid_code
-    for match in matches:
-        if is_valid_code(match):
-            return match
+    if matches:
+        matches = matches[0].lower().replace(string_to_remove[0].lower(), '')
+        matches = matches.lower().replace(string_to_remove[1].lower(), '')
     
-    return ""
+        # Return the matches found
+        return matches.upper().replace(" ", "")
+    else:
+        return ""
 
 def find_page_in_invoice(pdf_path, keywords=["Invoice Total Net", "Total VAT", "Total Value Due", "* Last Page"]):
     try:

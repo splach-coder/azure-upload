@@ -4,15 +4,11 @@ import json
 import os
 import base64
 
-from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
-from TennecoMonroe.service.extractors import extract_dynamic_text_from_pdf, extract_text_from_first_page, find_customs_authorisation_coords, find_page_in_invoice
-from TennecoMonroe.helpers.adress_extractors import get_address_structure
-from TennecoMonroe.excel.createExcel import write_to_excel
+from casa.excel.create_excel import generate_excel_zip
+from casa.helpers.functions import hanlde_country
+from casa.service.extractors import clean_and_convert_totals, clean_invoice_data, extract_cleaned_invoice_text, extract_container_load_plan_text, extract_header_details, extract_items_from_text, extract_totals_from_text, extract_vissel_details, get_items_data, merge_data
 
-from TennecoMonroe.config.coords import first_page_coords, totals_page_coords
-from TennecoMonroe.config.key_maps import first_page_key_map, totals_page_key_map, table_page_key_map
-from TennecoMonroe.data.countries import countries
-
+from casa.data.data import ports
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -37,8 +33,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-        
-    multiple_invoices = []    
 
     for file_info in files:
         file_content_base64 = file_info.get('file')
@@ -76,77 +70,48 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
         
-        '''------------------- Extract the Static Values from the first page ------------------'''
-        # extract the file and put it on global for multiple files case
-        first_page_data = json.loads(extract_text_from_first_page(uploaded_file_path, first_page_coords, first_page_key_map))
-        #extract the the adress into company name, street, city ....
-        first_page_data["Address"] = get_address_structure(first_page_data["Address"], countries)
-        #clean the VAT from other chars
-        first_page_data["Vat"] = clean_VAT(first_page_data["Vat"])
+        Items_All = []
+
+        invoice_pages = extract_cleaned_invoice_text(uploaded_file_path)
+        invoice_pages = clean_invoice_data(invoice_pages)
         
+        '''Extract the Header Details (origin, inco terms invoice date, vissel)'''
+        header_details = extract_header_details(invoice_pages)
+        header_details = hanlde_country(header_details, ports)
         
-        '''------------------- Extract the Total from the last page ---------------------------'''
-        #detect which page the totals are
-        totals_page = find_page_in_invoice(uploaded_file_path)
-        #extract data from the totals page
-        totals_data = extract_text_from_first_page(uploaded_file_path, totals_page_coords, totals_page_key_map, totals_page)
-        #cast it to json
-        totals_data = json.loads(totals_data)
-        #update the numbers type
-        totals_data = normalize_the_totals_type(totals_data)
-        totals_data["Terms"] = handle_terms_into_arr(totals_data["Terms"])
+        '''Extract the Container Load Plan text'''
+        vissel_data = extract_container_load_plan_text(uploaded_file_path)
+        vissel = extract_vissel_details(vissel_data)
         
+        '''Extract Totals from the text'''
+        #totals_data = extract_totals_from_text(invoice_pages)
+        #totals_data = clean_and_convert_totals(totals_data)
         
-        '''------------------- Extract the Table data from its page ---------------------------'''
-        #extract data from the table
-        x_coords = [(37, 91), (91, 156), (156, 216), (216, 266), (266, 344)]  # Static x-coordinates
-        y_range = (178, 188)  # Dynamic y-coordinates
-        
-        #find the table page
-        table_page = find_page_in_invoice(uploaded_file_path, keywords=["Customs Tariff", "Origin", "Net Weight", "Quantity", "Value Payable"])
-        # Call the function
-        result = extract_dynamic_text_from_pdf(uploaded_file_path, x_coords, y_range, table_page_key_map, table_page)
-        #cast it to json
-        result = json.loads(result)
-        #update countries to abbr
-        result = abbr_countries_in_items(result, countries)
-        #update the numbers type
-        result = normalize_the_items_numbers(result)
-        result = add_inv_date_to_items(result, first_page_data.get("Inv No", ""))
-        
-        
-        '''------------------- Extract the Code BE70 from its page ---------------------------'''
-        customs_code = find_customs_authorisation_coords(uploaded_file_path, table_page)
-        
-        
-        '''------------------- JOIN data in one object - items also ---------------------------'''
-        all_data = {**first_page_data, **totals_data, "Customs Code" : customs_code, "items" : result}
-        
-        
-        '''------------------- append the data list to the global var --------------------------'''
-        multiple_invoices.append(all_data)
-        
-    '''------------------- merging the data to be one object --------------------------'''
-    merged_data = merge_pdf_data(multiple_invoices)  
-    
-    logging.error(merged_data)
+        '''Extract ing items from the text'''
+        for key, text in invoice_pages.items():
+            texto = extract_items_from_text(text)
+            for item in texto:
+                item_obj = get_items_data(item)
+                Items_All.append({"Invoice_Number" : key, **item_obj})
+                
+        '''Merge the items data into one object'''        
+        result = merge_data(Items_All, vissel, header_details)
         
     # Proceed with data processing
     try:
-        # Call writeExcel to generate the Excel file in memory
-        excel_file = write_to_excel(merged_data)
-        logging.info("Generated Excel file.")
+        container_key = ""
+        for item in result: container_key += item['container']
         
-        reference = merged_data.get("Customer NO", "")
+        # Generate the ZIP file containing Excel files
+        zip_data = generate_excel_zip(result)
+        logging.info("Generated Excel file.")
 
-        # Set response headers for the Excel file download
-        headers = {
-            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-
-        # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        # Return the ZIP file as a response
+        return func.HttpResponse(
+            zip_data,
+            mimetype="application/zip",
+            headers={"Content-Disposition": 'attachment; filename="files-' + container_key + '".zip'}
+        )
 
     except TypeError as te:
         logging.error(f"TypeError during processing: {te}")

@@ -27,6 +27,21 @@ invoice_keys_de = {
     "DN Nbr:": "DN Number"
 }
 
+invoice_keys_it = {
+    "Vat": "VAT",
+    "ship to": "Adress",
+    "invoice": "Invoice Total",
+    "DN Nbr:": "DN Number",
+    "Batches:": "Batch",
+    "Peso netto: ": "Net",
+    "Prezzo forfettario": "Quantity",
+    "Totale per la voce": "Item value",
+    "Spese di trasporto totali per la voce:": "Freight Item",
+    "Codice delle merci del paese di spedizione:": "HS Code",
+    "Country of Origin: ": "Origin",
+}
+
+
 
 packing_list_keys = {
     "Tot. Carton" : "Collis",

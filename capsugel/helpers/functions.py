@@ -25,7 +25,7 @@ def detect_pdf_type(pdf_path):
         # Check for the keywords 'Packing List' and 'Invoice'
         if "Packing List" in first_page_text:
             return "Packing List"
-        elif "Invoice" in first_page_text or "Proforma Rechnung" in first_page_text:
+        elif "Invoice" in first_page_text or "Proforma Rechnung" in first_page_text or "Fattura proforma" in first_page_text:
             return "Invoice"
         else:
             return "I can't detect which PDF it is."
@@ -74,7 +74,7 @@ def get_abbreviation_by_country(countries, country_name):
 def clean_invoice_data (result, countries):
     for obj in result:
         for key, value in obj.items():
-            if key == "Commodity Code of country of dispatch:" or key == "DN Nbr:" or key == "Batches:":
+            if key == "Commodity Code of country of dispatch:" or key == "DN Nbr:" or key == "Batches:" or key == "Codice delle merci del paese di spedizione:":
                 obj[key] = clean_number(value)
                 
             if key == "Country of Origin: ":
@@ -87,13 +87,23 @@ def clean_invoice_data (result, countries):
                 
                 #clean and update the country
                 obj[key] = get_abbreviation_by_country(countries, country)
-            elif key == "Net Weight:" or key == "Nettogewicht:":
+            elif key == "Net Weight:" or key == "Nettogewicht:" or key == "Peso netto":
                 #clean and update the net weight
                 obj[key] = safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value)))
-            elif key == "All in Price" or key == "Pauschalpreis":
+            elif key == "All in Price" or key == "Pauschalpreis" or key == "Prezzo forfettario":
                 #clean and update the quantity
                 obj[key] = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value))))
-            elif key == "Total for the line item" or key ==  "Total freight related surcharges for the item:" or key == "Temp Reco Surchg" or key == "Total für Produkt" or key == "Total für die Position" or key == "Gesamttransportzuschläge für den Artikel:" :
+            elif key in [
+                        "Total for the line item",
+                        "Total freight related surcharges for the item:",
+                        "Temp Reco Surchg",
+                        "Total für Produkt",
+                        "Total für die Position",
+                        "Gesamttransportzuschläge für den Artikel:",
+                        "Totale per la voce",
+                        "Spese di trasporto totali per la voce:"
+                ]:
+                
                 #clean and update the invoice
                 price_arr = value.split(' ')
                 if len(price_arr) > 1:
@@ -134,10 +144,31 @@ def clean_packing_list_data (result) :
     return  result           
 
 def vat_validation(vat_number):
-    pattern = re.compile(r'^[A-Z]{2}\s?\d{10}$')
+    pattern = re.compile(r'^[A-Z]{2}\s?\d{9,10}$')
     if pattern.match(vat_number):
         return vat_number
     return ""
+
+def extract_vat_number(text):
+    """
+    Extracts a VAT number from the given text.
+    
+    Args:
+        text (str): The input text to search for a VAT number.
+        
+    Returns:
+        str: The extracted VAT number if found, otherwise an empty string.
+    """
+    # Define the VAT number pattern
+    pattern = r'\b[A-Z]{2}\s?\d{9,10}+\b'
+    
+    # Search for the VAT number in the text
+    match = re.search(pattern, text)
+    
+    # Return the found VAT number or an empty string
+    return match.group(0) if match else ""
+
+
 
 def change_keys(data, key_map):
     """

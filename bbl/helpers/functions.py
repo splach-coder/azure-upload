@@ -1,6 +1,7 @@
 import re
 import requests
 import xml.etree.ElementTree as ET
+from datetime import datetime
 
 from bbl.helpers.searchOnPorts import search_ports
 
@@ -90,7 +91,11 @@ def extract_freight(value):
     return numbers[:2] if numbers else [0.0]
 
 def fetch_exchange_rate(currency_code):
-    url = "https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd202411.xml"
+    # Get the current year and month in "YYYYMM" format
+    current_date = datetime.now().strftime("%Y%m")
+
+    # Insert the dynamic part into the URL
+    url = f"https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd{current_date}.xml"
     
     # Fetch XML content from the URL
     response = requests.get(url)
