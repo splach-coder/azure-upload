@@ -56,7 +56,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             temp_file.write(file_content)
 
         # Actual code logic
-        #extracted_data = extract_text_from_pdf(uploaded_file_path, coordinates, coordinates_2)
+        extracted_data = extract_text_from_pdf(uploaded_file_path, coordinates, coordinates_2)
 
         # Actual code logic
         extracted_data = extract_text_from_pages(uploaded_file_path, coordinates)

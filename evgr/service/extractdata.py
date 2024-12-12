@@ -9,8 +9,8 @@ def extract_text_from_pdf(pdf_path, coordinates_page_2, coordinates_2, key_map=N
     pdf_document = fitz.open(pdf_path)
     
     # Ensure the PDF has at least 3 pages
-    if len(pdf_document) < 3:
-        raise ValueError("The PDF must have at least 3 pages.")
+    if len(pdf_document) < 2:
+        raise ValueError("The PDF must have at least 2 pages.")
     
     # Select page 2 (index 1 because pages are 0-based in PyMuPDF)
     page_2 = pdf_document[1]

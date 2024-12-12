@@ -28,13 +28,15 @@ def generate_excel_zip(data):
                 top=Side(style='thin'),
                 bottom=Side(style='thin')
             )
+            
+            invoice_number = entry['items'][0]['Invoice_Number']
 
             # General information with titles in column A and values in column B
             general_info = [
                 ('Origin', entry['City']),
                 ('Vessel', entry['vissel']),
                 ('ETA', ''),
-                ('Invoice number', entry['items'][0]['Invoice_Number']),
+                ('Invoice number', entry['container']),
                 ('Invoice Date', entry['Date']),
                 ('CT Type', '')
             ]
@@ -48,6 +50,7 @@ def generate_excel_zip(data):
                 ws[f'B{idx}'].alignment = left_aligned
 
             # Add a few empty rows after general info
+            ws.append([])
             ws.append(['Items'])
 
             # Define the column headers for the items table
@@ -55,18 +58,18 @@ def generate_excel_zip(data):
 
             # Write the headers to the sheet starting from row 10
             for col_num, header in enumerate(headers, start=1):
-                cell = ws.cell(row=8, column=col_num, value=header)
+                cell = ws.cell(row=9, column=col_num, value=header)
                 cell.font = bold_font
-                cell.alignment = centered_alignment
-                cell.border = border_style
+                
+            item_number = 623456    
 
             # Write the data rows for each item
-            row_num = 9
+            row_num = 10
             for item in entry['items']:
-                ws[f'A{row_num}'] = item.get('item number', '')
-                ws[f'B{row_num}'] = entry['container']
+                ws[f'A{row_num}'] = item_number
+                ws[f'B{row_num}'] = ""
                 ws[f'C{row_num}'] = item.get('hs_code', '')
-                ws[f'D{row_num}'] = item.get('pieces', '')
+                ws[f'D{row_num}'] = 0#item.get('pieces', '')
                 ws[f'E{row_num}'] = item.get('pckg', '')
                 ws[f'F{row_num}'] = item.get('net', '')
                 ws[f'G{row_num}'] = item.get('gross', '')
@@ -76,15 +79,11 @@ def generate_excel_zip(data):
                 ws[f'K{row_num}'] = item.get('Invoice_Number', '')
                 ws[f'L{row_num}'] = entry['Date']
 
-                # Apply the border style for each cell in the row
-                for col in range(1, 13):
-                    cell = ws.cell(row=row_num, column=col)
-                    cell.border = border_style
-
                 row_num += 1
+                item_number += 11
 
             # Save the file with the container name
-            excel_filename = f"{entry['container']}.xlsx"
+            excel_filename = f"{invoice_number}-{entry['container']}.pdf.xlsx"
             with BytesIO() as excel_buffer:
                 wb.save(excel_buffer)
                 excel_buffer.seek(0)

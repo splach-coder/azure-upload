@@ -1,9 +1,24 @@
-from datetime import datetime
+from bs4 import BeautifulSoup
+import json
 
-# Get the current year and month in "YYYYMM" format
-current_date = datetime.now().strftime("%Y%m")
+html_content = """<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border-spacing: 0px; box-sizing: border-box;" id="table_0"><tbody><tr><td style="border-width: 1pt; border-style: solid; border-color: windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Eindbestemmeling</span></b></p></td><td style="border-top: 1pt solid windowtext; border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Neofas</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Aantal paletten</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">53</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Bruto gewicht</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">9.397 kg</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);" class="elementToProof"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Kantoor van uitgang</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">DE004101</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Nummerplaat Truck</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">ST0542AD + ST9573AC</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 60.55pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Container nummer + seal</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 60.55pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">n/a</span></b></p><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Gelieve deze gegevens te vermelden op het export document</span></b></p></td></tr></tbody></table>"""
 
-# Insert the dynamic part into the URL
-url = f"https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd{current_date}.xml"
+# Parse the HTML
+soup = BeautifulSoup(html_content, 'html.parser')
 
-print(url)
+# Get the first table
+first_table = soup.find('table')
+
+# Extract key-value pairs
+data = {}
+for row in first_table.find_all('tr'):
+    cells = row.find_all('td')
+    if len(cells) == 2:
+        # Extract text, strip unnecessary whitespaces
+        key = cells[0].get_text(strip=True)
+        value = cells[1].get_text(strip=True)
+        data[key] = value
+
+# Convert to JSON
+json_output = json.dumps(data, indent=4, ensure_ascii=False)
+print(json_output)

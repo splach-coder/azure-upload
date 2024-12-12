@@ -1,10 +1,23 @@
 coordinates = [
     #vat number
+    (14, 12, 158, 90),
+    #invoice date
+    (180, 105, 235, 137),
+    #invoice ref
+    (310, 105, 370, 137),
+    #shipt to
+    (40, 230, 260, 286),
+    #INCO
+    (15, 308, 205, 329),
+]
+
+coordinates_fr = [
+    #vat number
     (14, 12, 158, 73),
     #invoice date
-    (180, 105, 235, 115),
+    (180, 95, 240, 105),
     #invoice ref
-    (310, 97, 370, 106),
+    (280, 90, 370, 100),
     #shipt to
     (40, 230, 260, 286),
     #INCO
@@ -39,7 +52,12 @@ coordinates_it = [
 
 coordinates_lastpage = [
     #total invoice 
-    (80, 730, 130, 740),
+    (75, 713, 145, 740),
+]
+
+coordinates_lastpage_fr = [
+    #total invoice 
+    (54, 706, 156, 716),
 ]
 
 key_map = ["Vat", "Inv Date", "Inv Ref", "ship to", "Inco"]
@@ -54,6 +72,17 @@ inv_keyword_params = {
     "Total freight related surcharges for the item:": ((150, 0), 300),
     "Commodity Code of country of dispatch:": ((100, 0), 0),
     "Country of Origin: ": ((25, 0), 5)
+}
+
+inv_keyword_params_fr = {
+    "DN Nbr:": ((40, 0), 5),
+    "Lots:": ((100, 0), 0),
+    "Poids net: ": ((100, 0), 0),
+    "Prix tout compris": ((120, 0), 150),
+    "Total pour la ligne d'article": ((150, 10), 350),
+    "Total freight related surcharges for the item:": ((150, 0), 300),
+    "Code douanier du pays d'envoi:": ((100, 0), 0),
+    "Pays d'origine:": ((35, 0), 2)
 }
 
 inv_keyword_params_it = {

@@ -25,7 +25,7 @@ def detect_pdf_type(pdf_path):
         # Check for the keywords 'Packing List' and 'Invoice'
         if "Packing List" in first_page_text:
             return "Packing List"
-        elif "Invoice" in first_page_text or "Proforma Rechnung" in first_page_text or "Fattura proforma" in first_page_text:
+        elif "Invoice" in first_page_text or "Proforma Rechnung" in first_page_text or "Fattura proforma" in first_page_text or "Facture" in first_page_text:
             return "Invoice"
         else:
             return "I can't detect which PDF it is."
@@ -77,20 +77,20 @@ def clean_invoice_data (result, countries):
             if key == "Commodity Code of country of dispatch:" or key == "DN Nbr:" or key == "Batches:" or key == "Codice delle merci del paese di spedizione:":
                 obj[key] = clean_number(value)
                 
-            if key == "Country of Origin: ":
+            if key == "Country of Origin: " or key == "Pays d'origine:":
                 
                 country = value.split('\n')
-                for item in country:
-                    if len(item) <= 3:
-                        country.remove(item) 
-                country = ''.join(country)
+                if len(country) > 1:
+                    country = country[1]
+                else :
+                    country = value    
                 
                 #clean and update the country
                 obj[key] = get_abbreviation_by_country(countries, country)
-            elif key == "Net Weight:" or key == "Nettogewicht:" or key == "Peso netto":
+            elif key == "Net Weight:" or key == "Nettogewicht:" or key == "Peso netto" or key == "Poids net: ":
                 #clean and update the net weight
                 obj[key] = safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value)))
-            elif key == "All in Price" or key == "Pauschalpreis" or key == "Prezzo forfettario":
+            elif key == "All in Price" or key == "Prix tout compris" or key == "Pauschalpreis" or key == "Prezzo forfettario":
                 #clean and update the quantity
                 obj[key] = safe_int_conversion(safe_float_conversion(normalize_number_format(remove_non_numeric_chars(value))))
             elif key in [
@@ -101,7 +101,8 @@ def clean_invoice_data (result, countries):
                         "Total für die Position",
                         "Gesamttransportzuschläge für den Artikel:",
                         "Totale per la voce",
-                        "Spese di trasporto totali per la voce:"
+                        "Spese di trasporto totali per la voce:",
+                        "Total pour la ligne d'article"
                 ]:
                 
                 #clean and update the invoice
@@ -144,7 +145,7 @@ def clean_packing_list_data (result) :
     return  result           
 
 def vat_validation(vat_number):
-    pattern = re.compile(r'^[A-Z]{2}\s?\d{9,10}$')
+    pattern = re.compile(r'^[A-Z]{2}\s?\d{9,11}$')
     if pattern.match(vat_number):
         return vat_number
     return ""
@@ -160,7 +161,7 @@ def extract_vat_number(text):
         str: The extracted VAT number if found, otherwise an empty string.
     """
     # Define the VAT number pattern
-    pattern = r'\b[A-Z]{2}\s?\d{9,10}+\b'
+    pattern = r'\b[A-Z]{2}\s?\d{9,11}+\b'
     
     # Search for the VAT number in the text
     match = re.search(pattern, text)
@@ -277,7 +278,7 @@ def safe_float_conversion(value, default=0):
     
     
 def remove_g_from_date(date_str):
-    return date_str.replace("g", "").replace("\n", "")    
+    return date_str.replace("g", "").replace("\n", "").replace('Proforma In', '')   
 
 def clean_number(s):
     """
@@ -290,3 +291,9 @@ def clean_number(s):
         str: String with only numeric characters.
     """
     return re.sub(r'[^0-9.,]', '', s) 
+
+def extract_date(text):
+    # Regular expression to match the date format
+    date_pattern = r'\b\d{2}-[A-Z]{3}-\d{4}\b'
+    match = re.search(date_pattern, text)
+    return match.group(0) if match else None

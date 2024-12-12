@@ -218,7 +218,7 @@ def merge_incomplete_objects_invoice(page_data):
             if open_object:
                 # If the field is not already in the current_item, add it
                 current_item[field] = value
-                if (field == "Country of Origin: "):
+                if (field == "Country of Origin: " or field == "Pays d'origine:"):
                     open_object = False
                 
         if not open_object :
@@ -443,11 +443,12 @@ def extract_customs_code_from_text(text_obj, text):
     # Use regex to find text inside parentheses
     matches = re.findall(r'\((.*?)\)', text_value)
     
-    string_to_remove = ['Exporter Reference No', 'customs authorization No']
+    string_to_remove = ['Exporter Reference No', 'customs authorization No', "autorisation douanière n°"]
     
     if matches:
         matches = matches[0].lower().replace(string_to_remove[0].lower(), '')
         matches = matches.lower().replace(string_to_remove[1].lower(), '')
+        matches = matches.lower().replace(string_to_remove[2].lower(), '')
     
         # Return the matches found
         return matches.upper().replace(" ", "")

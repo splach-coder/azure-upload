@@ -128,8 +128,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
     '''------------------- merging the data to be one object --------------------------'''
     merged_data = merge_pdf_data(multiple_invoices)  
-    
-    logging.error(merged_data)
         
     # Proceed with data processing
     try:

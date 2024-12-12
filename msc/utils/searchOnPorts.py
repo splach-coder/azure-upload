@@ -27,10 +27,10 @@ def search_json(search_term):
     # Iterate through each entry in the data
     for entry in bigData:
         # Check if the search term is in any of the values (case insensitive)
-        if (search_term.lower() in str(entry['container']).lower() or
+        if (search_term.lower() in str(entry['container']).lower() and (
             search_term.lower() in str(entry['package']).lower() or
             search_term.lower() in str(entry['net']).lower() or
-            search_term.lower() in str(entry['gross']).lower()):
+            search_term.lower() in str(entry['gross']).lower())):
             results = entry
     
     return results

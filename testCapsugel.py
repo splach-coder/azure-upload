@@ -1,89 +1,209 @@
+data = {'Vissel': 'OOCL DENMARK', 'Port Of Loading': 'JAKARTA', 'ETA': '02/12/2024', 'LoydsNumber': '9922548', 'BL number': 'EGLV080400573384', 'Article': '186', 'Agent Code': 'ANFREI', 'Stay': '288746', 'Quay': 1700, 'Date': '30/09/2024', 'containers': [{'container': 'MAGU5288872', 'items': [{'desc': 'RATTAN', 'Item': '1', 'Packages': '202', 'Gross Weight': '1494.8'}]}]}
+
+import xml.etree.ElementTree as ET
 import json
+from msc.utils.searchOnPorts import search_json, search_ports
 
-inv_keyword_params = {"Country of Origin: " : ((25, 0), 5), "Commodity Code of country of dispatch:" : ((100, 0), 0), "Batches:" : ((100, 0), 0),  "Net Weight:" : ((100, 0), 0), "Total for the line item" : ((150, 10), 350), "Total freight related surcharges for the item:" : ((150, 0), 300), "All in Price" : ((120, 0), 150), "DN Nbr:" : ((40, 0), 5)}
-extracted_data = """[
-    {
-        "Country of Origin: ": "Belgium",
-        "Commodity Code of country of dispatch:": "96020000",
-        "Batches:": "3664095",
-        "Net Weight:": "1.579,872  KG",
-        "Total for the line item": "43.379,84 USD",
-        "All in Price": "16.457,000",
-        "DN Nbr:": "73064698"
-    },
-    {
-        "Batches:": "3663997",
-        "DN Nbr:": "73064699"
-    },
-    {
-        "Country of Origin: ": "Belgium",
-        "Commodity Code of country of dispatch:": "96020000",
-        "Batches:": "3665962",
-        "Net Weight:": "67,200  KG",
-        "Total for the line item": "1.834,00 USD",
-        "All in Price": "700,000",
-        "DN Nbr:": "73066653"
-    },
-    {
-        "Country of Origin: ": "Belgium",
-        "Commodity Code of country of dispatch:": "96020000",
-        "Batches:": "3665963",
-        "Net Weight:": "289,256  KG",
-        "Total for the line item": "9.971,72 USD",
-        "All in Price": "3.806,000",
-        "DN Nbr:": "73071795"
-    },
-    {
-        "Net Weight:": "161,040  KG",
-        "Total for the line item": "8.851,30 USD",
-        "All in Price": "3.355,000"
-    },
-    {
-        "Country of Origin: ": "Belgium",
-        "Commodity Code of country of dispatch:": "96020000"
-    }
-]"""
+def escape_xml_chars(text):
+    return (text.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace('"', "&quot;")
+                .replace("'", "&apos;"))
 
-def merge_incomplete_records_invoice(extracted_data, keyword_params):
-    """
-    Merges incomplete records with the next record that has the missing data.
 
-    Parameters:
-        extracted_data (list): The list of extracted JSON data.
-        keyword_params (dict): The keyword parameters to check completeness against.
+def safe_float_conversion(value):
+  try:
+    return float(value)
+  except ValueError:
+    return 0.0
+
+def transform_json(input_data):
+    transformed_data = []
+
+    currentIndex = 0
+    for container in input_data.get("containers", []):
         
-    Returns:
-        list: The corrected and merged data.
-    """
+        dispatch_country = search_ports(input_data.get("Port Of Loading"))
 
-    extracted_data = json.loads(extracted_data)
+        # Construct transformed data for each item in each container
+        transformed_data.append({
+            "Vissel": input_data.get("Vissel"),
+            "Container": container.get("container"),
+            "globalWeight": 0,
+            "globalWeight2": 0,
+            "globalPkgs": 0,
+            "Quay" : "",
+            "DispatchCountry" : dispatch_country,
+            "items" : []
+        })
 
-    # Iterate through the list of extracted records
-    merged_results = []
-    incomplete_record = None
+        if input_data.get("Quay") == 1742 : 
+            transformed_data[currentIndex]["Quay"] = "BEDELAZ03318001"
+        if input_data.get("Quay") == 1700 : 
+            transformed_data[currentIndex]["Quay"] = "BEKOUAZ03318024"
+        if input_data.get("Quay") == 913 : 
+            transformed_data[currentIndex]["Quay"] = "BEANRAZ03318002"
+        
+        data = search_json(container.get("container"))
+        
+        for item in container.get("items", []):
+            item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
+            packages = ''.join([i for i in item.get("Packages", "") if i.isdigit()])
+            description = item.get("desc", "")
+            gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
+            net_weight = data.get("net", 0)
 
-    # Loop through all extracted records
-    for record in extracted_data:
-        # Check if the record is incomplete
-        is_record_missing = len(record) < len(keyword_params)
+            transformed_data[currentIndex]["globalWeight"] += int(gross_weight)
+            transformed_data[currentIndex]["globalWeight2"] += safe_float_conversion(net_weight)
+            transformed_data[currentIndex]["globalPkgs"] += int(packages)
+            
+            correctIMAH = False
+            
+            def compare_weights(weight1, weight2):
+              abs_value = abs(weight1 - weight2)
+              return -2.5 <= abs_value and abs_value <= 2.5
+            
 
-        if is_record_missing:
-            if incomplete_record is None:
-                # Store the incomplete record for future merging
-                incomplete_record = record
-            else:
-                # Merge with the next incomplete record
-                incomplete_record.update(record)
-                merged_results.append(incomplete_record)
-                incomplete_record = None  # Reset for the next potential merge
-        else:
-            # Add the complete record directly to results
-            merged_results.append(record)    
+            
+            if data :
+              #check net
+              if compare_weights(safe_float_conversion(data.get("gross")), safe_float_conversion(gross_weight)) and int(data.get("package")) == int(packages) :
+                correctIMAH = True
 
-    # Handle any remaining incomplete record if at the end
-    if incomplete_record is not None:
-        merged_results.append(incomplete_record)
+            item = {
+                "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
+                "ArrivalNotice2": f"{input_data.get('Agent Code')}*{item_number}*{input_data.get('BL number')}",
+                "Container": container.get("container"),
+                "Packages": packages,
+                "Description": description,
+                "Gross Weight": gross_weight,
+                "Net Weight": net_weight if correctIMAH else 0
+            }
 
-    return merged_results
+            # Construct transformed data for each item in each container
+            transformed_data[currentIndex]["items"].append(item)
+        currentIndex += 1     
 
-print(json.dumps(merge_incomplete_records_invoice(extracted_data, inv_keyword_params), indent=4))
+    return json.dumps(transformed_data, indent=4)
+
+def json_to_xml(json_data):
+    json_data = json.loads(transform_json(json_data))
+
+    xml_files = []
+
+    for data in json_data:
+        xml_template = '''<?xml version="1.0" encoding="iso-8859-1"?>
+<NctsSswDeclaration xsi:noNamespaceSchemaLocation="NctsSsw.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <typeDeclaration>N</typeDeclaration>
+  <version>516.1.002</version>
+  <CustomsStreamliner>
+    <template>CASA</template>
+    <company>DKM</company>
+    <user>STAGIAIR2</user>
+    <printLocation>DEFAULT PRINTGROEP</printLocation>
+    <createDeclaration>F</createDeclaration>
+    <sendingMode>R</sendingMode>
+    <sendDeclaration>F</sendDeclaration>
+    <dossierNumberERP>{Container}</dossierNumberERP>
+    <transhipment>F</transhipment>
+    <isFerry>F</isFerry>
+    <Principal>
+      <id>CASAINTERN</id>
+      <ContactPerson>
+        <contactPersonCode>BCTN</contactPersonCode>
+      </ContactPerson>
+    </Principal>
+    <IntegratedLogisticStreamliner>
+      <createDossier>F</createDossier>
+      <IlsDossier>
+        <iLSCompany>DKM</iLSCompany>
+        <dossierId>71721</dossierId>
+      </IlsDossier>
+    </IntegratedLogisticStreamliner>
+    <ControlValues>
+      <ControlArticles>0</ControlArticles>
+      <ControlPackages>{globalPkgs}</ControlPackages>
+      <ControlGrossmass>{globalWeight}</ControlGrossmass>
+      <ControlNetmass>{globalWeight2}</ControlNetmass>
+    </ControlValues>
+  </CustomsStreamliner>
+  <MessageBody>
+  <GoodsDeclaration>
+    <Header>
+      <typeOfDeclaration>T1</typeOfDeclaration>
+      <countryOfDestinationCode>BE</countryOfDestinationCode>
+      <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
+      <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
+      <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
+      <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
+    </Header>
+  </GoodsDeclaration>
+    {GoodsItems}
+  </MessageBody>
+</NctsSswDeclaration>'''
+        formatted_goods_items = []
+        itemNumber = 1
+        for data_items in data['items'] :
+            goods_items = '''
+        <GoodsItems>
+            <itemNumber>{itemNmber}</itemNumber>
+            <goodsDescription language="EN">{Description}</goodsDescription>
+            <grossMass>{GrossWeight}</grossMass>
+            <netMass>{NetWeight}</netMass>
+            <PreviousAdministrativeReferences>
+                <previousDocumentType>126E</previousDocumentType>
+                <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
+                <complementOfInformation language="EN">{ArrivalNotice2}</complementOfInformation>
+            </PreviousAdministrativeReferences>
+            <ProducedDocuments>
+                <documentType>Y026</documentType>
+                <documentReference language="EN">BEAEOF0000064GDA</documentReference>
+                <complementOfInformation language="EN">.</complementOfInformation>
+            </ProducedDocuments>
+            <Containers>
+                <containerNumber>{Container}</containerNumber>
+            </Containers>
+            <Packages>
+                <marksAndNumbersOfPackages language="EN">KARTON</marksAndNumbersOfPackages>
+                <kindOfPackages>CT</kindOfPackages>
+                <numberOfPackages>{Packages}</numberOfPackages>
+                <numberOfPieces>0</numberOfPieces>
+            </Packages>
+        </GoodsItems>
+        '''
+          
+            # Format goods items with the given data
+            formatted_goods_items.append(goods_items.format(
+                Description=escape_xml_chars(data_items["Description"]), 
+                GrossWeight=data_items["Gross Weight"],
+                NetWeight=data_items["Net Weight"],
+                ArrivalNotice1=data_items["ArrivalNotice1"],
+                ArrivalNotice2=data_items["ArrivalNotice2"],
+                Container=data_items["Container"],
+                Packages=data_items["Packages"],
+                itemNmber=itemNumber,
+            ))
+
+            itemNumber += 1
+
+        # Join the goods items list into a single string
+        formatted_goods_items_str = "".join(formatted_goods_items)
+
+        # Fill the XML template with the formatted goods items
+        xml_filled = xml_template.format (
+            Container=data["Container"],
+            Vissel=data["Vissel"],
+            DispatchCountry=data["DispatchCountry"],
+            Quay=data["Quay"],
+            globalWeight=data["globalWeight"],
+            globalWeight2=data["globalWeight2"],
+            globalPkgs=data["globalPkgs"],
+            GoodsItems = formatted_goods_items_str
+        )
+
+        xml_files.append({"xml" : xml_filled, "container" : data["Container"]})
+
+    return xml_files
+
+print(json_to_xml(data))

@@ -7,12 +7,12 @@ import base64
 
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
-from capsugel.helpers.functions import extract_vat_number, print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number, vat_validation
+from capsugel.helpers.functions import extract_date, extract_vat_number, print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number, vat_validation
 from capsugel.service.extractors import another_version, extract_customs_code_from_pdf_invoice, extract_customs_code_from_text, extract_data_from_pdf, extract_exitoffices_from_body, extract_structured_data_from_pdf_invoice, extract_text_from_last_page, extract_text_from_first_page, find_page_in_invoice, merge_incomplete_objects_invoice, merge_incomplete_records_invoice
 
-from capsugel.config.coords import coordinates, coordinates_be, coordinates_it, coordinates_lastpage, key_map, inv_keyword_params, inv_keyword_params_it, inv_keyword_params_de, fallback_inv_keywords, packingList_keyword_params
+from capsugel.config.coords import coordinates, coordinates_be, coordinates_it, coordinates_fr, coordinates_lastpage, coordinates_lastpage_fr, key_map, inv_keyword_params, inv_keyword_params_it, inv_keyword_params_de, inv_keyword_params_fr, fallback_inv_keywords, packingList_keyword_params
 from capsugel.data.countries import countries
-from capsugel.data.keys import invoice_keys, packing_list_keys, invoice_keys_de, invoice_keys_it
+from capsugel.data.keys import invoice_keys, packing_list_keys, invoice_keys_de, invoice_keys_it, invoice_keys_fr
 
 from capsugel.service.language_detection import detect_language
 
@@ -110,12 +110,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     coors_for_invoice = coordinates_be
                 elif language == "it":
                     coors_for_invoice = coordinates_it
+                elif language == "fr":
+                    coors_for_invoice = coordinates_fr
                 else:
                     coors_for_invoice = coordinates 
                       
                 data_1 = json.loads(extract_text_from_first_page(uploaded_file_path, coors_for_invoice, key_map))
                 data_1["Vat"] = vat_validation(extract_vat_number(data_1["Vat"]))
                 data_1["Inv Date"] = remove_g_from_date(data_1["Inv Date"])
+                data_1["Inv Date"] = extract_date(data_1["Inv Date"])
                 data_1["Inv Ref"] = clean_number(data_1["Inv Ref"])
                 data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
                 
@@ -127,17 +130,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
                 
                 if len(data_1["Inco"]) == 1:
-                    data_1["Inco"].append("")   
-                
+                    data_1["Inco"].append("") 
+
                 if language == "de":
                     lst_keywords=["Rechnungsbetrag", "MwSt", "Fälliger Rechnungsbetrag", "* Letzte Seite"]
                 elif language == "it":
                     lst_keywords=["Totale fatture nette", "IVA totale", "Valore totale dovuto", "* Ultima pagina"]
+                elif language == "fr":
+                    lst_keywords=["Montant total de la facture", "Total TVA", "Montant total dû", "*Dernière page"]
                 else:
                     lst_keywords=["Invoice Total Net", "Total VAT", "Total Value Due", "* Last Page"]
+                    
+                coords = coordinates_lastpage_fr if language == "fr" else coordinates_lastpage     
 
                 page = find_page_in_invoice(uploaded_file_path, lst_keywords)
-                data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coordinates_lastpage, page[0], ["invoice"]))
+                data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coords, page[0], ["invoice"]))
+                data_2['invoice'] = data_2['invoice'].replace('Invoice Total', '').replace('\n', '').replace('al conditions', "").replace('Net', '').replace('of', '').strip()
                 data_2 = clean_invoice_total(data_2)
 
                 if language == "de":
@@ -150,6 +158,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     keyword_params={"Testo preferenziale:" : ((700, 30), -200)}
                     customs_code_key = "Testo preferenziale:"
                     keys_general_inv = invoice_keys_it 
+                elif language == "fr":
+                    items_inv_keywords_params = inv_keyword_params_fr
+                    keyword_params={"Texte Prefrential" : ((700, 30), -200)}
+                    customs_code_key = "Texte Prefrential"
+                    keys_general_inv = invoice_keys_fr
                 else :
                     items_inv_keywords_params = inv_keyword_params
                     keyword_params={"Preferential Text:" : ((700, 30), -200)}
@@ -158,8 +171,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     
                 data_3 = another_version(uploaded_file_path, items_inv_keywords_params, fallback_inv_keywords)
                 data_3 = merge_incomplete_objects_invoice(data_3)
-                data_3 = clean_invoice_data(data_3, countries)
+                data_3 = clean_invoice_data(data_3, countries) 
                 
+                #clean the unwanted stuff
+                data_3 = [item for item in data_3 if item]
                 
                 data_4 = extract_customs_code_from_pdf_invoice(uploaded_file_path, keyword_params)
                 #customs_code = "Bevorzugter Text:" if language == "de" else "Preferential Text:"

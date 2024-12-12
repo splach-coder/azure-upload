@@ -10,6 +10,12 @@ def escape_xml_chars(text):
                 .replace("'", "&apos;"))
 
 
+def safe_float_conversion(value):
+  try:
+    return float(value)
+  except ValueError:
+    return 0.0
+
 def transform_json(input_data):
     transformed_data = []
 
@@ -56,11 +62,7 @@ def transform_json(input_data):
               abs_value = abs(weight1 - weight2)
               return -2.5 <= abs_value and abs_value <= 2.5
             
-            def safe_float_conversion(value):
-              try:
-                return float(value)
-              except ValueError:
-                return 0.0
+
             
             if data :
               #check net

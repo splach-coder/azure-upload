@@ -66,7 +66,8 @@ def clean_invoice_data(invoice_data):
     # Iterate over each page's data
     for page_num, text in invoice_data.items():
         # Extract invoice number from the start of the page text
-        invoice_match = re.search(r":\s*(TM-\d{6})\s*No\.", text)  # Match TM-6numbers (e.g., TM-241841)
+        #invoice_match = re.search(r":\s*(?:TM|CS)-\d{6}\s*No\.", text)  # Match TM-6numbers (e.g., TM-241841)
+        invoice_match = re.search(r":\s*((TM|CS)-\d{6})\s*No\.", text) 
         
         if invoice_match:
             # Clean the invoice number
@@ -280,8 +281,15 @@ def extract_vissel_details(text):
         
     for i in range(len(first_line)- 1):
         if(first_line[i] == "VESSEL"):
-            vissel = first_line[i+1]
-            break
+            j = 1
+            vissel = first_line[i+j]
+            while True:
+                if len(vissel) <= 2:
+                    j += 1
+                    vissel = first_line[i+j]
+                else :
+                    break    
+            
         
     def clean_string(input_string):
         # Use regex to replace anything that is not a letter or space with an empty string

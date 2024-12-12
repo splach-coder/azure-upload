@@ -41,6 +41,20 @@ invoice_keys_it = {
     "Country of Origin: ": "Origin",
 }
 
+invoice_keys_fr = {
+    "Vat": "VAT",
+    "ship to": "Adress",
+    "invoice": "Invoice Total",
+    "DN Nbr:": "DN Number",
+    "Lots:": "Batch",
+    "Poids net: ": "Net",
+    "Prix tout compris": "Quantity",
+    "Total pour la ligne d'article": "Item value",
+    "Total freight related surcharges for the item:": "Freight Item",
+    "Code douanier du pays d'envoi:": "HS Code",
+    "Pays d'origine:": "Origin",
+}
+
 
 
 packing_list_keys = {
