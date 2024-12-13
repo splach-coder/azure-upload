@@ -126,6 +126,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 
                 if re.search(pattern, data_1["Inco"]):
                     data_1["Inco"] = re.sub(pattern, '', data_1["Inco"]).strip()
+                    data_1["Inco"] = data_1["Inco"].replace("Payment Terms:", "")
 
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
                 

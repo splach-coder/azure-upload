@@ -3,7 +3,7 @@ import logging
 import json
 
 from global_db.countries.functions import get_abbreviation_by_country
-from eternit.functions.functions import add_pieces_to_hs_and_totals, clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_container_number, extract_customs_code, extract_key_value_pairs_from_email, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion, update_items_with_hs_code
+from eternit.functions.functions import add_pieces_to_hs_and_totals, clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_customs_code, extract_data, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from eternit.excel.create_excel import write_to_excel
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -73,18 +73,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             else : 
                 total = [0.00, ""]
 
-            #clean and split the total value
-            freight = result.get("Freight", "")
-            freight = freight.split(' ', maxsplit=1) if freight else ""
-            if(len(freight) > 1):
-                valueF, currencyF = freight
-                valueF = normalize_numbers(valueF)
-                valueF = safe_float_conversion(valueF)
-                freight = [valueF, currencyF]
-                result["Freight"] = freight
-            else : 
-                freight = [0.00, ""]
-
             #update the numbers in the items
             items = result.get("Items", "")  
             for item in items :
@@ -136,20 +124,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         #Extract the body data
         cleaned_email_body_html = extract_and_clean(email)
         
-        #extracted customs code
-        if not merged_result["Customs Code"]:
-            customs_code = extract_customs_code(cleaned_email_body_html)
-            if customs_code:
-                merged_result["Customs Code"] = customs_code
-        
         #extract the table as json object
-        email_table = json.loads(extract_key_value_pairs_from_email(email))
+        email_table = extract_data(cleaned_email_body_html)
         
-        merged_result["Principal"] = email_table.get("Eindbestemmeling", "")
-        merged_result["container"] = extract_container_number(email_table.get("Container nummer + seal", ""))
-        merged_result["Exit office"] = email_table.get("Kantoor van uitgang", "")
-        merged_result["Truck"] = email_table.get("Nummerplaat Truck", "")
-        merged_result["Total pallets"] = safe_int_conversion(clean_number_from_chars(email_table.get("Aantal paletten", "")))
+        merged_result["Exit office"] = email_table.get("Exit office", "")
+        merged_result["Total pallets"] = email_table.get("collis", "")
+        #clean and split the total value
+        freight = email_table.get("freight", "")
+        if(len(freight) > 1):
+            valueF, currencyF = freight
+            freight = [valueF, currencyF]
+            merged_result["Freight"] = freight
+        else : 
+            merged_result["Freight"] = [0.00, ""]
         
         try:
             # Call writeExcel to generate the Excel file in memory

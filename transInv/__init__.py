@@ -4,7 +4,7 @@ import json
 import os
 import base64
 
-from export.helpers.functions import write_to_excel, extract_key_value_pairs, extract_text_from_pdf, modify_and_correct_amounts, extract_body_text, extract_office_value, updateBTWnumber, updateAdress
+from transInv.functions import extract_text_from_pdf
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -47,6 +47,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Save the uploaded file temporarily
     temp_dir = os.getenv('TEMP', '/tmp')
     uploaded_file_path = os.path.join(temp_dir, filename)
+    
     # Write the file to the temporary path
     try:
         with open(uploaded_file_path, 'wb') as temp_file:
@@ -65,9 +66,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Extract text from the PDF
         pdf_text = extract_text_from_pdf(uploaded_file_path)
         
-        isTransInv = True if "Proforma Invoice" in pdf_text else False
+        logging.error(pdf_text)
 
-        logging.info("Generated Excel file.")
+        isTransInv = True if "Proforma Invoice".lower() in pdf_text.lower() or "Proforma Facture".lower() in pdf_text.lower() or "Confirmation de commande".lower() in pdf_text.lower() else False
 
         try:
             # Prepare the JSON response

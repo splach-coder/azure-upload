@@ -5,6 +5,8 @@ import os
 import openpyxl
 import base64
 
+from bbl.helpers.functions import process_container_data, safe_float_conversion
+from bbl.helpers.sentEmail import json_to_xml
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -13,8 +15,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_json()
         base64_files = body.get('files', [])
-        email = body.get('body', [])
-        
     except Exception as e:
         return func.HttpResponse(
             body=json.dumps({"error": "Invalid request format"}),

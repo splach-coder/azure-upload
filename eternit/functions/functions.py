@@ -76,27 +76,31 @@ def extract_and_clean(html_content):
     
     return data    
 
-def extract_key_value_pairs_from_email(html_content):
-    # Parse the HTML
-    soup = BeautifulSoup(html_content, 'html.parser')
 
-    # Get the first table
-    first_table = soup.find('table')
-
-    # Extract key-value pairs
-    data = {}
-    for row in first_table.find_all('tr'):
-        cells = row.find_all('td')
-        if len(cells) == 2:
-            # Extract text, strip unnecessary whitespaces
-            key = cells[0].get_text(strip=True)
-            value = cells[1].get_text(strip=True)
-            data[key] = value
-
-    # Convert to JSON
-    json_output = json.dumps(data, indent=4, ensure_ascii=False)
+def extract_data(input_text):
+    # Define regex patterns
+    collis_pattern = r"Pal:\s*(\d+)"
+    freight_pattern = r"Transportprijs:\s*(\d+)\s+(\w+)"
+    exit_office_pattern = r"Poort of Exit\s+(\w+)"
     
-    return json_output
+    # Extract data using regex
+    collis_match = re.search(collis_pattern, input_text)
+    freight_match = re.search(freight_pattern, input_text)
+    exit_office_match = re.search(exit_office_pattern, input_text)
+    
+    # Parse the matches
+    collis = int(collis_match.group(1)) if collis_match else None
+    freight = [int(freight_match.group(1)), freight_match.group(2)] if freight_match else None
+    exit_office = exit_office_match.group(1).strip() if exit_office_match else None
+    
+    # Create the output JSON structure
+    output = {
+        "collis": collis,
+        "freight": freight,
+        "Exit office": exit_office
+    }
+    
+    return output
 
 def extract_container_number(text):
     """

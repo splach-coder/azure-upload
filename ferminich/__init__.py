@@ -100,7 +100,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         array_of_items = split_items_into_array(items_data)
         array_of_items = clean_array_from_unwanted_items(array_of_items)
 
-
         items_data = extract_fields_from_item_text(array_of_items)
         
         for item in items_data:

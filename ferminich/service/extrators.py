@@ -346,7 +346,7 @@ def extract_customs_code_from_text(text_obj, text="The exporter of the product")
     
 def clean_array_from_unwanted_items(arr):
     for item in arr:
-        if 'Correspondence to:' in item:
+        if 'Correspondence to:' in item or 'If the delivery address on our purchase order states' in item:
             arr.remove(item)
             
     return arr            
