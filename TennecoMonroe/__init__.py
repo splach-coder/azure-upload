@@ -12,6 +12,7 @@ from TennecoMonroe.excel.createExcel import write_to_excel
 from TennecoMonroe.config.coords import first_page_coords, totals_page_coords
 from TennecoMonroe.config.key_maps import first_page_key_map, totals_page_key_map, table_page_key_map
 from TennecoMonroe.data.countries import countries
+from global_db.extractors.functions import extract_Exitoffice
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -21,6 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         files = req_body.get('files', [])
+        subject = req_body.get('subject', [])
 
     except ValueError:
         logging.error("Invalid JSON in request body.")
@@ -106,6 +108,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         table_page = find_page_in_invoice(uploaded_file_path, keywords=["Customs Tariff", "Origin", "Net Weight", "Quantity", "Value Payable"])
         # Call the function
         result = extract_dynamic_text_from_pdf(uploaded_file_path, x_coords, y_range, table_page_key_map, table_page)
+        
         #cast it to json
         result = json.loads(result)
         #update countries to abbr
@@ -126,8 +129,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         '''------------------- append the data list to the global var --------------------------'''
         multiple_invoices.append(all_data)
         
+        '''------------------- Extract data from the subject line --------------------------'''
+        goods_location = extract_Exitoffice(subject)
+        
+        
     '''------------------- merging the data to be one object --------------------------'''
-    merged_data = merge_pdf_data(multiple_invoices)  
+    merged_data = merge_pdf_data(multiple_invoices)
+    
+      
+    '''------------------- Add the goods location to the object --------------------------'''
+    merged_data["Goods Location"] = goods_location if goods_location else ""
         
     # Proceed with data processing
     try:

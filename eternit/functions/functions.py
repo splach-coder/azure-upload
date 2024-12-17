@@ -63,7 +63,7 @@ def add_pieces_to_hs_and_totals(items, hs_and_totals):
     # Loop through items and sum pieces based on CA in TVA CT
     for item in items:
         for hs in hs_and_totals:
-            if hs["CA"] in item["TVA CT"]:
+            if hs.get("CA", "") in item.get("TVA CT", ""):
                 hs["Pieces"] += item.get("Pieces", 0)
                 hs["Price"] += item.get("Price", 0.00)
                 hs["Origin"] = item.get("Origin", "")
@@ -80,7 +80,7 @@ def extract_and_clean(html_content):
 def extract_data(input_text):
     # Define regex patterns
     collis_pattern = r"Pal:\s*(\d+)"
-    freight_pattern = r"Transportprijs:\s*(\d+)\s+(\w+)"
+    freight_pattern = r"Transportprijs:\s*(\d+)\s+(\w{3})"
     exit_office_pattern = r"Poort of Exit\s+(\w+)"
     
     # Extract data using regex

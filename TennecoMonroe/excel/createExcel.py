@@ -40,7 +40,7 @@ def write_to_excel(json_string):
         data.get('Customer NO', ''),
         data.get('Our ref', ''),
         data.get('Totals Freight Value', ''),
-        data.get('Parking trailer', ''),
+        data.get('Goods Location', ''),
         data.get('Export office', ''),
         data.get('Exit Port BE', ''),
         name if 'name' in locals() else '',  # Safely handle variables

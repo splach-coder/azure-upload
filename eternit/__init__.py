@@ -38,6 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         result[key] = value.get("content")      
 
             '''------------------   Clean the JSON response   ------------------ '''
+            
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
             
@@ -49,7 +50,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 gross_weight_total = normalize_numbers(gross_weight_total)
             result["Gross weight Total"] = safe_float_conversion(gross_weight_total)
             
-
             #clean the customs code
             customs_code = result.get("Customs Code", "") if result.get("Customs Code", "") else ""
             result["Customs Code"] = clean_customs_code(customs_code)
@@ -68,7 +68,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 value, currency = total
                 value = normalize_numbers(value)
                 value = safe_float_conversion(value)
-                total = [value, currency]
+                total = [round(value, 2), currency]
+                logging.error(total)
                 result["Total"] = total
             else : 
                 total = [0.00, ""]
@@ -76,18 +77,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #update the numbers in the items
             items = result.get("Items", "")  
             for item in items :
-                item["Pieces"] = safe_int_conversion(item.get("Pieces", 0))
-                Price = item.get("Price", 0.0)
+                item["Pieces"] = safe_int_conversion(item.get("Pieces", ""))
+                Price = item.get("Price", "")
                 Price = normalize_numbers(Price)
                 Price = safe_float_conversion(Price)
                 item["Price"] = Price 
-
             
             #update items with HS code based on TVA CT and CA match
             items = result.get("Items", "")
             hs_and_totals = result.get("HSandTotals")
             result["HSandTotals"] = add_pieces_to_hs_and_totals(items, hs_and_totals)
-
 
             #update the numbers in the HSandTotals
             items = result.get("HSandTotals", "")  
@@ -133,10 +132,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         freight = email_table.get("freight", "")
         if(len(freight) > 1):
             valueF, currencyF = freight
-            freight = [valueF, currencyF]
+            freight = [valueF, currencyF.upper()]
             merged_result["Freight"] = freight
         else : 
             merged_result["Freight"] = [0.00, ""]
+            
+        logging.error(json.dumps(merged_result, indent=4))    
         
         try:
             # Call writeExcel to generate the Excel file in memory

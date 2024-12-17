@@ -864,6 +864,10 @@ countries = [
         "abbreviation": "TH"
     },
     {
+        "country": "Taiwan",
+        "abbreviation": "TW"
+    },
+    {
         "country": "The Democratic Republic of Congo",
         "abbreviation": "CD"
     },
