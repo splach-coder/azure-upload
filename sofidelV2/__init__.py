@@ -2,7 +2,7 @@ import azure.functions as func
 import logging
 import json
 
-from eternit.excel.create_excel import write_to_excel
+from sofidelV2.excel.create_excel import write_to_excel
 from global_db.functions.numbers.functions import clean_customs_code, clean_incoterm, clean_number_from_chars, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
 from sofidelV2.utils.functions import handle_body_request, join_cmr_invoice_objects, join_cmrs, join_invoices, join_items
@@ -93,7 +93,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 fields = page["fields"]
                 for key, value in fields.items():
                     if key in ["items_collis", "items", "Totals", "Totals_Collis"]: 
-                        arr = value.get("valueArray")
+                        arr = value.get("valueArray", [])
                         result[key] = []
                         for item in arr:
                             valueObject = item.get("valueObject")
@@ -135,7 +135,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             items = result.get("items", "")  
             for item in items :
                 item["Pieces"] = safe_int_conversion(item.get("Pieces", 0))
-                Price = item.get("Gross Weight", 0.0)
+                Price = item.get("Gross Weight", "")
                 Price = normalize_number_format(Price)
                 Price = safe_float_conversion(Price)
                 item["Gross Weight"] = Price 
@@ -160,16 +160,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if json_result["Exit Port BE"].lower() == "Zeebrugge".lower() :
             json_result["Export office"] = "BEZEE216010"
         else :
-            json_result["Export office"] = "BEHSS216000"
-            
-        logging.error(json.dumps(json_result, indent=4))    
+            json_result["Export office"] = "BEHSS216000"     
         
         try:
              # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(json_result)
             logging.info("Generated Excel file.")
             
-            reference = json_result.get("Reference", "") + ' ' + json_result.get("Inv Reference", "")
+            reference = f'{json_result.get("Reference", "")}-{json_result.get("Inv Reference", "")}'
 
             # Set response headers for the Excel file download
             headers = {

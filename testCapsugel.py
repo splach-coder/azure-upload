@@ -11,7 +11,6 @@ def escape_xml_chars(text):
                 .replace('"', "&quot;")
                 .replace("'", "&apos;"))
 
-
 def safe_float_conversion(value):
   try:
     return float(value)

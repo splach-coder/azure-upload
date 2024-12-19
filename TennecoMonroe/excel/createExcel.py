@@ -30,19 +30,21 @@ def write_to_excel(json_string):
         "Rex/Other"
     ]
 
-    name, street, city, code_postal, country = data['Address']
-
-    term, place = data.get('Terms', ('', ''))
+    if data.get('Address', ""):
+        name, street, city, code_postal, country = data.get('Address', "")
+        
+    if data.get('Terms', ""):
+        term, place = data.get('Terms', ('', ''))
 
     values1 = [
         data.get('Vat', ''),
         data.get('Principal', ''),
-        data.get('Customer NO', ''),
+        data.get('Inv No', ''),
         data.get('Our ref', ''),
-        data.get('Totals Freight Value', ''),
+        data.get('Freight', ''),
         data.get('Goods Location', ''),
         data.get('Export office', ''),
-        data.get('Exit Port BE', ''),
+        data.get('Exit office', ''),
         name if 'name' in locals() else '',  # Safely handle variables
         street if 'street' in locals() else '',
         code_postal if 'code_postal' in locals() else '',

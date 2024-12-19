@@ -1,24 +1,52 @@
 from bs4 import BeautifulSoup
-import json
+import re
 
-html_content = """<table cellspacing="0" cellpadding="0" style="border-collapse: collapse; border-spacing: 0px; box-sizing: border-box;" id="table_0"><tbody><tr><td style="border-width: 1pt; border-style: solid; border-color: windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Eindbestemmeling</span></b></p></td><td style="border-top: 1pt solid windowtext; border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Neofas</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Aantal paletten</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">53</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Bruto gewicht</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">9.397 kg</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);" class="elementToProof"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Kantoor van uitgang</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">DE004101</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 14.95pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Nummerplaat Truck</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 14.95pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">ST0542AD + ST9573AC</span></b></p></td></tr><tr><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; border-left: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 170.35pt; height: 60.55pt;"><p style="text-align: right; margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Container nummer + seal</span></b></p></td><td style="border-right: 1pt solid windowtext; border-bottom: 1pt solid windowtext; padding: 0cm 5.4pt; vertical-align: top; width: 164.1pt; height: 60.55pt;"><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">n/a</span></b></p><p style="margin: 0cm; font-family: Calibri, sans-serif; font-size: 11pt; color: rgb(0, 176, 240);"><b><span style="color: rgb(0, 0, 0); font-weight: normal;">Gelieve deze gegevens te vermelden op het export document</span></b></p></td></tr></tbody></table>"""
+def extract_freight_and_exit_office_from_html(html):
+    # Parse the HTML with BeautifulSoup
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    # Extract all text from the HTML
+    text = soup.get_text(separator=' ')
+    
+    # Regex for freight (amount followed by €)
+    freight_pattern = r"(\d+(?:[.,]\d+)?\s?€)"
+    
+    # Regex for exit office (2 letters followed by 6 digits)
+    exit_office_pattern = r"\b[A-Z]{2}\d{6}\b"
+    
+    # Search for freight
+    freight_match = re.search(freight_pattern, text)
+    freight = freight_match.group(1) if freight_match else None
+    
+    # Search for exit office
+    exit_office_match = re.search(exit_office_pattern, text)
+    exit_office = exit_office_match.group(0) if exit_office_match else None
+    
+    return {
+        "freight": freight,
+        "exit_office": exit_office
+    }
 
-# Parse the HTML
-soup = BeautifulSoup(html_content, 'html.parser')
+# Example usage
+html_email = """
+<html>
+<head></head>
+<body>
+<p>Hallo,</p>
+<p>Kan u een exportdocument opmaken voor de bijgevoegde factuur?</p>
+<p>Export via: <b>SE060340</b></p>
+<p>Container#:</p>
+<p>Transportkost tot EU-grens: <span>250€</span></p>
+<p>Tenneco Warehouse will be closed for Christmas holidays from 23/12/2024 till 01/01/2025.</p>
+<p>Kind regards - Met vriendelijke groeten</p>
+<p>Diane Claes</p>
+<p>Logistics Specialist</p>
+<p>Tel: 0032/11703457</p>
+<p>Tel counter : 0032/11 703177</p>
+<p>diane.claes@driv.com</p>
+</body>
+</html>
+"""
 
-# Get the first table
-first_table = soup.find('table')
-
-# Extract key-value pairs
-data = {}
-for row in first_table.find_all('tr'):
-    cells = row.find_all('td')
-    if len(cells) == 2:
-        # Extract text, strip unnecessary whitespaces
-        key = cells[0].get_text(strip=True)
-        value = cells[1].get_text(strip=True)
-        data[key] = value
-
-# Convert to JSON
-json_output = json.dumps(data, indent=4, ensure_ascii=False)
-print(json_output)
+result = extract_freight_and_exit_office_from_html(html_email)
+print(result)

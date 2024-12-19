@@ -1,6 +1,8 @@
 import logging
 import re
 
+import fitz
+
 def clean_VAT(VAT_number):
     pattern = r'\w{2}\s?\d{10}'
     match = re.search(pattern, VAT_number)
@@ -22,7 +24,13 @@ def is_valid_number(s):
 
 def abbr_countries_in_items(result, countries):
     for item in result:
-        item["Origin"] = get_abbreviation_by_country(countries, item["Origin"])
+        origin = item.get("Origin", "").split('\n')
+        if len(origin) > 1:
+            for itm in origin:
+                if len(itm) < 2:
+                    origin.remove(itm)
+        origin = ''.join(origin)            
+        item["Origin"] = get_abbreviation_by_country(countries, origin)
     return result
 
 def normalize_numbers(s):
@@ -32,13 +40,13 @@ def safe_float_conversion(s):
     try:
         return float(s)
     except ValueError:
-        return s
+        return 0.0
 
 def safe_int_conversion(s):
     try:
         return int(s)
     except ValueError:
-        return s
+        return 0
 
 def normalize_the_items_numbers(result):
     for item in result:
@@ -83,7 +91,8 @@ def merge_pdf_data(pdf_data_list):
                 else:
                     merged_data[key] = ['', '', '', '', '']  # Assign an empty list if lengths are not the same
             elif isinstance(value, (int, float)):  # Handle numerical fields
-                merged_data[key] += value
+                if value:
+                    merged_data[key] += value
             else:  # Handle strings or other types
                 if merged_data[key] != value:
                     merged_data[key] = f"{merged_data[key]}+{value}" if merged_data[key] else value
@@ -104,3 +113,23 @@ def handle_terms_into_arr(s):
         return s
     
     return arr
+
+def check_invoice_in_pdf(pdf_path):
+    try:
+        # Open the PDF file
+        document = fitz.open(pdf_path)
+        
+        # Check if the document has at least one page
+        if document.page_count > 0:
+            # Extract text from the first page
+            first_page = document[0]
+            text = first_page.get_text()
+            
+            # Check if "INVOICE" is in the extracted text
+            if "INVOICE" in text.upper() and "(original)".upper() in text.upper() :  # Convert to uppercase for case-insensitive comparison
+                return True
+        
+        return False  # Return False if "INVOICE" is not found or if there are no pages
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False  # Return False in case of any error

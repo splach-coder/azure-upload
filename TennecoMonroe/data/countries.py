@@ -940,6 +940,10 @@ countries = [
         "abbreviation": "US"
     },
     {
+        "country": "USA",
+        "abbreviation": "US"
+    },
+    {
         "country": "United States Minor Outlying Islands",
         "abbreviation": "UM"
     },

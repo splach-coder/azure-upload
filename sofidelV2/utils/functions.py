@@ -1,7 +1,10 @@
+import logging
 import re
 from bs4 import BeautifulSoup
 
 def join_items(data):
+    
+    logging.error(data)
     # Create a dictionary to store the joined items
     joined_items = {}
 
@@ -76,13 +79,13 @@ def join_cmr_invoice_objects(inv, cmr):
 
     # Add items from the invoice to the joined_items dictionary
     for item in inv['Items']:
-        product_code = item['Material Code']
+        product_code = item.get('Material Code', "")
         # Store the item in the joined_items dictionary
         joined_items[product_code] = item
 
     # Add items from the CMR to the joined_items dictionary
     for item in cmr['items']:
-        product_code = item['Product Code']
+        product_code = item.get('Product Code', "")
         # If the product code already exists, update it with CMR data
         if product_code in joined_items:
             # Overwrite the existing item with the CMR item

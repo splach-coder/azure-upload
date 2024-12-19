@@ -1,6 +1,8 @@
 from io import BytesIO
 import openpyxl
 
+from sofidelV2.utils.number_handlers import safe_float_conversion
+
 def write_to_excel(json_string):
     # Create a new workbook and select the active sheet
     wb = openpyxl.Workbook()
@@ -34,21 +36,20 @@ def write_to_excel(json_string):
 
     term, place = data.get('Incoterm', ['', ''])
     
-    Vat = data.get('Vat', '') if data.get('Vat', '') else data.get('Eori number', '')
+    Total = data.get('Total', 0.00)
     
-    Total, Currency = data.get('Total', '')
-    
-    freight =  data.get('Freight', '')[0] if data.get('Freight', '') else 0.00
+    Freight = data.get('Freight cost', 0.00)
+    Freight = safe_float_conversion(Freight)
     
     values1 = [
-        Vat,
+        data.get('Vat Number', ''),
         data.get('Principal', ''),
-        data.get('Bon de livraison', ''),
+        data.get('Reference', ''),
         data.get('Other Ref', ''),
-        freight,
+        Freight,
         data.get('Parking trailer', ''),
+        data.get('Exit Port BE', ''),
         data.get('Export office', ''),
-        data.get('Exit office', ''),
         name if 'name' in locals() else '',  # Safely handle variables
         street if 'street' in locals() else '',
         code_postal if 'code_postal' in locals() else '',
@@ -57,8 +58,8 @@ def write_to_excel(json_string):
         term if 'term' in locals() else '',
         place if 'place' in locals() else '',
         data.get('container', ''),
-        data.get('Truck', ''),
-        data.get("Customs Code", '')
+        data.get('Wagon', ''),
+        data.get("Customs code", '')
     ]
 
     header2 = [
@@ -83,7 +84,7 @@ def write_to_excel(json_string):
     
     for key, value in data.items():
         # Handle array values
-        if key == "HSandTotals":
+        if key == "Items":
             for obj in value:
                 mini_row = []
                 
@@ -91,22 +92,20 @@ def write_to_excel(json_string):
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
                         mini_row.append(obj.get("HS code", ''))
-                    elif ordered_key == "Collis":
-                        mini_row.append(obj.get("Collis", ''))
                     elif ordered_key == "Gross":
                         mini_row.append(obj.get("Gross Weight", ''))
                     elif ordered_key == "Net":
-                        mini_row.append(obj.get("Net weight", ''))
+                        mini_row.append(obj.get("Net Weight", ''))
                     elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("Net Value", ""))
+                        mini_row.append(obj.get("Amount", ""))
                     elif ordered_key == "Currency":
-                        mini_row.append(Currency)
+                        mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":
-                        mini_row.append(obj.get("Inv Reference", ''))
+                        mini_row.append(data.get("Inv Reference", ''))
                     elif ordered_key == "Invoice date":
                         mini_row.append(data.get("Inv Date", ''))
                     elif ordered_key == "Rex/other":
-                        mini_row.append(obj.get("Customs Code", ''))
+                        mini_row.append(data.get("Customs code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -124,16 +123,16 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    ws.append([Total])
+    ws.append([round(Total)])
     ws.append(row_empty)
 
     ws.append(["Total Collis"])
-    total_pallets = data.get('Total pallets', 0)
+    total_pallets = data.get('Pallets', 0)
     ws.append([total_pallets])
     ws.append(row_empty)
 
     ws.append(["Total Gross"])
-    total_weight = data.get('Gross weight Total', 0)
+    total_weight = data.get('Gross weight total', 0)
     ws.append([total_weight])
     ws.append(row_empty)
 

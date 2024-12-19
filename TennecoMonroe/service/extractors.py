@@ -1,6 +1,8 @@
 import logging
+from bs4 import BeautifulSoup
 import fitz
 import json
+import re
 
 from TennecoMonroe.helpers.functions import is_valid_number
 
@@ -74,9 +76,7 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
         for x in x_coords:
             rect = fitz.Rect(x[0], current_y, x[1], current_y + row_height)
             text = first_page.get_text("text", clip=rect).strip()
-            row_data.append(text)  
-        
-        logging.error(f"the line number : {row_data}")       
+            row_data.append(text)     
 
         # Check if the row meets the criteria
         if (
@@ -127,4 +127,49 @@ def find_customs_authorisation_coords(pdf_path, page_number):
             return None
     else:
         return ""
+    
+def extract_freight_and_exit_office_from_html(html):
+    # Parse the HTML with BeautifulSoup
+    soup = BeautifulSoup(html, 'html.parser')
 
+    # Extract the body tag content specifically
+    body_content = soup.find('body')
+    if not body_content:
+        return {"error": "Body not found"}
+
+    # Get text from the email body
+    body_text = body_content.get_text(separator=' ').strip()
+
+    # Regex for freight (only the number)
+    freight_pattern = r"(\d+(?:[.,]\d+)?)\s?€"
+    freight_pattern2 = r"(\d+(?:[.,]\d+)?)\s?EUR"
+    
+    # Regex for exit office (2 letters followed by 6 digits)
+    exit_office_pattern = r"\b[A-Z]{2}\d{6}\b"
+    
+    # Regex for container (4 letters followed by 7 digits)
+    container_pattern = r"\b\s*[A-Z]{4}\s*\d{7}\s*\b"
+    
+    # Search for freight
+    freight_match = re.search(freight_pattern, body_text)
+    freight = float(freight_match.group(1).replace(',', '.')) if freight_match else None
+
+    # Search for freight
+    freight_match2 = re.search(freight_pattern2, body_text)
+    freight2 = float(freight_match2.group(1).replace(',', '.')) if freight_match2 else None
+    
+    # Search for exit office
+    exit_office_match = re.search(exit_office_pattern, body_text)
+    exit_office = exit_office_match.group(0) if exit_office_match else None
+    
+    # Search for exit office
+    container_match = re.search(container_pattern, body_text)
+    container = container_match.group(0) if container_match else ""
+    
+    logging.error(container)
+
+    return {
+        "freight": freight if freight else freight2,
+        "exit_office": exit_office,
+        "Container": container.replace(" ", "")
+    }

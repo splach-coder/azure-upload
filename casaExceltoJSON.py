@@ -1,6 +1,10 @@
 import openpyxl
 import json
 
+'''pip install azure-ai-formrecognizer
+pip install azure-identity azure-keyvault-secrets'''
+
+
 def excel_to_json(file_path, json_file_path):
     try:
         # Load the workbook and select the active sheet
