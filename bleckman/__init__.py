@@ -10,8 +10,8 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient # Use this API key to call Azure Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 
-from bleckman.helpers.functions import process_invoice_data
-from bleckman.service.extractors import extract_text_from_first_page
+from bleckman.helpers.functions import process_arrays, process_invoice_data
+from bleckman.service.extractors import extract_text_from_first_page, extract_text_from_first_page_arrs
 from bleckman.config.keywords import key_map, coordinates
 from bleckman.excel.excel import create_excel
 
@@ -123,6 +123,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             logging.info(f"Processing Voorblad PDF: {file_name}")
                             # Process Voorblad PDFs (custom logic here)
                             voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
+                            voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
+                            collis, grosses = voorblad_data_items
+                            collis, grosses = process_arrays(collis, grosses)
                             
                         else:
                             if "to" in file_name.lower():
@@ -161,7 +164,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             invoices_data_and_type = {
                 **voorblad_data,
                 "invoice_type": invoice_type,
-                "data": invoices_data
+                "data": invoices_data,
+                "collis": sum(collis),
+                "grosses": sum(grosses),
             }              
                         
         except zipfile.BadZipFile as e:

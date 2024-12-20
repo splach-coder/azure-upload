@@ -1,7 +1,7 @@
 from datetime import datetime
 import fitz
 import re
-from typing import Any, List, Dict, Union
+from typing import Any, List, Dict, Tuple, Union
 from global_db.countries.functions import get_abbreviation_by_country
 
 def detect_pdf_type(pdf_path):
@@ -48,6 +48,9 @@ def safe_float_conversion(value: str) -> float:
         return float(value)
     except (ValueError, TypeError):
         return 0.0
+    
+def normalize_number(value: str) -> str:
+    return value.replace(" ", "").replace(".", "").replace(",", ".")    
 
 def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, Union[str, List]]:
     # Initialize variables for merging
@@ -80,13 +83,13 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         merged_invoices.append(item['Inv Reference'])
 
         # Append total to totals array
-        merged_totals.append(safe_float_conversion(item.get('Total', "0")))
+        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "")))
 
         # Sum total pallets
-        merged_total_pallets += safe_int_conversion(item.get('Total Pallets', "0"))
+        merged_total_pallets += safe_int_conversion(item.get('Total Pallets', 0))
 
         # Sum total amount
-        merged_total += safe_float_conversion(item.get('Total', "0"))
+        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", ""))
 
         # Process items
         for item_data in item.get('Items', []):
@@ -126,8 +129,34 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         "Currency": currency_symbol,
         "Instruction 1": instruction_1,
         "Invoices": merged_invoices,
-        "Totals": merged_totals
+        "Totals": merged_totals,
+        "grosses": input_data.get("grosses", ""),
+        "collis": input_data.get("collis", ""),
     }
 
     return output_data
+
+
+
+
+# Function to test
+def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float], List[float]]:
+    collis = [value for value in collis if value]
+    gross = [value for value in gross if value]
+
+    if len(collis) != len(gross):
+        raise ValueError("Collis and Gross arrays are not the same length after removing empty items.")
+
+    if len(collis) == 3:
+        if collis[0] + collis[1] == collis[2]:
+            collis.pop(2)
+        if gross[0] + gross[1] == gross[2]:
+            gross.pop(2)
+    elif len(collis) == 5:
+        if collis[0] + collis[1] == collis[4]:
+            collis.pop(4)
+        if gross[0] + gross[1] == gross[4]:
+            gross.pop(4)
+
+    return collis, gross
    

@@ -1,52 +1,76 @@
-from bs4 import BeautifulSoup
-import re
+import unittest
+from typing import List, Tuple
 
-def extract_freight_and_exit_office_from_html(html):
-    # Parse the HTML with BeautifulSoup
-    soup = BeautifulSoup(html, 'html.parser')
-    
-    # Extract all text from the HTML
-    text = soup.get_text(separator=' ')
-    
-    # Regex for freight (amount followed by €)
-    freight_pattern = r"(\d+(?:[.,]\d+)?\s?€)"
-    
-    # Regex for exit office (2 letters followed by 6 digits)
-    exit_office_pattern = r"\b[A-Z]{2}\d{6}\b"
-    
-    # Search for freight
-    freight_match = re.search(freight_pattern, text)
-    freight = freight_match.group(1) if freight_match else None
-    
-    # Search for exit office
-    exit_office_match = re.search(exit_office_pattern, text)
-    exit_office = exit_office_match.group(0) if exit_office_match else None
-    
-    return {
-        "freight": freight,
-        "exit_office": exit_office
-    }
+# Function to test
+def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float], List[float]]:
+    collis = [value for value in collis if value]
+    gross = [value for value in gross if value]
 
-# Example usage
-html_email = """
-<html>
-<head></head>
-<body>
-<p>Hallo,</p>
-<p>Kan u een exportdocument opmaken voor de bijgevoegde factuur?</p>
-<p>Export via: <b>SE060340</b></p>
-<p>Container#:</p>
-<p>Transportkost tot EU-grens: <span>250€</span></p>
-<p>Tenneco Warehouse will be closed for Christmas holidays from 23/12/2024 till 01/01/2025.</p>
-<p>Kind regards - Met vriendelijke groeten</p>
-<p>Diane Claes</p>
-<p>Logistics Specialist</p>
-<p>Tel: 0032/11703457</p>
-<p>Tel counter : 0032/11 703177</p>
-<p>diane.claes@driv.com</p>
-</body>
-</html>
-"""
+    if len(collis) != len(gross):
+        raise ValueError("Collis and Gross arrays are not the same length after removing empty items.")
 
-result = extract_freight_and_exit_office_from_html(html_email)
-print(result)
+    if len(collis) == 3:
+        if collis[0] + collis[1] == collis[2]:
+            collis.pop(2)
+        if gross[0] + gross[1] == gross[2]:
+            gross.pop(2)
+    elif len(collis) == 5:
+        if collis[0] + collis[1] == collis[4]:
+            collis.pop(4)
+        if gross[0] + gross[1] == gross[4]:
+            gross.pop(4)
+
+    return collis, gross
+
+class TestProcessArrays(unittest.TestCase):
+
+    def test_one_item(self):
+        collis = [10.0, 0, 0, 0, 0]
+        gross = [15.0, 0, 0, 0, 0]
+        expected_collis = [10.0]
+        expected_gross = [15.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_three_items_sum_match(self):
+        collis = [10.0, 20.0, 30.0, 0, 0]
+        gross = [15.0, 25.0, 40.0, 0, 0]
+        expected_collis = [10.0, 20.0]
+        expected_gross = [15.0, 25.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_three_items_no_sum_match(self):
+        collis = [10.0, 20.0, 35.0, 0, 0]
+        gross = [15.0, 25.0, 50.0, 0, 0]
+        expected_collis = [10.0, 20.0, 35.0]
+        expected_gross = [15.0, 25.0, 50.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_five_items_sum_match(self):
+        collis = [10.0, 20.0, 15.0, 25.0, 30.0]
+        gross = [15.0, 25.0, 20.0, 30.0, 40.0]
+        expected_collis = [10.0, 20.0, 15.0, 25.0]
+        expected_gross = [15.0, 25.0, 20.0, 30.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_five_items_no_sum_match(self):
+        collis = [10.0, 20.0, 15.0, 25.0, 50.0]
+        gross = [15.0, 25.0, 20.0, 30.0, 60.0]
+        expected_collis = [10.0, 20.0, 15.0, 25.0, 50.0]
+        expected_gross = [15.0, 25.0, 20.0, 30.0, 60.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_empty_items_removed(self):
+        collis = [0, 10.0, 0, 20.0, 0]
+        gross = [0, 15.0, 0, 25.0, 0]
+        expected_collis = [10.0, 20.0]
+        expected_gross = [15.0, 25.0]
+        self.assertEqual(process_arrays(collis, gross), (expected_collis, expected_gross))
+
+    def test_mismatched_lengths(self):
+        collis = [10.0, 20.0, 30.0, 0, 0]
+        gross = [15.0, 25.0, 40.0, 0]
+        with self.assertRaises(ValueError):
+            process_arrays(collis, gross)
+
+if __name__ == "__main__":
+    unittest.main()
