@@ -1,5 +1,8 @@
 from datetime import datetime
 import fitz
+import re
+from typing import Any, List, Dict, Union
+from global_db.countries.functions import get_abbreviation_by_country
 
 def detect_pdf_type(pdf_path):
     try:
@@ -27,7 +30,6 @@ def detect_pdf_type(pdf_path):
     except Exception as e:
         return f"An error occurred: {str(e)}"
     
-
 def transform_date(date_str):
     # Parse the date string
     parsed_date = datetime.strptime(date_str, '%d-%b-%Y')
@@ -35,3 +37,97 @@ def transform_date(date_str):
     formatted_date = parsed_date.strftime('%d.%m.%Y')
     return formatted_date
 
+def safe_int_conversion(value: str) -> int:
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
+def safe_float_conversion(value: str) -> float:
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.0
+
+def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, Union[str, List]]:
+    # Initialize variables for merging
+    merged_reference = ""
+    merged_total_pallets = 0
+    merged_total = 0.0
+    merged_items = []
+    merged_invoices = []
+    merged_totals = []
+
+    # Extract general fields from the first data item
+    first_data_item = input_data['data'][0]
+    vat_number = first_data_item.get('Vat Number', "")
+    inv_date = first_data_item.get('Inv Date', "")
+    address = first_data_item.get('Address', [])
+    incoterm = first_data_item.get('Incoterm', "")
+
+    # Remove special characters from Incoterm and split
+    cleaned_incoterm = re.sub(r'[+,.]', '', incoterm).split(' ', maxsplit=1)
+
+    # Process and merge all data items
+    for item in input_data['data']:
+        # Merge references
+        if merged_reference:
+            merged_reference += f" + {item['Inv Reference']}"
+        else:
+            merged_reference = item['Inv Reference']
+
+        # Append to invoices array
+        merged_invoices.append(item['Inv Reference'])
+
+        # Append total to totals array
+        merged_totals.append(safe_float_conversion(item.get('Total', "0")))
+
+        # Sum total pallets
+        merged_total_pallets += safe_int_conversion(item.get('Total Pallets', "0"))
+
+        # Sum total amount
+        merged_total += safe_float_conversion(item.get('Total', "0"))
+
+        # Process items
+        for item_data in item.get('Items', []):
+            cleaned_hs_code = re.sub(r"[^\w]", "", item_data.get("HS code", "").strip())
+            price_without_currency = re.sub(r"[^\d.]", "", item_data.get("Price", ""))
+            item_entry = {
+                "HS code": cleaned_hs_code,
+                "Origin": get_abbreviation_by_country(item_data.get("Origin", "")),
+                "Pieces": safe_int_conversion(item_data.get("Pieces", 0)),
+                "Price": safe_float_conversion(price_without_currency)
+            }
+            merged_items.append(item_entry)
+
+    # Add currency and instructions based on invoice type
+    invoice_type = input_data.get('invoice_type', "").lower()
+    currency_symbol = ""
+    instruction_1 = ""
+    if invoice_type == "euro":
+        currency_symbol = "€"
+        instruction_1 = "Anine Bing V2 €"
+    elif invoice_type == "dollar":
+        currency_symbol = "$"
+        instruction_1 = "Anine Bing V2 $"
+
+    # Construct the final output JSON
+    output_data = {
+        "Exit office": input_data.get("Exit office", ""),
+        "Reference": input_data.get("Reference", ""),
+        "inv Reference": merged_reference,
+        "Vat Number": vat_number,
+        "Inv Date": inv_date,
+        "Address": address,
+        "Incoterm": cleaned_incoterm,
+        "Total Pallets": merged_total_pallets,
+        "Total": merged_total,
+        "Items": merged_items,
+        "Currency": currency_symbol,
+        "Instruction 1": instruction_1,
+        "Invoices": merged_invoices,
+        "Totals": merged_totals
+    }
+
+    return output_data
+   

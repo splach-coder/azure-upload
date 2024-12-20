@@ -4,7 +4,7 @@ import json
 import os
 import base64
 
-from transInv.functions import extract_text_from_pdf
+from TennecoINV.functions import extract_text_from_pdf
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -66,8 +66,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Extract text from the PDF
         pdf_text = extract_text_from_pdf(uploaded_file_path)
 
-
-        isTennecoInv = True if "(original)".upper() in pdf_text.lower() and "INVOICE" in pdf_text.upper() else False
+        isTennecoInv = True if "(original)".lower() in pdf_text.lower() and "INVOICE".lower() in pdf_text.lower() else False
 
         try:
             # Prepare the JSON response

@@ -10,8 +10,10 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient # Use this API key to call Azure Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 
+from bleckman.helpers.functions import process_invoice_data
 from bleckman.service.extractors import extract_text_from_first_page
 from bleckman.config.keywords import key_map, coordinates
+from bleckman.excel.excel import create_excel
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -61,9 +63,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     # Your Form Recognizer endpoint
     endpoint = "https://document-intelligence-python.cognitiveservices.azure.com/"
-    #apikey = AzureKeyCredential(api_key)
-    #apikey = "8jCA4tf8Tpc8FcBSYnkAAhQlB6aFWwCzl9IBmjZPQahxJjuJ1xGWJQQJ99ALAC5RqLJXJ3w3AAALACOGx8wJ"
+
     client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(api_key))
+    
+    # Initialize a list to store extracted PDF data
+    voorblad_data = {}
+    invoices_data = []
+    invoice_type = ""
+    invoices_data_and_type = {}
     
     for file_info in files:
         file_content_base64 = file_info.get('file')
@@ -100,11 +107,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 status_code=500,
                 mimetype="application/json"
             )
-        
-        # Initialize a list to store extracted PDF data
-        voorblad_data = {}
-        invoices_data = []
-        invoice_type = ""
     
         # Unzip the file and process PDFs
         try:
@@ -156,7 +158,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             invoices_data.append(result_dict)
 
             # Append the processed JSON to extracted_data
-            invoices_data_type = {
+            invoices_data_and_type = {
                 **voorblad_data,
                 "invoice_type": invoice_type,
                 "data": invoices_data
@@ -172,10 +174,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Cleanup temp file
         os.remove(uploaded_file_path)
+        
+    result = process_invoice_data(invoices_data_and_type)
     
-    # Set response as JSON with extracted data
-    return func.HttpResponse(
-        body=json.dumps(invoices_data_type, indent=2),
-        status_code=200,
-        mimetype="application/json"
-    )
+    
+    # Call writeExcel to generate the Excel file in memory
+    excel_file = create_excel(result)
+    logging.info("Generated Excel file.")
+    
+    reference = result.get("Reference", "")
+    
+    # Set response headers for the Excel file download
+    headers = {
+        'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+    # Return the Excel file as an HTTP response
+    return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

@@ -1,0 +1,49 @@
+{
+"Exit office": "NL000205",
+"Reference": "#TO0012358",
+"Vat Number": "BE1004542292",
+"Inv Date": "9/30/2024",
+"Address": [
+    {
+        "Company name": "Anine Bing Bicester Village",
+        "Street": "North West Service Yard (Yard 06) Unit 70",
+        "City": "Bicester Village Oxon.",
+        "Postal Code": "OX26 6WD",
+        "Country": "United Kingdom"
+    }
+],
+"Incoterm": [
+    "DDP",
+    " Bicester Village"
+],
+"Total Pallets": 23,
+"Total": 549.4,
+"Items": [
+    {
+        "HS code": "6110.20.2046",
+        "Origin": "TURKEY",
+        "Pieces": "8",
+        "Price": "$194.40"
+    },
+    {
+        "HS code": "6110.20.2046",
+        "Origin": "TURKEY",
+        "Pieces": "10",
+        "Price": "$242.00"
+    },
+    {
+        "HS code": "6110.20.2077",
+        "Origin": "TURKEY",
+        "Pieces": "5",
+        "Price": "$113.00"
+    }
+],
+"Currency": "$",
+"Instruction 1": "Anine Bing V2 $",
+"Invoices": [
+    "#TO0012358"
+],
+"Totals": [
+    549.4
+]
+}
