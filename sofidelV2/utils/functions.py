@@ -4,21 +4,20 @@ from bs4 import BeautifulSoup
 
 def join_items(data):
     
-    logging.error(data)
     # Create a dictionary to store the joined items
     joined_items = {}
 
     # Iterate over the 'items_collis' list
-    for item_collis in data['items_collis']:
+    for item_collis in data.get('items_collis'):
         # Use the 'Product Code' as the key
-        product_code = item_collis['Product Code']
+        product_code = item_collis.get('Product Code')
         # Initialize the joined item with the 'Collis' value
         joined_items[product_code] = {'Collis': item_collis['Collis']}
 
     # Iterate over the 'items' list
     for item in data['items']:
         # Use the 'Product Code' as the key
-        product_code = item['Product Code']
+        product_code = item.get('Product Code')
         # Update the joined item with the values from the 'items' list
         if product_code in joined_items:
             joined_items[product_code].update(item)

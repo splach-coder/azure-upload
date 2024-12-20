@@ -102,8 +102,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 obj[keyObj] = valueObj["content"]
                             result[key].append(obj)          
                     else :
-                        result[key] = value.get("content")                 
-
+                        result[key] = value.get("content")              
+                        
+                           
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the total value
             totals = result.get("Totals", "")
@@ -132,13 +133,28 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Collis"] = safe_int_conversion(item.get("Collis", 0))       
                 
             #update the numbers in the items
-            items = result.get("items", "")  
-            for item in items :
+            items = result.get("items", "") 
+            # Get all keys that appear in any item
+            all_keys = set(key for item in items for key in item.keys())
+
+            # Clean the items
+            cleaned_items = []
+            for item in items:
+                # Ensure the item has all required keys
+                if set(item.keys()) == all_keys:
+                    # Process HS code: Keep only the first part of the split
+                    if 'HS code' in item:
+                        item['HS code'] = item['HS code'].split('\n')[0]
+                    cleaned_items.append(item)
+                    
+            for item in cleaned_items :  
                 item["Pieces"] = safe_int_conversion(item.get("Pieces", 0))
                 Price = item.get("Gross Weight", "")
                 Price = normalize_number_format(Price)
                 Price = safe_float_conversion(Price)
-                item["Gross Weight"] = Price 
+                item["Gross Weight"] = Price
+                
+            result["items"] = cleaned_items     
                 
             del result["Totals"]         
             del result["Totals_Collis"]
