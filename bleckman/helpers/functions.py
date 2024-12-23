@@ -67,7 +67,10 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
     inv_date = first_data_item.get('Inv Date', "")
     address = first_data_item.get('Address', [])
     incoterm = first_data_item.get('Incoterm', "")
-
+    
+    #handle the adress 
+    address[0]["Country"] = get_abbreviation_by_country(address[0].get("Country", ""))
+    
     # Remove special characters from Incoterm and split
     cleaned_incoterm = re.sub(r'[+,.]', '', incoterm).split(' ', maxsplit=1)
 
@@ -135,9 +138,6 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
     }
 
     return output_data
-
-
-
 
 # Function to test
 def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float], List[float]]:
