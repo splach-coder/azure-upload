@@ -7,6 +7,8 @@ import base64
 
 from bbl.helpers.functions import process_container_data, safe_float_conversion
 from bbl.helpers.sentEmail import json_to_xml
+from cornelBeechfield.excel.create_excel import write_to_excel
+from cornelBeechfield.functions.functions import extract_email_data, process_data
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -14,7 +16,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Attempt to get the JSON body from the request
     try:
         body = req.get_json()
-        base64_files = body.get('files', [])
+        pdfs = body.get('pdf', [])
+        excels = body.get('excel', [])
+        email = body.get('email', [])
+        
     except Exception as e:
         return func.HttpResponse(
             body=json.dumps({"error": "Invalid request format"}),
@@ -22,18 +27,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-    if not base64_files:
+    if not pdfs or not excels:
         return func.HttpResponse(
             body=json.dumps({"error": "No files provided"}),
             status_code=400,
             mimetype="application/json"
         )
 
-    extracted_data = []
-
-    for base64_file in base64_files:
-        filename = base64_file.get('filename')
-        file_data = base64_file.get('file')
+    extracted_data_from_pdfs = []
+    extracted_data_from_excels = []
+    
+    # Get the data from the excel
+    for excel in excels: 
+        filename = excel.get('filename')
+        file_data = excel.get('file')
 
         if not filename or not file_data:
             continue
@@ -41,92 +48,114 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Decode the base64-encoded file
         try:
             decoded_data = base64.b64decode(file_data)
-
+            
             temp_dir = os.getenv('TEMP', '/tmp')
             uploaded_file_path = os.path.join(temp_dir, filename)
 
             # Write the file to the temporary path
             with open(uploaded_file_path, 'wb') as temp_file:
                 temp_file.write(decoded_data)
+                
+            # Load the workbook
+            workbook = openpyxl.load_workbook(uploaded_file_path)
+            sheet = workbook.active  # Use the first sheet
 
-            # Process the Excel file using openpyxl
-            try:
-                wb = openpyxl.load_workbook(uploaded_file_path)
-                sheet = wb.active  # Get the active sheet
+            # Prepare the output list
+            items = []
 
-                # Extract static values (those not in the items)
-                data = {
-                    "container": sheet.cell(row=1, column=1).value,
-                    "Incoterm": sheet.cell(row=6, column=2).value,
-                    "Freight": sheet.cell(row=13, column=2).value,
-                    "Vat 1": sheet.cell(row=14, column=2).value,
-                    "Vat 2": sheet.cell(row=15, column=2).value,
+            # Iterate through rows dynamically
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row is the header
+                if all(cell is None for cell in row):  # Stop if the row is completely empty
+                    break
+
+                # Safely access the row's values
+                despatch_no = row[0]
+                commodity_code = row[1]
+                description = row[2]
+                country_of_origin = row[3]
+                qty = row[4]
+                cartons = row[5]
+                value = row[6]
+                currency = row[7]
+                net_wt = row[8]
+                gross_wt = row[9]
+
+                # Skip rows with critical missing data
+                if despatch_no is None or commodity_code is None or description is None:
+                    continue
+
+                # Safely convert and handle data types
+                item = {
+                    "Invoice No": despatch_no if despatch_no else '',
+                    "Commodity Code": str(commodity_code) if commodity_code else "",
+                    "Description": str(description) if description else "",
+                    "Country of Origin": str(country_of_origin) if country_of_origin else "",
+                    "Qty": int(qty) if qty else 0,
+                    "Cartons": float(cartons) if cartons else 0.00,
+                    "Value": float(str(value).replace(',', '')) if value else 0.00,
+                    "Currency": str(currency) if currency else "",
+                    "Net Wt": float(net_wt) if net_wt else 0.00,
+                    "Gross Wt": float(gross_wt) if gross_wt else 0.00
                 }
+                items.append(item)
 
-                # Extract dynamic "items" that may exist in columns B, C, D, etc.
-                items = []
-                column = 2  # Start from column B (2), and check up to column D, E, etc.
-
-                while True:
-                    # Check the required cell values for emptiness
-                    hscode = sheet.cell(row=7, column=column).value
-                    valeur = sheet.cell(row=8, column=column).value
-                    devises = sheet.cell(row=9, column=column).value
-                    gross_weight = sheet.cell(row=10, column=column).value
-                    net_weight = sheet.cell(row=11, column=column).value
-                    packages = sheet.cell(row=12, column=column).value
-                    
-                    # If any of the required cells are empty, break the loop
-                    if not (hscode and valeur and devises and gross_weight and net_weight and packages):
-                        break
-                    
-                    # Create the item dictionary
-                    item = {
-                        "HSCODE": hscode,
-                        "VALEUR": safe_float_conversion(valeur),
-                        "DEVISES": devises,
-                        "Gross Weight": safe_float_conversion(gross_weight),
-                        "Net Weight": safe_float_conversion(net_weight),
-                        "Packages": packages
-                    }
-
-                    items.append(item)
-                    column += 1  # Move to the next column
-
-                # If items exist, add them to the data
-                if items:
-                    data["items"] = items
-
-                extracted_data.append(data)
-
-            except Exception as e:
-                logging.error(f"Error processing Excel file: {e}")
-                return func.HttpResponse(
-                    body=json.dumps({"error": f"Failed to process Excel file: {str(e)}"}),
-                    status_code=500,
-                    mimetype="application/json"
-                )
-
-            processed_output = process_container_data(extracted_data)
-
-            xml_data = json_to_xml(processed_output)
-
+            # Output JSON format
+            extracted_data_from_excels.append(items)
+            
             # Delete the temporary uploaded file
             os.remove(uploaded_file_path)
 
         except Exception as e:
-            logging.error(f"Error decoding or saving file: {e}")
-            return func.HttpResponse(
-                body=json.dumps({"error": f"Failed to decode base64 file: {str(e)}"}),
-                status_code=500,
-                mimetype="application/json"
-            )
+            return json.dumps({"error": str(e)}, indent=4)
+    
+    for pdf in pdfs:
+        documents = pdf.get("documents")
+        
+        result = {}
 
-    # Construct the JSON response with the extracted data
-    response_body = xml_data
+        for page in documents:
+            fields = page["fields"]
+            for key, value in fields.items():
+                if key in ["Address", "Items"]: 
+                    arr = value.get("valueArray")
+                    result[key] = []
+                    for item in arr:
+                        valueObject = item.get("valueObject")
+                        obj = {}
+                        for keyObj, valueObj in valueObject.items():
+                            obj[keyObj] = valueObj["content"]
+                        result[key].append(obj)          
+                else :
+                    result[key] = value.get("content")
+                    
+        extracted_data_from_pdfs.append(result)            
 
-    return func.HttpResponse(
-        body=response_body,
-        status_code=200,
-        mimetype="application/xml"
-    )
+    email_data = extract_email_data(email)
+    
+    logging.error(email_data)
+
+    result_data = {**extracted_data_from_pdfs[0], **email_data,"Items" : extracted_data_from_excels[0]}
+    
+    result_data = process_data(result_data)
+
+    try:
+        # Call writeExcel to generate the Excel file in memory
+        excel_file = write_to_excel(result_data)
+        logging.info("Generated Excel file.")
+        
+        reference = result_data.get("Reference", "")
+
+        # Set response headers for the Excel file download
+        headers = {
+            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+
+        # Return the Excel file as an HTTP response
+        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error processing request: {e}", status_code=500
+        ) 

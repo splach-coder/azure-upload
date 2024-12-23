@@ -27,7 +27,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #logging.error(json.dumps(file, indent=4))
             documents = file["documents"]
             
-
             result = {}
 
             for page in documents:
@@ -154,7 +153,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Price = safe_float_conversion(Price)
                 item["Gross Weight"] = Price
                 
-            result["items"] = cleaned_items     
+            result["items"] = cleaned_items
                 
             del result["Totals"]         
             del result["Totals_Collis"]

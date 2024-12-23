@@ -936,6 +936,10 @@ countries = [
         "abbreviation": "GB"
     },
     {
+        "country": "GBR",
+        "abbreviation": "GB"
+    },
+    {
         "country": "United States",
         "abbreviation": "US"
     },
