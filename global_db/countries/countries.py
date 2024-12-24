@@ -904,6 +904,10 @@ countries = [
         "abbreviation": "TR"
     },
     {
+        "country": "TURKIYE",
+        "abbreviation": "TR"
+    },
+    {
         "country": "Turkmenistan",
         "abbreviation": "TM"
     },

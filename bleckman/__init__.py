@@ -165,8 +165,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 **voorblad_data,
                 "invoice_type": invoice_type,
                 "data": invoices_data,
-                "collis": sum(collis),
-                "grosses": sum(grosses),
+                "collis": collis,
+                "grosses": grosses,
             }              
                         
         except zipfile.BadZipFile as e:
@@ -181,7 +181,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         os.remove(uploaded_file_path)
         
     result = process_invoice_data(invoices_data_and_type)
-    
     
     # Call writeExcel to generate the Excel file in memory
     excel_file = create_excel(result)

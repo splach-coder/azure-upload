@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 import fitz
 import re
 from typing import Any, List, Dict, Tuple, Union
@@ -52,6 +53,28 @@ def safe_float_conversion(value: str) -> float:
 def normalize_number(value: str) -> str:
     return value.replace(" ", "").replace(".", "").replace(",", ".")    
 
+def merge_inputs(dicts):
+    """
+    Merge a list of dictionaries by combining their keys and keeping the first non-None value for each key.
+
+    Args:
+        dicts (list): A list of dictionaries to merge.
+
+    Returns:
+        dict: A merged dictionary with non-None values.
+    """
+    merged_dict = {}
+
+    # Loop through each dictionary
+    for d in dicts:
+        for key, value in d.items():
+            # If the key doesn't exist or the current value is None, update it
+            if key not in merged_dict or merged_dict[key] is None:
+                merged_dict[key] = value
+
+    return [merged_dict]
+
+
 def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, Union[str, List]]:
     # Initialize variables for merging
     merged_reference = ""
@@ -68,8 +91,12 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
     address = first_data_item.get('Address', [])
     incoterm = first_data_item.get('Incoterm', "")
     
+    if len(address) > 1:
+        address = merge_inputs(address)
+    
     #handle the adress 
-    address[0]["Country"] = get_abbreviation_by_country(address[0].get("Country", ""))
+    if address[0]["Country"] is not None:
+        address[0]["Country"] = get_abbreviation_by_country(address[0].get("Country", ""))
     
     # Remove special characters from Incoterm and split
     cleaned_incoterm = re.sub(r'[+,.]', '', incoterm).split(' ', maxsplit=1)
@@ -86,13 +113,13 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         merged_invoices.append(item['Inv Reference'])
 
         # Append total to totals array
-        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "")))
+        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "")))
 
         # Sum total pallets
         merged_total_pallets += safe_int_conversion(item.get('Total Pallets', 0))
 
         # Sum total amount
-        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", ""))
+        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", ""))
 
         # Process items
         for item_data in item.get('Items', []):
@@ -145,18 +172,18 @@ def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float]
     gross = [value for value in gross if value]
 
     if len(collis) != len(gross):
-        raise ValueError("Collis and Gross arrays are not the same length after removing empty items.")
-
-    if len(collis) == 3:
-        if collis[0] + collis[1] == collis[2]:
-            collis.pop(2)
-        if gross[0] + gross[1] == gross[2]:
-            gross.pop(2)
-    elif len(collis) == 5:
-        if collis[0] + collis[1] == collis[4]:
-            collis.pop(4)
-        if gross[0] + gross[1] == gross[4]:
-            gross.pop(4)
-
+        return [], []
+            
+    if len(collis) <= 4:
+        collis = collis[-1]
+        gross = gross[-1]
+    elif len(collis) >= 5:
+        if sum(collis[:4]) == collis[-1] :
+            collis = collis[-1]
+            gross = gross[-1] 
+        else :
+            collis = sum(collis)
+            gross = sum(gross)
+                      
     return collis, gross
    
