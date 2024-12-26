@@ -113,13 +113,13 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         merged_invoices.append(item['Inv Reference'])
 
         # Append total to totals array
-        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "")))
+        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", "")))
 
         # Sum total pallets
         merged_total_pallets += safe_int_conversion(item.get('Total Pallets', 0))
 
         # Sum total amount
-        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", ""))
+        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", ""))
 
         # Process items
         for item_data in item.get('Items', []):

@@ -1,3 +1,4 @@
+import logging
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from io import BytesIO
@@ -55,19 +56,23 @@ def create_excel(data):
     ]
     
     Items = data.get("Items", [])
+    
+    # Define the desired key order
+    desired_order = ['Pieces', 'HS code', 'Origin', 'Price']
+    
     if Items: 
         for item in Items:
             res = []
-            for key, value in item.items():
-                res.append(value)
-            datat.append(res)
+            for key in desired_order:
+                res.append(item.get(key))  # Use .get() to avoid KeyError if a key is missing
+            datat.append(res)         
 
     # Apply data to the worksheet
     for row_idx, row_data in enumerate(datat, start=1):
         for col_idx, value in enumerate(row_data, start=1):
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             # Apply font to all cells
-            cell.font = Font(bold=False, size=12)
+            cell.font = Font(bold=False, size=11)
             
     ws["A1"].font = Font(bold=True)  # Make cell A1 bold
     ws["A2"].font = Font(bold=True)  # Make cell B2 bold
