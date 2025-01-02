@@ -1,10 +1,6 @@
 import openpyxl
 import json
 
-'''pip install azure-ai-formrecognizer
-pip install azure-identity azure-keyvault-secrets'''
-
-
 def excel_to_json(file_path, json_file_path):
     try:
         # Load the workbook and select the active sheet
@@ -15,13 +11,13 @@ def excel_to_json(file_path, json_file_path):
         data = []
 
         # Iterate through the rows in the sheet
-        for row in sheet.iter_rows(min_row=2, values_only=True):  # Assuming the first row is a header
+        for row in sheet.iter_rows(min_row=4, values_only=True):  # Assuming the first row is a header
             if row[0] is not None:  # Ensure the first column (A) has data
                 entry = {
-                    'container': row[3],  # Column A
-                    'package': row[2],    # Column B
-                    'net': row[1],        # Column C
-                    'gross': row[0]       # Column D
+                    'container': row[1],  # Column A
+                    'package': row[0],    # Column B
+                    'net': row[2],        # Column C
+                    'gross': row[3]       # Column D
                 }
                 data.append(entry)
 
@@ -59,11 +55,4 @@ def search_json(data, search_term):
     
     return results
 
-# Assuming the data is already loaded from the JSON file
-with open("data.json", "r") as json_file:
-    json_data = json.load(json_file)
-search_term = "TGBU8039600"  # Example search term
-search_results = search_json(json_data, search_term)
-
-print("Search Results:")
-print(search_results["net"])
+excel_to_json("FOLLOW UP CASA (1).xlsx", "data.json")

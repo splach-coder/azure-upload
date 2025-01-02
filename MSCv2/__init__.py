@@ -2,7 +2,7 @@ import azure.functions as func
 import logging
 import json
 
-from evergreenV2.functions.functions import fill_missing_container_values, process_container_data, transform_container_data
+from MSCv2.functions.functions import fill_missing_container_values, process_container_data, transform_container_data
 from templates.NCTS_XML.xml_output import generate_xml_declarations
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -19,7 +19,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         for page in documents:
             fields = page["fields"]
             for key, value in fields.items():
-                if key in ["containers"]: 
+                if key in ["containersData"]: 
                     arr = value.get("valueArray")
                     result[key] = []
                     for item in arr:
@@ -31,12 +31,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 else :
                     result[key] = value.get("valueString") 
 
-        result = fill_missing_container_values(result)         
-                    
-        result =  process_container_data(result)
-        result =  transform_container_data(result)
+        result = fill_missing_container_values(result) 
         
-        logging.error(json.dumps(result, indent=4))
+        logging.error(json.dumps(result))   
+
+        result =  process_container_data(result)
+        
+        result =  transform_container_data(result)
         
         xml_output = generate_xml_declarations(result)
         

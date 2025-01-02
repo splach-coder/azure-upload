@@ -1,208 +1,119 @@
-data = {'Vissel': 'OOCL DENMARK', 'Port Of Loading': 'JAKARTA', 'ETA': '02/12/2024', 'LoydsNumber': '9922548', 'BL number': 'EGLV080400573384', 'Article': '186', 'Agent Code': 'ANFREI', 'Stay': '288746', 'Quay': 1700, 'Date': '30/09/2024', 'containers': [{'container': 'MAGU5288872', 'items': [{'desc': 'RATTAN', 'Item': '1', 'Packages': '202', 'Gross Weight': '1494.8'}]}]}
+import difflib
+from collections import defaultdict
 
-import xml.etree.ElementTree as ET
-import json
-from msc.utils.searchOnPorts import search_json, search_ports
 
-def escape_xml_chars(text):
-    return (text.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace('"', "&quot;")
-                .replace("'", "&apos;"))
-
-def safe_float_conversion(value):
-  try:
-    return float(value)
-  except ValueError:
-    return 0.0
-
-def transform_json(input_data):
-    transformed_data = []
-
-    currentIndex = 0
-    for container in input_data.get("containers", []):
-        
-        dispatch_country = search_ports(input_data.get("Port Of Loading"))
-
-        # Construct transformed data for each item in each container
-        transformed_data.append({
-            "Vissel": input_data.get("Vissel"),
-            "Container": container.get("container"),
-            "globalWeight": 0,
-            "globalWeight2": 0,
-            "globalPkgs": 0,
-            "Quay" : "",
-            "DispatchCountry" : dispatch_country,
-            "items" : []
-        })
-
-        if input_data.get("Quay") == 1742 : 
-            transformed_data[currentIndex]["Quay"] = "BEDELAZ03318001"
-        if input_data.get("Quay") == 1700 : 
-            transformed_data[currentIndex]["Quay"] = "BEKOUAZ03318024"
-        if input_data.get("Quay") == 913 : 
-            transformed_data[currentIndex]["Quay"] = "BEANRAZ03318002"
-        
-        data = search_json(container.get("container"))
-        
-        for item in container.get("items", []):
-            item_number = ''.join([i for i in item.get("Item", "") if i.isdigit()]).zfill(4)
-            packages = ''.join([i for i in item.get("Packages", "") if i.isdigit()])
-            description = item.get("desc", "")
-            gross_weight = ''.join([i for i in item.get("Gross Weight", "") if i.isdigit()])
-            net_weight = data.get("net", 0)
-
-            transformed_data[currentIndex]["globalWeight"] += int(gross_weight)
-            transformed_data[currentIndex]["globalWeight2"] += safe_float_conversion(net_weight)
-            transformed_data[currentIndex]["globalPkgs"] += int(packages)
-            
-            correctIMAH = False
-            
-            def compare_weights(weight1, weight2):
-              abs_value = abs(weight1 - weight2)
-              return -2.5 <= abs_value and abs_value <= 2.5
-            
-
-            
-            if data :
-              #check net
-              if compare_weights(safe_float_conversion(data.get("gross")), safe_float_conversion(gross_weight)) and int(data.get("package")) == int(packages) :
-                correctIMAH = True
-
-            item = {
-                "ArrivalNotice1": f"1{input_data.get('Stay')}L{input_data.get('LoydsNumber')}*{input_data.get('Article').zfill(4)}",
-                "ArrivalNotice2": f"{input_data.get('Agent Code')}*{item_number}*{input_data.get('BL number')}",
-                "Container": container.get("container"),
-                "Packages": packages,
-                "Description": description,
-                "Gross Weight": gross_weight,
-                "Net Weight": net_weight if correctIMAH else 0
+invoices = [
+    {
+        "Inv Ref": "999606850",
+        "Inv Date": "10.12.2024",
+        "Other Ref": "8671",
+        "Incoterm": [
+            "DDP",
+            "RISHON LETSIYON"
+        ],
+        "Currency": "USD",
+        "Customs Code": "BE1489",
+        "Adrress": [
+            {
+                "Company name": "AGORAN\nAvraham",
+                "Street": "Buma Shavit 3 St.\nLEV SOREQ",
+                "City": "booth 16\nRISHON LETSIYON",
+                "Country": "ISRA\u00cbL",
+                "Postal code": None
             }
+        ],
+        "Items": [
+            {
+                "Origin": "BE",
+                "HS code": "4910000000",
+                "Qty": 15,
+                "Gross": 4.81,
+                "Net": 4.5,
+                "Amount": 34.6
+            }
+        ],
+        "Totals": [
+            {
+                "Total Qty": 15,
+                "Total Gross": 4.81,
+                "Total Net": 4.5,
+                "Total Amount": 34.6
+            }
+        ]
+    },
+    {
+        "Inv Ref": "999606849",
+        "Inv Date": "10.12.2024",
+        "Other Ref": "8671",
+        "Incoterm": [
+            "DAP",
+            "RISHON LETSIYON"
+        ],
+        "Currency": "USD",
+        "Customs Code": "BE1489",
+        "Adrress": [
+            {
+                "Company name": "AGORAN",
+                "Street": "Avraham Buma Shavit 3 St.\nLEV SOREQ",
+                "City": "booth 16\nRISHON LETSIYON",
+                "Country": "ISRA\u00cbL",
+                "Postal code": None
+            }
+        ],
+        "Items": [
+            {
+                "Origin": "US",
+                "HS code": "7326909890",
+                "Qty": 9,
+                "Gross": 10.73,
+                "Net": 10.04,
+                "Amount": 1142.79
+            }
+        ],
+        "Totals": [
+            {
+                "Total Qty": 9,
+                "Total Gross": 10.73,
+                "Total Net": 10.04,
+                "Total Amount": 1142.79
+            }
+        ]
+    }
+]
 
-            # Construct transformed data for each item in each container
-            transformed_data[currentIndex]["items"].append(item)
-        currentIndex += 1     
+def normalize_address(address):
+  """Normalize full address for comparison."""
+  address_fields = [
+      address[0]['Company name'],
+      address[0]['Street'],
+      address[0]['City'],
+      address[0]['Postal code'],
+      address[0]['Country']
+  ]
+  return ' '.join(str(field).lower() for field in address_fields if field)
+      
+def are_addresses_similar(addr1, addr2, threshold):
+  """Determine if two addresses are similar based on a similarity ratio."""
+  ratio = difflib.SequenceMatcher(None, addr1, addr2).ratio()
+  print(ratio)
+  return ratio >= threshold
 
-    return json.dumps(transformed_data, indent=4)
+addr1 = invoices[0].get('Adrress')
+addr2 = invoices[1].get('Adrress')
 
-def json_to_xml(json_data):
-    json_data = json.loads(transform_json(json_data))
 
-    xml_files = []
+addr1 = normalize_address(addr1)
+addr2 = normalize_address(addr2)
+threshold = 0.8
 
-    for data in json_data:
-        xml_template = '''<?xml version="1.0" encoding="iso-8859-1"?>
-<NctsSswDeclaration xsi:noNamespaceSchemaLocation="NctsSsw.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <typeDeclaration>N</typeDeclaration>
-  <version>516.1.002</version>
-  <CustomsStreamliner>
-    <template>CASA</template>
-    <company>DKM</company>
-    <user>STAGIAIR2</user>
-    <printLocation>DEFAULT PRINTGROEP</printLocation>
-    <createDeclaration>F</createDeclaration>
-    <sendingMode>R</sendingMode>
-    <sendDeclaration>F</sendDeclaration>
-    <dossierNumberERP>{Container}</dossierNumberERP>
-    <transhipment>F</transhipment>
-    <isFerry>F</isFerry>
-    <Principal>
-      <id>CASAINTERN</id>
-      <ContactPerson>
-        <contactPersonCode>BCTN</contactPersonCode>
-      </ContactPerson>
-    </Principal>
-    <IntegratedLogisticStreamliner>
-      <createDossier>F</createDossier>
-      <IlsDossier>
-        <iLSCompany>DKM</iLSCompany>
-        <dossierId>71721</dossierId>
-      </IlsDossier>
-    </IntegratedLogisticStreamliner>
-    <ControlValues>
-      <ControlArticles>0</ControlArticles>
-      <ControlPackages>{globalPkgs}</ControlPackages>
-      <ControlGrossmass>{globalWeight}</ControlGrossmass>
-      <ControlNetmass>{globalWeight2}</ControlNetmass>
-    </ControlValues>
-  </CustomsStreamliner>
-  <MessageBody>
-  <GoodsDeclaration>
-    <Header>
-      <typeOfDeclaration>T1</typeOfDeclaration>
-      <countryOfDestinationCode>BE</countryOfDestinationCode>
-      <codeAuthorisedLocationOfGoods>{Quay}</codeAuthorisedLocationOfGoods>
-      <countryOfDispatchExportCode>{DispatchCountry}</countryOfDispatchExportCode>
-      <identityOfMeansOfTransportCrossingBorder language="EN">{Vissel}</identityOfMeansOfTransportCrossingBorder>
-      <simplifiedProcedureFlag>T</simplifiedProcedureFlag>
-    </Header>
-  </GoodsDeclaration>
-    {GoodsItems}
-  </MessageBody>
-</NctsSswDeclaration>'''
-        formatted_goods_items = []
-        itemNumber = 1
-        for data_items in data['items'] :
-            goods_items = '''
-        <GoodsItems>
-            <itemNumber>{itemNmber}</itemNumber>
-            <goodsDescription language="EN">{Description}</goodsDescription>
-            <grossMass>{GrossWeight}</grossMass>
-            <netMass>{NetWeight}</netMass>
-            <PreviousAdministrativeReferences>
-                <previousDocumentType>126E</previousDocumentType>
-                <previousDocumentReference language="EN">{ArrivalNotice1}</previousDocumentReference>
-                <complementOfInformation language="EN">{ArrivalNotice2}</complementOfInformation>
-            </PreviousAdministrativeReferences>
-            <ProducedDocuments>
-                <documentType>Y026</documentType>
-                <documentReference language="EN">BEAEOF0000064GDA</documentReference>
-                <complementOfInformation language="EN">.</complementOfInformation>
-            </ProducedDocuments>
-            <Containers>
-                <containerNumber>{Container}</containerNumber>
-            </Containers>
-            <Packages>
-                <marksAndNumbersOfPackages language="EN">KARTON</marksAndNumbersOfPackages>
-                <kindOfPackages>CT</kindOfPackages>
-                <numberOfPackages>{Packages}</numberOfPackages>
-                <numberOfPieces>0</numberOfPieces>
-            </Packages>
-        </GoodsItems>
-        '''
-          
-            # Format goods items with the given data
-            formatted_goods_items.append(goods_items.format(
-                Description=escape_xml_chars(data_items["Description"]), 
-                GrossWeight=data_items["Gross Weight"],
-                NetWeight=data_items["Net Weight"],
-                ArrivalNotice1=data_items["ArrivalNotice1"],
-                ArrivalNotice2=data_items["ArrivalNotice2"],
-                Container=data_items["Container"],
-                Packages=data_items["Packages"],
-                itemNmber=itemNumber,
-            ))
-
-            itemNumber += 1
-
-        # Join the goods items list into a single string
-        formatted_goods_items_str = "".join(formatted_goods_items)
-
-        # Fill the XML template with the formatted goods items
-        xml_filled = xml_template.format (
-            Container=data["Container"],
-            Vissel=data["Vissel"],
-            DispatchCountry=data["DispatchCountry"],
-            Quay=data["Quay"],
-            globalWeight=data["globalWeight"],
-            globalWeight2=data["globalWeight2"],
-            globalPkgs=data["globalPkgs"],
-            GoodsItems = formatted_goods_items_str
-        )
-
-        xml_files.append({"xml" : xml_filled, "container" : data["Container"]})
-
-    return xml_files
-
-print(json_to_xml(data))
+def fill_origin_country_on_items(items: list) -> list:
+    origin = ""
+    for item in items:
+        if item.get("Origin") is not None:
+            origin = item.get("Origin")
+        else :
+            item["Origin"] = origin
+            
+    return items        
+        
+print(fill_origin_country_on_items(invoices[1].get('Items')))        
