@@ -2,7 +2,7 @@ import azure.functions as func
 import logging
 import json
 
-from MSCv2.functions.functions import fill_missing_container_values, process_container_data, transform_container_data
+from MSCv2.functions.functions import fill_missing_container_values, group_containers_by_items, process_container_data_MSC, transform_container_data
 from templates.NCTS_XML.xml_output import generate_xml_declarations
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -31,12 +31,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 else :
                     result[key] = value.get("valueString") 
 
-        result = fill_missing_container_values(result) 
+        result = fill_missing_container_values(result)
+         
+        result = process_container_data_MSC(result)
         
-        logging.error(json.dumps(result))   
-
-        result =  process_container_data(result)
-        
+        result = group_containers_by_items(result)
+    
         result =  transform_container_data(result)
         
         xml_output = generate_xml_declarations(result)

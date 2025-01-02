@@ -396,6 +396,10 @@ countries = [
         "abbreviation": "IN"
     },
     {
+        "country": "INDE + SIKKIM",
+        "abbreviation": "IN"
+    },
+    {
         "country": "Indonesia",
         "abbreviation": "ID"
     },
@@ -433,6 +437,10 @@ countries = [
     },
     {
         "country": "Japan",
+        "abbreviation": "JP"
+    },
+    {
+        "country": "JAPON",
         "abbreviation": "JP"
     },
     {
@@ -653,6 +661,14 @@ countries = [
     },
     {
         "country": "Norway",
+        "abbreviation": "NO"
+    },
+    {
+        "country": "NORVÈGE",
+        "abbreviation": "NO"
+    },
+    {
+        "country": "NORVEGE",
         "abbreviation": "NO"
     },
     {
@@ -929,6 +945,10 @@ countries = [
     },
     {
         "country": "United Arab Emirates",
+        "abbreviation": "AE"
+    },
+    {
+        "country": "EMIR. ARAB. UNIS",
         "abbreviation": "AE"
     },
     {

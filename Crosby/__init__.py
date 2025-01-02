@@ -10,7 +10,7 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
 from Crosby.excel.createExcel import write_to_excel
-from Crosby.helpers.functions import clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, normalize_number, safe_float_conversion, safe_int_conversion
+from Crosby.helpers.functions import clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -104,6 +104,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
             continue
         
+        # Validate the file format (optional)
+        if not is_invoice(filename):
+            logging.error(f"File '{filename}' is not an invoice. Skipping analysis.")
+            continue
+        
         # Analyze the document
         try: 
             poller = client.begin_analyze_document("Crosby-model", file_content)
@@ -141,6 +146,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         customs_code = result_dict.get("Customs Code", "") if result_dict.get("Customs Code", "") else ""
         result_dict["Customs Code"] = clean_customs_code(customs_code)
         
+        logging.error(result_dict)
+        
         #switch the address country to abbr
         address = result_dict.get("Adrress", "")[0]
         address["Country"] = get_abbreviation_by_country(address.get("Country", ""))    
@@ -164,7 +171,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             item["Total Net"] = safe_float_conversion(normalize_number(item.get("Total Net", 0.0)))
             item["Total Amount"] = safe_float_conversion(normalize_number(item.get("Total Amount", 0.0)))
             
-        results.append(result_dict)
+        results.append(result_dict)  
         
     results = combine_invoices_by_address(results)
     
@@ -181,9 +188,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     for item in results:    
         item["Reference"] = reference
-        item["Email"] = email_data        
+        item["Email"] = email_data      
     
- # Proceed with data processing
+    # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
         zip_data = write_to_excel(results)
@@ -203,6 +210,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=500,
             mimetype="application/json"
         )
+
     except Exception as e:
         logging.error(f"Unexpected error during processing: {e}")
         return func.HttpResponse(

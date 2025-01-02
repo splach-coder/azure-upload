@@ -100,6 +100,10 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
 
     return combined_invoices
 
+def is_invoice(filename):
+    pattern = r"^\d+\.pdf$"
+    return re.match(pattern, filename, re.IGNORECASE) is not None
+
 def fill_origin_country_on_items(items: list) -> list:
     origin = ""
     for item in items:
@@ -137,7 +141,7 @@ def extract_totals_info(item):
 
 def extract_reference(text):
     # Define the regex pattern to find the reference after "ref"
-    pattern = r"ref\s+(\w+\s+\w+/\d+)"
+    pattern = r"ref\s+(\w+\s+\d+(?:/\d+)?)"
     
     # Search for the pattern in the text
     match = re.search(pattern, text)

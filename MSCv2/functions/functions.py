@@ -12,7 +12,7 @@ def extract_numbers_from_string(input_string):
     
     return numbers[0]
 
-def process_container_data(input_data: dict) -> list:
+def process_container_data_MSC(input_data: dict) -> list:
     """
     Transform container data by flattening the structure and converting data types.
     
@@ -40,7 +40,8 @@ def process_container_data(input_data: dict) -> list:
             'Quay': extract_numbers_from_string(input_data.get('Quay')),
             'Origin': input_data.get('portOfloading'),
             'ArticleNumber' : input_data.get('ArticleNumber'),
-            'AgentCode' : input_data.get('AgentCode')
+            'AgentCode' : input_data.get('AgentCode'),
+            'BLnumber' : input_data.get('BillOflading')
         }
         
         result = []
@@ -52,11 +53,11 @@ def process_container_data(input_data: dict) -> list:
             processed_container.update(container)
             
             # Convert Packages to integer
-            if 'Packages' in processed_container:
+            if 'packages' in processed_container:
                 try:
-                    processed_container['Packages'] = int(processed_container['Packages'])
+                    processed_container['packages'] = int(processed_container['packages'])
                 except ValueError:
-                    processed_container['Packages'] = 0
+                    processed_container['packages'] = 0
                     
             if 'gross weight' in processed_container:
                 try:
@@ -90,7 +91,7 @@ def transform_container_data(input_data: list) -> list:
         
         gross, net = 0.00, 0.00
         
-        if data and  container.get("packages") == data.get("package"):
+        if data and container.get("packages") == data.get("package"):
             gross, net = data.get("gross"), data.get("net")
         
         Quay = ""
@@ -102,25 +103,27 @@ def transform_container_data(input_data: list) -> list:
         if container.get("Quay") == 913 : 
             Quay = "BEANRAZ03318002"    
         
+        items = container.get("items")
+        for item in items:
+            item["item"] = int(item.get("item"))
+            item["ArrivalNotice1"] = f"1{container.get('stay')}L{container.get('loyd')}*{container.get('ArticleNumber').zfill(4)}"
+            item["ArrivalNotice2"] = f"MSCBEL*{item.get('item')}*{container.get('BLnumber')}"
+            item["Net Weight"] = net   
+            item["Gross Weight"] = item.get("gross weight") 
+            item["container"] = container.get("container")
+            item["Description"] = item.get("description")
+            item["Packages"] = item.get("packages")
+
+
         transformed = {
             **container,
+            "containers" :  container.get("container", ""),
             "Quay": Quay,
             "globalWeight":gross,
-            "globalWeight2":net,
-            "items": [{
-                "item": 1,
-                "ArrivalNotice1": f"1{container.get('stay')}L{container.get('loyd')}*{container.get('Article Nbr').zfill(4)}",
-                "ArrivalNotice2": f"MSCBEL*1*{container.get('BLnumber')}",
-                "container": container.get("containers"),
-                "Description": container.get("Description"),
-                "Packages": container.get("Packages"),
-                "Gross Weight": gross,
-                "Net Weight": net,
-            }]
+            "globalWeight2":net
         }
+        
         result.append(transformed)
-        
-        
         
     return result
 
@@ -139,7 +142,7 @@ def fill_missing_container_values(data: dict) -> dict:
         return data
         
     containers = data['containers']
-    fields_to_check = ['BLnumber', 'Origin', 'Description']
+    fields_to_check = ['BillOflading', 'Origin', 'Description']
     
     # Process each container
     for i, current in enumerate(containers):
@@ -153,8 +156,58 @@ def fill_missing_container_values(data: dict) -> dict:
             if not current.get(field):
                 current[field] = previous.get(field, '')
                 
-    return data      
-        
+    return data     
+
+def group_containers_by_items(input_list: list) -> list:
+    # Dictionary to hold grouped containers
+    grouped_containers = {}
+
+    for entry in input_list:
+        # Extract common fields and use them as the key for grouping
+        common_key = (
+            entry["vissel"],
+            entry["stay"],
+            entry["loyd"],
+            entry["Quay"],
+            entry["Origin"],
+            entry["ArticleNumber"],
+            entry["AgentCode"],
+            entry["container"],
+            entry["BLnumber"],
+        )
+
+        # Extract item-specific fields
+        item_data = {
+            "item": entry["item"],
+            "packages": entry["packages"],
+            "description": entry["description"],
+            "gross weight": entry["gross weight"]
+        }
+
+        # If the common key is already in the dictionary, append the item data
+        if common_key in grouped_containers:
+            grouped_containers[common_key]["items"].append(item_data)
+        else:
+            # Otherwise, create a new entry with the common fields and an items list
+            grouped_containers[common_key] = {
+                "vissel": entry["vissel"],
+                "stay": entry["stay"],
+                "loyd": entry["loyd"],
+                "Quay": entry["Quay"],
+                "Origin": entry["Origin"],
+                "ArticleNumber": entry["ArticleNumber"],
+                "AgentCode": entry["AgentCode"],
+                "container": entry["container"],
+                "BLnumber": entry["BLnumber"],
+                "items": [item_data]
+            }
+
+    # Convert the grouped containers dictionary to a list
+    return list(grouped_containers.values()) 
+
+def compare_weights(weight1, weight2):
+    abs_value = abs(weight1 - weight2)
+    return -2.5 <= abs_value and abs_value <= 2.5      
         
         
         
