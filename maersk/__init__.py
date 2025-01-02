@@ -99,9 +99,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 body=json.dumps({"error": f"Failed to decode base64 file: {str(e)}"}),
                 status_code=500,
                 mimetype="application/json"
-            )
-        
-    print(containers)    
+            )  
 
     # Process the extracted data if necessary (e.g., further processing or conversion)
     processed_output = process_container_data(containers)
