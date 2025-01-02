@@ -1,4 +1,4 @@
-from msc.data.data import ports
+from global_db.ports.data import ports
 from msc.data.bigData import bigData
 
 def search_ports(search_value):

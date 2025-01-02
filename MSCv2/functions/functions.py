@@ -1,7 +1,7 @@
 import logging
 import re
 from global_db.plda.functions import search_json
-
+from global_db.ports.data import ports
 
 def extract_numbers_from_string(input_string):
     # Use regular expression to find all numbers in the string
@@ -72,6 +72,15 @@ def process_container_data_MSC(input_data: dict) -> list:
     except Exception as e:
         raise ValueError(f"Error processing container data: {str(e)}")
     
+def search_ports(search_value):
+    # Iterate through the list of dictionaries to find the matching port
+    for port in ports:
+        if port["Port"].lower() == search_value.lower():  # Case-insensitive comparison
+            return port["Country Code"]
+    
+    # If no match is found, return a message
+    return ""    
+    
 def transform_container_data(input_data: list) -> list:
     """
     Transform container data to conform to specified schema with additional fields.
@@ -88,7 +97,8 @@ def transform_container_data(input_data: list) -> list:
     result = []
     for container in input_data:
         data = search_json(container.get("container"))
-        
+        country = search_ports(container.get("Origin"))
+
         gross, net = 0.00, 0.00
         
         if data and container.get("packages") == data.get("package"):
@@ -117,6 +127,7 @@ def transform_container_data(input_data: list) -> list:
 
         transformed = {
             **container,
+            "Origin": country,
             "containers" :  container.get("container", ""),
             "Quay": Quay,
             "globalWeight":gross,
