@@ -177,7 +177,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                  
     reference = ""
     if subject: 
-        reference = extract_reference(subject)
+        reference = extract_reference(subject).replace('/', '-')
     
     for item in results:    
         item["Reference"] = reference
