@@ -70,7 +70,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 valueF = freight
                 valueF = normalize_numbers(valueF)
                 valueF = safe_float_conversion(valueF)
-                result["Freight"] = freight
+                result["Freight"] = valueF
 
             #update the numbers in the HSandTotals
             items = result.get("Items", "")  
@@ -109,6 +109,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             # Call writeExcel to generate the Excel file in memory
+            logging.info(merged_result)
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             
