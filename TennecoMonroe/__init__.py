@@ -162,7 +162,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(merged_data)
         logging.info("Generated Excel file.")
         
-        reference = merged_data.get("Customer NO", "")
+        reference = merged_data.get("Inv No", "")
 
         # Set response headers for the Excel file download
         headers = {

@@ -1654,5 +1654,5 @@ bigData = [
         "package": 0,
         "net": 0,
         "gross": 0
-    }
+    },
 ]

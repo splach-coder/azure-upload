@@ -5,10 +5,11 @@ import os
 import base64
 
 from casa.excel.create_excel import generate_excel_zip
-from casa.helpers.functions import hanlde_country
+from casa.helpers.functions import aggregate_container_data, hanlde_country
 from casa.service.extractors import clean_and_convert_totals, clean_invoice_data, extract_cleaned_invoice_text, extract_container_load_plan_text, extract_header_details, extract_items_from_text, extract_totals_from_text, extract_vissel_details, get_items_data, merge_data
 
 from casa.data.data import ports
+from global_db.plda.functions import append_container_data
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -95,8 +96,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Items_All.append({"Invoice_Number" : key, **item_obj})
                 
         '''Merge the items data into one object'''        
-        result = merge_data(Items_All, vissel, header_details)
+        result = merge_data(Items_All, vissel, header_details)  
         
+    append_result = aggregate_container_data (result)
+    
+    #put this data to the global database
+    for item in append_result:        
+        append_container_data(item)
+    
     # Proceed with data processing
     try:
         container_key = ""
