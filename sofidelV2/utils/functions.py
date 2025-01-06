@@ -73,30 +73,35 @@ def join_cmrs(cmrs):
     return combined_invoice
 
 def join_cmr_invoice_objects(inv, cmr):
-    # Create a dictionary to store the joined items
+    # Create a dictionary to store the joined items, starting with invoice items
     joined_items = {}
 
-    # Add items from the invoice to the joined_items dictionary
+    # First add all invoice items - these are our source of truth
     for item in inv['Items']:
         product_code = item.get('Material Code', "")
-        # Store the item in the joined_items dictionary
-        joined_items[product_code] = item
+        joined_items[product_code] = item.copy()
 
-    # Add items from the CMR to the joined_items dictionary
-    for item in cmr['items']:
-        product_code = item.get('Product Code', "")
-        # If the product code already exists, update it with CMR data
-        if product_code in joined_items:
-            # Overwrite the existing item with the CMR item
-            joined_items[product_code].update(item)
-        else:
-            # If the product code is not found, add it to the joined items
-            joined_items[product_code] = item
+    # Then selectively update with CMR data where product codes match
+    for cmr_item in cmr['items']:
+        cmr_product_code = cmr_item.get('Product Code', "")
+        if cmr_product_code in joined_items:
+            # Only copy specific fields from CMR that we want to update
+            inv_item = joined_items[cmr_product_code]
+            # Add CMR-specific fields while preserving invoice data
+            if 'Gross Weight' in cmr_item:
+                inv_item['Gross Weight'] = cmr_item['Gross Weight']
+            if 'Pieces' in cmr_item:
+                inv_item['Pieces'] = cmr_item['Pieces']
+            if 'HS code' in cmr_item:
+                inv_item['HS code'] = cmr_item['HS code']
+            if 'Collis' in cmr_item:
+                inv_item['Collis'] = cmr_item['Collis']
+            # Add any other CMR fields that should update invoice data here
 
     # Convert the joined items dictionary back to a list
     joined_items_list = list(joined_items.values())
 
-    # Create the final combined object
+    # Create the final combined object, prioritizing invoice data
     combined_object = {
         'Inv Reference': inv['Inv Reference'],
         'Inv Date': inv['Inv Date'],

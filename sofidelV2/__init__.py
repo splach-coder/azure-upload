@@ -21,9 +21,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         for file in files["invs"] :
 
-            #with open('output.json', 'w') as f:
-                #json.dump(file, f, indent=4)
-
             #logging.error(json.dumps(file, indent=4))
             documents = file["documents"]
             
@@ -101,7 +98,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 obj[keyObj] = valueObj["content"]
                             result[key].append(obj)          
                     else :
-                        result[key] = value.get("content")              
+                        result[key] = value.get("content")                        
                         
                            
             '''------------------   Clean the JSON response   ------------------ '''
@@ -140,11 +137,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             cleaned_items = []
             for item in items:
                 # Ensure the item has all required keys
-                if set(item.keys()) == all_keys:
-                    # Process HS code: Keep only the first part of the split
-                    if 'HS code' in item:
-                        item['HS code'] = item['HS code'].split('\n')[0]
-                    cleaned_items.append(item)
+                # Process HS code: Keep only the first part of the split
+                if 'HS code' in item:
+                    item['HS code'] = item['HS code'].split('\n')[0]
+                cleaned_items.append(item)
                     
             for item in cleaned_items :  
                 item["Pieces"] = safe_int_conversion(item.get("Pieces", 0))
@@ -158,12 +154,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             del result["Totals"]         
             del result["Totals_Collis"]
             
-            result = join_items(result)         
+            result = join_items(result)      
 
             cmrs.append(result)
             
         inv = join_invoices(invs)
         cmr = join_cmrs(cmrs)
+        
+        
         
         json_result = join_cmr_invoice_objects(inv, cmr)
         

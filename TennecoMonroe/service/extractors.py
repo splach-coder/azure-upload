@@ -55,7 +55,7 @@ def find_page_in_invoice(pdf_path, keywords=["Packaging", "No.units", "Weight (K
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.2):
+def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
     pdf_document = fitz.open(pdf_path)
     extracted_text = []
     
