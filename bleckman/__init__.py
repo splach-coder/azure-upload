@@ -42,7 +42,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     key_vault_url = "https://kv-functions-python.vault.azure.net"
     secret_name = "azure-form-recognizer-key-2"  # The name of the secret you created
     
-    
     # Use DefaultAzureCredential for authentication
     credential = DefaultAzureCredential()
 

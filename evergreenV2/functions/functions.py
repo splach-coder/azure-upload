@@ -113,11 +113,11 @@ def fill_missing_container_values(data: dict) -> dict:
     Returns:
         dict: Processed data with filled missing values
     """
-    if not data or 'containersData' not in data or not data['containersData']:
+    if not data or 'containers' not in data or not data['containers']:
         return data
         
-    containers = data['containersData']
-    fields_to_check = ['container']
+    containers = data['containers']
+    fields_to_check = ['Description', 'BLnumber', 'Origin']
     
     # Process each container
     for i, current in enumerate(containers):

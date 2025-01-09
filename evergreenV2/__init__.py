@@ -35,8 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     
         result =  process_container_data(result)
         result =  transform_container_data(result)
-        
-        logging.error(json.dumps(result, indent=4))
+    
         
         xml_output = generate_xml_declarations(result)
         

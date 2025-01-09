@@ -30,7 +30,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 fields = page["fields"]
                 for key, value in fields.items():
                     if key in ["Address", "Items"]: 
-                        arr = value.get("valueArray")
+                        arr = value.get("valueArray", [])
                         result[key] = []
                         for item in arr:
                             valueObject = item.get("valueObject")
@@ -39,7 +39,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 obj[keyObj] = valueObj["content"]
                             result[key].append(obj)          
                     else :
-                        result[key] = value.get("content")             
+                        result[key] = value.get("content")    
+                        
+            logging.error(json.dumps(result, indent=4))                     
 
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the incoterm
@@ -105,13 +107,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #clean and split the total value
             totals = result.get("Totals", "")
             if totals:
-                gross = totals[0].get("values", "")
+                gross = totals[1].get("values", "")
                 gross = clean_number_from_chars(gross)
                 gross = normalize_number_format(gross)
                 gross = safe_float_conversion(gross)
                 result["Gross weight total"] = gross
                 
-                net = totals[1].get("values", "")
+                net = totals[0].get("values", "")
                 net = clean_number_from_chars(net)
                 net = normalize_number_format(net)
                 net = safe_float_conversion(net)
@@ -161,8 +163,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         inv = join_invoices(invs)
         cmr = join_cmrs(cmrs)
         
-        
-        
         json_result = join_cmr_invoice_objects(inv, cmr)
         
         body = handle_body_request(email_body)
@@ -170,7 +170,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result = {**json_result, **body}
         
         #logic here for  exit office and export office and goods location
-        if json_result["Exit Port BE"].lower() == "Zeebrugge".lower() :
+        if json_result.get("Exit Port BE", "").lower() == "Zeebrugge".lower() :
             json_result["Export office"] = "BEZEE216010"
         else :
             json_result["Export office"] = "BEHSS216000"     

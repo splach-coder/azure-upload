@@ -780,6 +780,10 @@ countries = [
         "abbreviation": "SA"
     },
     {
+        "country": "ARABIE SAOUDITE",
+        "abbreviation": "SA"
+    },
+    {
         "country": "Senegal",
         "abbreviation": "SN"
     },

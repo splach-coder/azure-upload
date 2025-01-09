@@ -1,7 +1,12 @@
 from io import BytesIO
+import json
+from openpyxl.styles import Font, PatternFill
+import re
 import openpyxl
 
-from sofidelV2.utils.number_handlers import safe_float_conversion
+from sofidel.service.extractors import remove_spaces_from_numeric_strings
+from sofidel.utils.number_handlers import clean_string, normalize_number_format, normalize_number_format_global_weight, safe_int_conversion, safe_float_conversion
+
 
 def write_to_excel(json_string):
     # Create a new workbook and select the active sheet
@@ -31,27 +36,26 @@ def write_to_excel(json_string):
         "Rex/Other"
     ]
 
-    address = data.get('Address', [])[0]
-    name, street, city, code_postal, country = address.get('Company name', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal Code', ''), address.get('Country', '') 
+    name, street, city, code_postal, country = data['address']
 
-    term, place = data.get('Incoterm', ['', ''])
-    
-    Total = data.get('Total', 0.00)
-    
-    Freight = data.get('Freight cost', 0.00)
-    Freight = safe_float_conversion(Freight)
-    
-    Reference_sofidel = f"{data.get('Reference', '')} - {data.get('Inv Reference', '')}"
-    
+    # Split the string into parts
+    if("By truck" in data['term']):
+        data['term'] = data['term'].replace('By truck', '')
+    parts = data['term'].split(maxsplit=1)
+
+    # Extract the first word and the rest
+    term = parts[0] if parts else ''  # The first word
+    place = parts[1] if len(parts) > 1 else ''  # Everything after the first word
+
     values1 = [
-        data.get('Vat Number', ''),
+        clean_string(data.get('btw', '')),
         data.get('Principal', ''),
-        Reference_sofidel,
-        data.get('Other Ref', ''),
-        Freight,
+        data.get('Reference', ''),
+        data.get('inv reference', ''),
+        data.get('Freight cost', ''),
         data.get('Parking trailer', ''),
-        data.get('Exit Port BE', ''),
         data.get('Export office', ''),
+        data.get('Exit Port BE', ''),
         name if 'name' in locals() else '',  # Safely handle variables
         street if 'street' in locals() else '',
         code_postal if 'code_postal' in locals() else '',
@@ -59,9 +63,9 @@ def write_to_excel(json_string):
         country if 'country' in locals() else '',
         term if 'term' in locals() else '',
         place if 'place' in locals() else '',
-        data.get('container', ''),
-        data.get('Wagon', ''),
-        data.get("Customs code", '')
+        data.get('Container', ''),
+        data.get('wagon', ''),
+        data.get('rex', ''),
     ]
 
     header2 = [
@@ -86,26 +90,19 @@ def write_to_excel(json_string):
     
     for key, value in data.items():
         # Handle array values
-        if key == "Items":
+        if key == "items":
             for obj in value:
                 mini_row = []
-                
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
-                    if ordered_key == "Commodity":
-                        mini_row.append(obj.get("HS code", ''))
-                    elif ordered_key == "Net":
-                        mini_row.append(obj.get("Gross Weight", ''))
-                    elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("Amount", ""))
-                    elif ordered_key == "Currency":
-                        mini_row.append(data.get("Currency", ''))
-                    elif ordered_key == "Invoicenumber":
-                        mini_row.append(data.get("Inv Reference", ''))
-                    elif ordered_key == "Invoice date":
-                        mini_row.append(data.get("Inv Date", ''))
-                    elif ordered_key == "Rex/other":
-                        mini_row.append(data.get("Customs code", ''))
+                    if(ordered_key == "Currency"):
+                        mini_row.append(data.get("currency", ''))
+                    elif(ordered_key == "Invoicenumber"):
+                        mini_row.append(data.get("inv reference", ''))
+                    elif(ordered_key == "Invoice date"):
+                        mini_row.append(data.get("inv date", ''))
+                    elif(ordered_key == "Rex/other"):
+                        mini_row.append(data.get("rex", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -114,29 +111,32 @@ def write_to_excel(json_string):
 
     # Add keys (headers) to the first row
     ws.append(header1)
-
     # Add values to the second row
     ws.append(values1)
 
-    # Add empty rows and totals
+    # Add values to the second row
     ws.append(row_empty)
     ws.append(row_empty)
 
+    # Add values 
     ws.append(["Total invoices"])
-    ws.append([round(Total)])
+    total_invoices = safe_float_conversion(normalize_number_format(data.get('total amount', 0)))
+    ws.append([total_invoices])
     ws.append(row_empty)
 
+    # Add values 
     ws.append(["Total Collis"])
-    total_pallets = data.get('Pallets', 0)
+    total_pallets = safe_int_conversion(normalize_number_format(data.get('total pallets', 0)))
     ws.append([total_pallets])
     ws.append(row_empty)
 
+    # Add values 
     ws.append(["Total Gross"])
-    total_weight = data.get('Gross weight total', 0)
+    total_weight = safe_float_conversion(normalize_number_format_global_weight(re.sub(r'[^0-9.,]', '', data.get('total weight', 0))))
     ws.append([total_weight])
     ws.append(row_empty)
 
-    # Add items
+    # Add values
     ws.append(["Items"])
     ws.append(header2)
 
@@ -155,11 +155,10 @@ def write_to_excel(json_string):
                 pass
         adjusted_width = (max_length + 2)
         ws.column_dimensions[column].width = adjusted_width
-
+    
     # Save the workbook to a BytesIO object (in memory)
     file_stream = BytesIO()
     wb.save(file_stream)
     file_stream.seek(0)
 
     return file_stream
-
