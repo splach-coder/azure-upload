@@ -40,6 +40,7 @@ if __name__ == "__main__":
     try:
         # Obtain access token
         token = get_access_token(CONSUMER_KEY, CLIENT_SECRET)
+        print(token)
         print("Access token obtained successfully.")
 
         # Replace with your actual container number

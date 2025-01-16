@@ -28,20 +28,13 @@ def write_to_excel(json_string):
         "Place",
         "Container",
         "Truck",
-        "Rex/Other",
-        "Location"
+        "Rex/Other"
     ]
 
     address = data.get('Address', [])[0]
     name, street, city, code_postal, country = address.get('Name', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal Code', ''), address.get('Country', '') 
 
-    
-    Incoterm = data.get('Incoterm', ['', ''])
-    if len(Incoterm) > 1 :
-        term, place = Incoterm
-    else :
-        term = Incoterm[0]
-        place = ""
+    term, place = data.get('Incoterm', ['', ''])
 
     values1 = [
         data.get('Vat Number', ''),
@@ -61,8 +54,7 @@ def write_to_excel(json_string):
         place if 'place' in locals() else '',
         data.get('container', ''),
         data.get('Wagon', ''),
-        data.get("Customs code", ''),
-        data.get("Location", '')
+        data.get("Customs code", '')
     ]
 
     header2 = [

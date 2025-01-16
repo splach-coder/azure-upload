@@ -16,8 +16,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Attempt to get the JSON body from the request
     try:
         body = req.get_json()
-        pdfs = body.get('pdf', [])
-        excels = body.get('excel', [])
+        excels = body.get('excels', [])
         email = body.get('email', [])
         
     except Exception as e:
@@ -27,14 +26,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
 
-    if not pdfs or not excels:
+    if not excels:
         return func.HttpResponse(
             body=json.dumps({"error": "No files provided"}),
             status_code=400,
             mimetype="application/json"
         )
 
-    extracted_data_from_pdfs = []
     extracted_data_from_excels = []
     
     # Get the data from the excel
@@ -108,37 +106,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except Exception as e:
             return json.dumps({"error": str(e)}, indent=4)
     
-    for pdf in pdfs:
-        documents = pdf.get("documents")
-        
-        result = {}
-
-        for page in documents:
-            fields = page["fields"]
-            for key, value in fields.items():
-                if key in ["Address", "Items"]: 
-                    arr = value.get("valueArray")
-                    result[key] = []
-                    for item in arr:
-                        valueObject = item.get("valueObject")
-                        obj = {}
-                        for keyObj, valueObj in valueObject.items():
-                            obj[keyObj] = valueObj["content"]
-                        result[key].append(obj)          
-                else :
-                    result[key] = value.get("content")
-                    
-        extracted_data_from_pdfs.append(result)            
-
     email_data = extract_email_data(email)
     
     logging.error(email_data)
 
-    result_data = {**extracted_data_from_pdfs[0], **email_data,"Items" : extracted_data_from_excels[0]}
+    #result_data = {**extracted_data_from_pdfs[0], **email_data,"Items" : extracted_data_from_excels[0]}
     
     result_data = process_data(result_data)
-    
-    logging.error(json.dumps(result_data, indent=4))
 
     try:
         # Call writeExcel to generate the Excel file in memory
