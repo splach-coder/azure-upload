@@ -36,3 +36,7 @@ def is_valid_container_number(container_number):
     actual_check_digit = int(container_number[-1])
     
     return expected_check_digit == actual_check_digit
+
+def string_to_unique_array(input_string):
+    # Split the string by comma, strip spaces, and remove duplicates using a set
+    return list(set(item.strip() for item in input_string.split(',')))
