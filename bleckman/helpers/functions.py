@@ -112,22 +112,30 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         # Append to invoices array
         merged_invoices.append(item['Inv Reference'])
 
-        # Append total to totals array
-        merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", "")))
+
+        if item.get('Total') is not None:
+            merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", "")))
+        else:
+            merged_totals.append(0.0)
 
         # Sum total pallets
         merged_total_pallets += safe_int_conversion(item.get('Total Pallets', 0))
-
-        # Sum total amount
-        merged_total += safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", ""))
+        
+        if item.get('Total') is not None:
+            # Sum total amount
+            merged_total += safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", ""))
 
         # Process items
         for item_data in item.get('Items', []):
             cleaned_hs_code = re.sub(r"[^\w]", "", item_data.get("HS code", "").strip())
             price_without_currency = re.sub(r"[^\d.]", "", item_data.get("Price", ""))
+            if item_data.get("Origin", "") is not None:
+                Origin = get_abbreviation_by_country(item_data.get("Origin", ""))
+            else :
+                Origin = ""
             item_entry = {
                 "HS code": cleaned_hs_code,
-                "Origin": get_abbreviation_by_country(item_data.get("Origin", "")),
+                "Origin": Origin,
                 "Pieces": safe_int_conversion(item_data.get("Pieces", 0)),
                 "Price": safe_float_conversion(price_without_currency)
             }
@@ -171,8 +179,8 @@ def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float]
     collis = [value for value in collis if value]
     gross = [value for value in gross if value]
 
-    if len(collis) != len(gross):
-        return [], []
+    if (len(collis) != len(gross)) or (len(collis) == 0) or (len(gross) == 0):
+        return 0.00, 0.00
             
     if len(collis) <= 4:
         collis = collis[-1]

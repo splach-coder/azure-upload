@@ -996,6 +996,10 @@ countries = [
         "abbreviation": "ZM"
     },
     {
+        "country": "Ouganda",
+        "abbreviation": "UG"
+    },
+    {
         "country": "Zimbabwe",
         "abbreviation": "ZW"
     }

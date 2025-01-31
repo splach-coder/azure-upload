@@ -4,6 +4,7 @@ from openpyxl.styles import Font
 from io import BytesIO
 
 def create_excel(data):
+    print("------------------------------------------------")
     # Create a workbook and a worksheet
     wb = Workbook()
     ws = wb.active
@@ -73,7 +74,7 @@ def create_excel(data):
             cell = ws.cell(row=row_idx, column=col_idx, value=value)
             # Apply font to all cells
             cell.font = Font(bold=False, size=11)
-            
+      
     ws["A1"].font = Font(bold=True)  # Make cell A1 bold
     ws["A2"].font = Font(bold=True)  # Make cell B2 bold
     ws["A3"].font = Font(bold=True)        

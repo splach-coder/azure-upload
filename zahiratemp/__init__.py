@@ -49,20 +49,64 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 wb = openpyxl.load_workbook(uploaded_file_path, data_only=True)
                 sheet = wb.active  # Get the active sheet
 
-                # Insert rows above specified indices (12, 16, 20, 24, 28)
-                divider_row_indices = [13, 17, 21, 25, 29]
-                for index in divider_row_indices:
-                    sheet.insert_rows(index)
+                # Extract ID from B7
+                id_value = sheet['B7'].value
 
-                # Search and replace "TURKIYE" with "TURKEY" in columns A to D
-                for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=4):
-                    for cell in row:
-                        if cell.value == "TURKIYE":
-                            cell.value = "TURKEY"
+                # Extract invoices array from A24 to A33
+                invoices = []
+                for row in range(24, 34):  # Rows 24 to 33
+                    cell_value = sheet[f'A{row}'].value
+                    if cell_value:
+                        invoices.append(cell_value)
+                    else:
+                        break  # Stop if no data is found
 
-                # Save the changes to a new file in memory
+                # Extract items array starting from A32, B32, C32, D32
+                items = []
+                row = 32
+                while True:
+                    a_value = sheet[f'A{row}'].value
+                    b_value = sheet[f'B{row}'].value
+                    c_value = sheet[f'C{row}'].value
+                    d_value = sheet[f'D{row}'].value
+
+                    if not a_value and not b_value and not c_value and not d_value:
+                        break  # Stop if no data is found in the row
+
+                    items.append({
+                        'A': a_value,
+                        'B': b_value,
+                        'C': c_value,
+                        'D': d_value
+                    })
+                    row += 1
+
+                # Create a new Excel file with the extracted data
+                new_wb = openpyxl.Workbook()
+                new_sheet = new_wb.active
+
+                # Write ID to the new sheet
+                new_sheet['A1'] = id_value
+
+                # Write invoices array to the new sheet starting from A24
+                for index, invoice in enumerate(invoices, start=3):
+                    new_sheet[f'A{index}'] = invoice
+
+                new_sheet['A6'] = 'QTY'
+                new_sheet['B6'] = 'Commodity'
+                new_sheet['C6'] = 'Origin'
+                new_sheet['D6'] = 'Value'
+
+                # Write items array to the new sheet starting from A32
+                for index, item in enumerate(items, start=7):
+                    new_sheet[f'A{index}'] = item['A']
+                    new_sheet[f'B{index}'] = item['B']
+                    new_sheet[f'C{index}'] = item['C']
+                    new_sheet[f'D{index}'] = item['D']
+
+                # Save the new Excel file in memory
                 output_file_path = os.path.join(temp_dir, 'processed_' + filename)
-                wb.save(output_file_path)
+                new_wb.save(output_file_path)
 
                 # Read the processed file for response
                 with open(output_file_path, 'rb') as processed_file:

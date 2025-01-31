@@ -45,13 +45,13 @@ def write_to_excel(json_string):
         data.get('Goods Location', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
-        name if 'name' in locals() else '',  # Safely handle variables
-        street if 'street' in locals() else '',
-        code_postal if 'code_postal' in locals() else '',
-        city if 'city' in locals() else '',
-        country if 'country' in locals() else '',
-        term if 'term' in locals() else '',
-        place if 'place' in locals() else '',
+        name.strip() if 'name' in locals() else '',  # Safely handle variables
+        street.strip() if 'street' in locals() else '',
+        code_postal.strip() if 'code_postal' in locals() else '',
+        city.strip() if 'city' in locals() else '',
+        country.strip() if 'country' in locals() else '',
+        term.strip() if 'term' in locals() else '',
+        place.strip() if 'place' in locals() else '',
         data.get('Container', ''),
         data.get('wagon', ''),
         data.get("Customs Code", '')

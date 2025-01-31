@@ -118,12 +118,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     if file_name.endswith('.pdf'):
                         pdf_path = os.path.join(temp_dir, file_name)
                         
-                        if "Voorblad" in file_name:
+                        if "Voorblad".lower() in file_name.lower():
                             logging.info(f"Processing Voorblad PDF: {file_name}")
                             # Process Voorblad PDFs (custom logic here)
                             voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
                             voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
+                            logging.error(voorblad_data_items)
                             collis, grosses = voorblad_data_items
+                            
                             collis, grosses = process_arrays(collis, grosses)
                             
                         else:
@@ -132,7 +134,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 logging.info(f"Processing TO inv: {file_name}")
                             elif "if" in file_name.lower():
                                 invoice_type = "euro"
-                                logging.info(f"Processing TO inv: {file_name}")
+                                logging.info(f"Processing IF inv: {file_name}")
+                            else:    
+                                logging.error("Invalid invoice format.")
+                                return func.HttpResponse(
+                                    body=json.dumps({"error": "Invalid invoice format"}),
+                                    status_code=400,
+                                    mimetype="application/json"
+                                )    
                                 
                             pdf_path = os.path.join(temp_dir, file_name)    
                             with open(pdf_path, "rb") as f:
@@ -187,6 +196,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info("Generated Excel file.")
     
     reference = result.get("Reference", "")
+    reference = reference if reference else "no-ref"
     
     # Set response headers for the Excel file download
     headers = {
