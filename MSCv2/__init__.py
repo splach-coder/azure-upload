@@ -39,16 +39,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
         result =  transform_container_data(result)
         
-        xml_output = generate_xml_declarations(result)
+        #xml_output = generate_xml_declarations(result)
         
         try:
-            # Prepare the JSON response
-            response = {
-                "xml_files": xml_output  # Sending the array of XML strings
-            }
 
             return func.HttpResponse(
-                json.dumps(response),
+                json.dumps(result),
                 mimetype="application/json",
                 status_code=200
             )
