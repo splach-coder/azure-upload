@@ -3,7 +3,7 @@ import logging
 import json
 
 from MSCv2.functions.functions import fill_missing_container_values, group_containers_by_items, process_container_data_MSC, transform_container_data
-from templates.NCTS_XML.xml_output import generate_xml_declarations
+#from templates.NCTS_XML.xml_output import generate_xml_declarations
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -62,6 +62,3 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-        
-        
-  
