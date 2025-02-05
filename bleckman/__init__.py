@@ -38,7 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json"
         )
         
-    # Replace with your Key Vault URL
+    # Key Vault URL
     key_vault_url = "https://kv-functions-python.vault.azure.net"
     secret_name = "azure-form-recognizer-key-2"  # The name of the secret you created
     
