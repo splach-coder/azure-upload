@@ -17,8 +17,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "emailBody" : ""
         }
 
-        result = {}
-
         #process the data from the sql if plda files is there
         if len(sql_data)  > 0:
             sql_data = sql_data[0]
@@ -33,19 +31,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 <html>
                 <body>
                     <p>Dear,</p>
-                    <p>Please check, we can't find this record on the PLDA database:</p>
+                    <p>Please check, we can't find the IMAH in the PLDA database:</p>
                     <p><strong>CONTAINER:</strong> {file_data.get("containers")}</p>
                     <p>Best,</p>
                     <p>MESSI10 ⚽</p>
-                </body>
+                </body> 
                 </html>
                 """
             }
-            return func.HttpResponse(
-                json.dumps(email),
-                mimetype="application/json",
-                status_code=400
-            )
+
 
         #remove some fields from items in file_Data
         items = file_data.get("items", "")
