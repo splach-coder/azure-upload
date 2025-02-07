@@ -100,9 +100,10 @@ def transform_container_data(input_data: list) -> list:
         country = search_ports(container.get("Origin"))
 
         gross, net = 0.00, 0.00
+        Package = 0
         
         if data and container.get("packages") == data.get("package"):
-            gross, net = data.get("gross"), data.get("net")
+            gross, net = data.get("gross"), data.get("net")    
         
         Quay = ""
             
@@ -119,10 +120,13 @@ def transform_container_data(input_data: list) -> list:
             item["ArrivalNotice1"] = f"1{container.get('stay')}L{container.get('loyd')}*{container.get('ArticleNumber').zfill(4)}"
             item["ArrivalNotice2"] = f"MSCBEL*{item.get('item')}*{container.get('BLnumber')}"
             item["Net Weight"] = net   
-            item["Gross Weight"] = item.get("gross weight") 
+            item["Gross Weight"] = item.get("gross weight")
+            if gross == 0.00:
+                gross += item.get("gross weight") 
             item["container"] = container.get("container")
             item["Description"] = item.get("description")
             item["Packages"] = item.get("packages")
+            Package += item.get("packages")
 
 
         transformed = {
@@ -131,7 +135,8 @@ def transform_container_data(input_data: list) -> list:
             "containers" :  container.get("container", ""),
             "Quay": Quay,
             "globalWeight":gross,
-            "globalWeight2":net
+            "globalWeight2":net,
+            "Package": Package
         }
         
         result.append(transformed)

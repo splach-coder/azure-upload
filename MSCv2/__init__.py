@@ -36,6 +36,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result = process_container_data_MSC(result)
         
         result = group_containers_by_items(result)
+
+        logging.error(result)
     
         result =  transform_container_data(result)
         

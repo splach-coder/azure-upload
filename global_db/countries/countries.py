@@ -868,6 +868,10 @@ countries = [
         "abbreviation": "CH"
     },
     {
+        "country": "Switserland",
+        "abbreviation": "CH"
+    },
+    {
         "country": "Syria",
         "abbreviation": "SY"
     },

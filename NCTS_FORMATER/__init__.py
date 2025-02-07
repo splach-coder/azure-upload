@@ -59,10 +59,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if len(pdf_items) == 1 and len(plda_items) == 1:
             merged_items = [{**pdf_items[0], **plda_items[0]}]
 
-            PDF_GROSS = merged_items[0].get("Gross Weight")
-            PDF_PKGS = merged_items[0].get("Packages")
-            PLDA_GROSS = merged_items[0].get("GROSSMASS")
-            PLDA_PKGS = merged_items[0].get("PACKAGES")
+            PDF_GROSS = file_data.get("globalWeight")
+            PDF_PKGS = file_data.get("Package")
+            PLDA_GROSS = sql_data.get("CONTROL_GROSSMASS")
+            PLDA_PKGS = sql_data.get("CONTROL_PACKAGES")
 
             if PLDA_PKGS != PDF_PKGS:
                 email = {
@@ -101,8 +101,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif len(pdf_items) == 1 and len(plda_items) >= 1:
             merged_items = combine_jsons_one_to_many_relation(pdf_items[0], plda_items)
 
-            PDF_GROSS = pdf_items.get("Gross Weight")
-            PDF_PKGS = pdf_items.get("Packages")
+            PDF_GROSS = file_data.get("globalWeight")
+            PDF_PKGS = file_data.get("Package")
             PLDA_GROSS = sql_data.get("CONTROL_GROSSMASS")
             PLDA_PKGS = sql_data.get("CONTROL_PACKAGES")
 
@@ -143,8 +143,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         elif len(pdf_items) >= 1 and len(plda_items) == 1:
             merged_items = combine_jsons_many_to_one_relation(pdf_items, plda_items[0])
 
-            PDF_GROSS = pdf_items.get("Gross Weight")
-            PDF_PKGS = pdf_items.get("Packages")
+            PDF_GROSS = file_data.get("globalWeight")
+            PDF_PKGS = file_data.get("Package")
             PLDA_GROSS = sql_data.get("CONTROL_GROSSMASS")
             PLDA_PKGS = sql_data.get("CONTROL_PACKAGES")
 

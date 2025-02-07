@@ -1,4 +1,15 @@
 import json
+import re
+
+def replace_between_asterisks(input_string, replacement_value):
+    """
+    Replaces the value inside * * with a given parameter.
+    
+    :param input_string: str, the input string containing *value*.
+    :param replacement_value: str, the value to replace inside * *.
+    :return: str, modified string.
+    """
+    return re.sub(r'\*(.*?)\*', f'*{replacement_value}*', input_string, count=1)
 
 def combine_jsons_one_to_many_relation(json_one, json_two):
     """
@@ -9,7 +20,7 @@ def combine_jsons_one_to_many_relation(json_one, json_two):
     :return: list of combined JSON objects.
     """
     # Extract relevant fields from the first JSON
-    item = json_one["item"]
+    item = 1
     arrival_notice1 = json_one["ArrivalNotice1"]
     arrival_notice2 = json_one["ArrivalNotice2"]
     container = json_one["container"]
@@ -21,12 +32,13 @@ def combine_jsons_one_to_many_relation(json_one, json_two):
         combined_entry = {
             "item": item,
             "ArrivalNotice1": arrival_notice1,
-            "ArrivalNotice2": arrival_notice2,
+            "ArrivalNotice2": replace_between_asterisks(arrival_notice2, item),
             "container": container,
             "Description": description,
             **entry  # Add the entire entry from json_two
         }
         combined_result.append(combined_entry)
+        item = item+1
 
     return combined_result
 
