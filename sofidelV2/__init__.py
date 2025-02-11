@@ -5,6 +5,7 @@ import json
 from sofidelV2.excel.create_excel import write_to_excel
 from global_db.functions.numbers.functions import clean_customs_code, clean_incoterm, clean_number_from_chars, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
+from sofidelV2.helpers.functions import extract_id_from_string
 from sofidelV2.utils.functions import handle_body_request, join_cmr_invoice_objects, join_cmrs, join_invoices, join_items
 from sofidelV2.utils.number_handlers import normalize_number_format
 
@@ -16,6 +17,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json()
         files = req_body["files"]
         email_body = req_body["body"]
+        subject_body = req_body["subject"]
         
         invs = []
         
@@ -39,9 +41,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 obj[keyObj] = valueObj["content"]
                             result[key].append(obj)          
                     else :
-                        result[key] = value.get("content")    
-                        
-            logging.error(json.dumps(result, indent=4))                     
+                        result[key] = value.get("content")             
 
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the incoterm
@@ -168,13 +168,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         body = handle_body_request(email_body)
         
         json_result = {**json_result, **body}
-        
-        #logic here for  exit office and export office and goods location
-        if json_result.get("Exit Port BE", "").lower() == "Zeebrugge".lower() :
-            json_result["Export office"] = "BEZEE216010"
-        else :
-            json_result["Export office"] = "BEHSS216000"     
-        
+
+        json_result["Export office"] = json_result.get("Exit Port BE", "")
+        json_result["Exit Port BE"] = ""
+        json_result["Reference"] = extract_id_from_string(subject_body)
+            
         try:
              # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(json_result)

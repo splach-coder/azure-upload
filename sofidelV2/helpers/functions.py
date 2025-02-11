@@ -1,5 +1,5 @@
 import json
-import logging
+import re
 import os
 import fitz  # PyMuPDF
 import os
@@ -147,7 +147,6 @@ def clean_and_normalize_sublists(list_of_lists):
             sublist.append('0')
 
     return cleaned_list
-
 
 def convert_to_json_array_cmr(data):
     """
@@ -350,3 +349,13 @@ def validate_data(data):
             return message
     except Exception as e:
         return f"An error occurred during validation: {e}"
+    
+def extract_id_from_string(input_string):
+    # Use a regular expression to find a 7-digit number in the string
+    match = re.search(r'\d{7}', input_string)
+    if match:
+        # Return the ID as an integer
+        return int(match.group())
+    else:
+        # Return None if no ID is found
+        return None    

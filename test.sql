@@ -11,9 +11,30 @@ WHERE PLDA.CPDECLHISTORY.DECLARATION_ID = PLDA.CPDECLARATION.DECLARATION_ID
   AND PLDA.CPDECLARATION.PRINCIPAL <> 'MARKEN'
   AND PLDA.CPDECLHISTORY.HISTORYTIME >= '180000'
 FETCH FIRST 2 ROWS ONLY
-
-
 -------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 SELECT
     d.DECLARATION_ID,
     d.PRINCIPAL, 
@@ -30,6 +51,41 @@ JOIN PLDA.CPDECLARTARIF t
     ON t.DECLARATION_ID = d.DECLARATION_ID
 WHERE d.PRINCIPAL = 'CASAINTERN'
 AND d.COMMERCIALREFERENCE = 'MEDU4724476'
+
+
+
+OUTPUT.JSON
+
+
+OUTPUT.GET()
+
+INSERT (
+    test.get("id"),
+    test.get("name"),
+)
+IN TO PLDA.CPDECLARATION
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -------------------------------------------------------------------------------------
 SELECT 
     PLDA.CPDECLHISTORY.STATUSDECLARATION,
@@ -138,23 +194,7 @@ WHERE
     AND c.IDENTIFICATIONNUMBER IS NOT NULL
 GROUP BY 
     d.DECLARATIONID
-
-
-
-
-
-
-
-/*Request to the functiosn*/
-https://functionapp-python-pdf.azurewebsites.net/api/DailyContainerCheck?code=WojhELuZgjmzAl8_R0RqQ5BKoUDS3fTj49eUt1DK2I4MAzFuEPJ7SQ%3D%3D
-{
-  "data": @{body('Execute_a_Oracle_query')?['resultsets']}
-}
-
-
-
-
-
+-----------------------------------------------------------------------------------------
 SELECT 
     d.DECLARATIONID, 
     d.MESSAGESTATUS,

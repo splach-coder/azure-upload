@@ -2,8 +2,7 @@ import azure.functions as func
 import logging
 import json
 
-from MSCv2.functions.functions import fill_missing_container_values, group_containers_by_items, process_container_data_MSC, transform_container_data
-#from templates.NCTS_XML.xml_output import generate_xml_declarations
+from Hapagl.functions.functions import clean_data, fill_missing_container_values
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -31,8 +30,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 else :
                     result[key] = value.get("valueString") 
 
+        result = clean_data(result)
         result = fill_missing_container_values(result)
-         
         
         try:
 

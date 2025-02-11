@@ -5,10 +5,8 @@ from cachetools import TTLCache
 
 from DailyContainerCheck.functions.functions import is_valid_container_number, string_to_unique_array
 
-
 # Initialize the TTLCache with a maximum size and time-to-live (TTL)
-error_cache = TTLCache(maxsize=2000, ttl=86400)  # Cache stores up to 2000 items for 1 day (86400 seconds)
-
+error_cache = TTLCache(maxsize=2000, ttl=86400000)  # Cache stores up to 2000 items for 1 day (86400 seconds)
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
