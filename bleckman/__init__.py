@@ -115,7 +115,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 for file_name in zip_ref.namelist():
                     logging.info(f"Found file: {file_name}")
                     # Check if the file is a PDF
-                    if file_name.endswith('.pdf'):
+                    if file_name.endswith('.pdf') or file_name.endswith('.PDF'):
                         pdf_path = os.path.join(temp_dir, file_name)
                         
                         if "Voorblad".lower() in file_name.lower():
@@ -127,7 +127,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             collis, grosses = voorblad_data_items
                             
                             collis, grosses = process_arrays(collis, grosses)
-                            
+
                         else:
                             if "to" in file_name.lower():
                                 invoice_type = "dollar"
@@ -165,8 +165,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                         result_dict[key].append(obj)
                                 else:
                                     result_dict[key] = value.value
-
+                            
                             invoices_data.append(result_dict)
+                            logging.error(json.dumps(result_dict, indent=4))
 
             # Append the processed JSON to extracted_data
             invoices_data_and_type = {
@@ -187,6 +188,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Cleanup temp file
         os.remove(uploaded_file_path)
+    
+
     
     result = process_invoice_data(invoices_data_and_type)
     #logging.error(json.dumps(result, indent=4))  

@@ -125,8 +125,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             del result["Items"]
             
-            
-
             resutls.append(result)
             
         # Merge JSON objects

@@ -15,6 +15,7 @@ countries = [
         "country": "American Samoa",
         "abbreviation": "AS"
     },
+    
     {
         "country": "Andorra",
         "abbreviation": "AD"
@@ -22,6 +23,34 @@ countries = [
     {
         "country": "Angola",
         "abbreviation": "AO"
+    },
+    {
+        "country": "Turquie",
+        "abbreviation": "TR"
+    },
+    {
+        "country": "Namibie",
+        "abbreviation": "NA"
+    },
+    {
+        "country": "Koweit",
+        "abbreviation": "KW"
+    },
+    {
+        "country": "Emirats Arabes Unis",
+        "abbreviation": "AE"
+    },
+    {
+        "country": "Afrique du Sud",
+        "abbreviation": "ZA"
+    },
+    {
+        "country": "Zambie",
+        "abbreviation": "ZM"
+    },
+    {
+        "country": "Egypte",
+        "abbreviation": "EG"
     },
     {
         "country": "Anguilla",
