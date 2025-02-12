@@ -167,7 +167,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                     result_dict[key] = value.value
                             
                             invoices_data.append(result_dict)
-                            logging.error(json.dumps(result_dict, indent=4))
 
             # Append the processed JSON to extracted_data
             invoices_data_and_type = {
@@ -188,8 +187,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         # Cleanup temp file
         os.remove(uploaded_file_path)
-    
-
     
     result = process_invoice_data(invoices_data_and_type)
     #logging.error(json.dumps(result, indent=4))  
