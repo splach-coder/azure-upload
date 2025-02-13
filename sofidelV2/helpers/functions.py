@@ -358,4 +358,129 @@ def extract_id_from_string(input_string):
         return int(match.group())
     else:
         # Return None if no ID is found
-        return None    
+        return None
+
+def transform_data(items):
+    """
+    Transform a list of dictionaries into separate arrays for each field,
+    handling newline-separated values by splitting them.
+    Only includes HS codes and Gross Weights when they exist.
+    
+    Args:
+        items (list): List of dictionaries containing product information
+        
+    Returns:
+        tuple: Four lists containing product codes, pieces, HS codes, and gross weights
+    """
+    product_codes = []
+    pieces = []
+    hs_codes = []
+    gross_weights = []
+    
+    # First pass: collect all product codes and pieces
+    for item in items:
+        product_codes.append(item["Product Code"])
+        pieces.append(item["Pieces"])
+    
+    # Second pass: collect only existing HS codes and Gross Weights
+    for item in items:
+        if "HS code" in item:
+            codes = item["HS code"].split("\n")
+            hs_codes.extend(codes)
+            
+        if "Gross Weight" in item:
+            weights = item["Gross Weight"].split("\n")
+            gross_weights.extend(weights)
+            
+    return [product_codes, pieces, hs_codes, gross_weights]
+
+def arrays_to_objects(arrays):
+    """
+    Convert parallel arrays into a list of standardized objects.
+    Takes corresponding elements from each array to form complete objects.
+    
+    Args:
+        arrays (list): List of lists containing [product_codes, pieces, hs_codes, gross_weights]
+    
+    Returns:
+        list: List of dictionaries with standardized structure
+    """
+    product_codes, pieces, hs_codes, gross_weights = arrays
+    result = []
+    
+    # Use the length of product codes as base since it's guaranteed to have all items
+    for i in range(len(product_codes)):
+        # Only create object if we have corresponding HS code and Gross Weight
+        obj = {
+            "Product Code": product_codes[i],
+            "Pieces": pieces[i],
+            "HS code": hs_codes[i],
+            "Gross Weight": gross_weights[i]
+        }
+        result.append(obj)
+    
+    return result
+
+def transform_items_collis(items):
+    """
+    Transform a list of dictionaries into separate arrays for each field,
+    handling newline-separated values by splitting them.
+    Only includes HS codes and Gross Weights when they exist.
+    
+    Args:
+        items (list): List of dictionaries containing product information
+        
+    Returns:
+        tuple: Four lists containing product codes, pieces, HS codes, and gross weights
+    """
+    product_codes = []
+    Collis = []
+    
+
+    # Second pass: collect only existing HS codes and Gross Weights
+    for item in items:
+        if "Product Code" in item:
+            codes = item["Product Code"].split("\n")
+            product_codes.extend(codes)
+            
+        if "Collis" in item:
+            weights = item["Collis"].split("\n")
+            Collis.extend(weights)
+            
+    return [product_codes, Collis]
+
+def arrays_items_collis(arrays):
+    """
+    Convert parallel arrays into a list of standardized objects.
+    Takes corresponding elements from each array to form complete objects.
+    
+    Args:
+        arrays (list): List of lists containing [product_codes, pieces, hs_codes, gross_weights]
+    
+    Returns:
+        list: List of dictionaries with standardized structure
+    """
+    product_codes, Collis = arrays
+    result = []
+    
+    # Use the length of product codes as base since it's guaranteed to have all items
+    if len(product_codes) == len(Collis):
+        for i in range(len(product_codes)):
+            # Only create object if we have corresponding HS code and Gross Weight
+            obj = {
+                "Product Code": product_codes[i],
+                "Collis": Collis[i],
+            }
+            result.append(obj)
+    else :
+        for i in range(len(product_codes)):
+            # Only create object if we have corresponding HS code and Gross Weight
+            obj = {
+                "Product Code": product_codes[i],
+                "Collis": 0,
+            }
+            result.append(obj)
+
+    
+    return result
+

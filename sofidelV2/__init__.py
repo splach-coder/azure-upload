@@ -5,7 +5,7 @@ import json
 from sofidelV2.excel.create_excel import write_to_excel
 from global_db.functions.numbers.functions import clean_customs_code, clean_incoterm, clean_number_from_chars, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
-from sofidelV2.helpers.functions import extract_id_from_string
+from sofidelV2.helpers.functions import arrays_items_collis, arrays_to_objects, extract_id_from_string, transform_data, transform_items_collis
 from sofidelV2.utils.functions import handle_body_request, join_cmr_invoice_objects, join_cmrs, join_invoices, join_items
 from sofidelV2.utils.number_handlers import normalize_number_format
 
@@ -81,6 +81,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             invs.append(result) 
         
         cmrs = []
+
+
         
         for file in files["cmrs"] :
             documents = file["documents"]
@@ -121,13 +123,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 
             #clean and split the total value
             totals_collis = result.get("Totals_Collis", "")
+
             if totals_collis:
                 collis = totals_collis[0].get("Pallets", "")
                 result["Pallets"] = safe_int_conversion(collis)
 
             #update the numbers in the items
-            items = result.get("items_collis", "")  
-            for item in items :
+            items = result.get("items_collis", "")
+            tmp_data = transform_items_collis(items)
+            tmp_result = arrays_items_collis(tmp_data)
+            result["items_collis"] = tmp_result
+            for item in tmp_result :
                 item["Collis"] = safe_int_conversion(item.get("Collis", 0))       
                 
             #update the numbers in the items
@@ -137,7 +143,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             # Clean the items
             cleaned_items = []
-            for item in items:
+            data_fix_ai = transform_data(items)
+            result_fix_ai = arrays_to_objects(data_fix_ai)
+            result["items"] = result_fix_ai
+            for item in result_fix_ai:
                 # Ensure the item has all required keys
                 # Process HS code: Keep only the first part of the split
                 if 'HS code' in item:
@@ -159,7 +168,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result = join_items(result)      
 
             cmrs.append(result)
-            
+
         inv = join_invoices(invs)
         cmr = join_cmrs(cmrs)
         
