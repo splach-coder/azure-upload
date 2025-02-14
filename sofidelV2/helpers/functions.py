@@ -379,8 +379,8 @@ def transform_data(items):
     
     # First pass: collect all product codes and pieces
     for item in items:
-        product_codes.append(item["Product Code"])
-        pieces.append(item["Pieces"])
+        product_codes.append(item.get("Product Code", ""))
+        pieces.append(item.get("Pieces", ""))
     
     # Second pass: collect only existing HS codes and Gross Weights
     for item in items:
