@@ -10,12 +10,12 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
 from Crosby.excel.createExcel import write_to_excel
-from Crosby.helpers.functions import clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, safe_float_conversion, safe_int_conversion
+from Crosby.helpers.functions import clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
-
+    
     # Attempt to parse JSON body
     try:
         req_body = req.get_json()
@@ -146,8 +146,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         customs_code = result_dict.get("Customs Code", "") if result_dict.get("Customs Code", "") else ""
         result_dict["Customs Code"] = clean_customs_code(customs_code)
         
-        logging.error(result_dict)
-        
         #switch the address country to abbr
         address = result_dict.get("Adrress", "")[0]
         address["Country"] = get_abbreviation_by_country(address.get("Country", ""))    
@@ -181,6 +179,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if email_data.get("Freight", "") is not None and email_data.get("Collis", "") is not None:
             email_data["Freight"] = safe_float_conversion(clean_numbers(email_data.get("Freight", "")))
             email_data["Collis"] = safe_int_conversion(email_data.get("Collis", ""))
+            goodsLocationCode = process_email_location(email)
+            if goodsLocationCode.get("found", ""):
+                email_data["Goods Location"] = goodsLocationCode.get("postal_code", "")
                  
     reference = ""
     if subject: 

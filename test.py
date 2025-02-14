@@ -1,99 +1,125 @@
+import re
 
-import json
-
-
-def transform_items_collis(items):
+def extract_postal_code(email_body):
     """
-    Transform a list of dictionaries into separate arrays for each field,
-    handling newline-separated values by splitting them.
-    Only includes HS codes and Gross Weights when they exist.
+    Extract Belgian postal code from email signature.
+    Looks for patterns like B-2220 or 2220 in address context.
     
     Args:
-        items (list): List of dictionaries containing product information
-        
-    Returns:
-        tuple: Four lists containing product codes, pieces, HS codes, and gross weights
-    """
-    product_codes = []
-    Collis = []
-    
-
-    # Second pass: collect only existing HS codes and Gross Weights
-    for item in items:
-        if "Product Code" in item:
-            codes = item["Product Code"].split("\n")
-            product_codes.extend(codes)
-            
-        if "Collis" in item:
-            weights = item["Collis"].split("\n")
-            Collis.extend(weights)
-            
-    return [product_codes, Collis]
-
-def arrays_items_collis(arrays):
-    """
-    Convert parallel arrays into a list of standardized objects.
-    Takes corresponding elements from each array to form complete objects.
-    
-    Args:
-        arrays (list): List of lists containing [product_codes, pieces, hs_codes, gross_weights]
+        email_body (str): Full email body text
     
     Returns:
-        list: List of dictionaries with standardized structure
+        str: Extracted postal code (2220 or 2580) or None if not found
     """
-    product_codes, Collis = arrays
-    result = []
-    
-    # Use the length of product codes as base since it's guaranteed to have all items
-    if len(product_codes) == len(Collis):
-        for i in range(len(product_codes)):
-            # Only create object if we have corresponding HS code and Gross Weight
-            obj = {
-                "Product Code": product_codes[i],
-                "Collis": Collis[i],
-            }
-            result.append(obj)
-    else :
-        for i in range(len(product_codes)):
-            # Only create object if we have corresponding HS code and Gross Weight
-            obj = {
-                "Product Code": product_codes[i],
-                "Collis": 0,
-            }
-            result.append(obj)
-
-    
-    return result
-
-items = [
-        {
-            "Product Code": "421358"
-        },
-        {
-            "Product Code": "421359",
-            "Collis": "6"
-        },
-        {
-            "Product Code": "421360",
-            "Collis": "2"
-        },
-        {
-            "Product Code": "421377",
-            "Collis": "4\n12"
-        },
-        {
-            "Product Code": "421378"
-        }
+    # Look for common Belgian postal code patterns
+    patterns = [
+        r'B-(\d{4})',  # Matches B-2220
+        r'BE-(\d{4})',  # Matches BE-2220
+        r'Belgium.*?(\d{4})',  # Matches postal code near "Belgium"
+        r'(\d{4}).*?Belgium',  # Matches postal code before "Belgium"
+        r'(\b2220\b|\b2580\b)'  # Specifically look for 2220 or 2580
     ]
+    
+    # Try each pattern
+    for pattern in patterns:
+        matches = re.finditer(pattern, email_body, re.IGNORECASE | re.MULTILINE)
+        for match in matches:
+            code = match.group(1) if len(match.groups()) > 0 else match.group(0)
+            # Only return if it's one of the expected codes
+            if code in ['2220', '2580']:
+                return code
+    
+    return None
+
+def process_email_location(email_body):
+    """
+    Process email body and determine goods location based on postal code.
+    
+    Args:
+        email_body (str): Full email body text
+    
+    Returns:
+        dict: Result containing postal code and status
+    """
+    postal_code = extract_postal_code(email_body)
+    
+    return {
+        'postal_code': postal_code,
+        'found': postal_code is not None,
+        'message': f"Found postal code: {postal_code}" if postal_code else "No valid postal code found"
+    }
+
+# Test with example email
+example_email = """Beste,
+
+ 
+
+Zouden jullie een exportdocument kunnen opstellen voor een zending naar UAE ajb?
+
+ 
+
+Kantoor van uitgang is: BE212000
+
+Vrachtkost: 50,- EUR
+
+Aantal colli: 1
+
+ 
+
+Regeling 10 00
+
+ 
+
+Bijgevoegd onze factuur.
+
+ 
+
+Alvast bedankt!
+
+ 
+
+ 
+
+Best regards,
+
+ 
+
+Sandra Henderickx
+
+Customer Care - Traffic Assistant
+
+ 
+
+Kito Crosby
+
+Heist-op-den-Berg, Belgium
+
+Office: (+32)(0)15768892
+
+sandra.henderickx@kitocrosby.com
+
+www.kitocrosby.com
+
+ 
 
 
-data = transform_items_collis(items)
-result = arrays_items_collis(data)
 
+ 
 
-print(json.dumps(result, indent=4))
+Crosby Europe nv
 
+Industriepark zone B nr. 26
 
+2220 Heist-op-den-Berg
 
+Monday-Thursday : 08h00 – 12h00 / 12h30 – 16h30
 
+Friday : 08h00 – 12h00 / 12h30 – 15h30
 
+ 
+
+ """
+
+# Test the function
+result = process_email_location(example_email)
+print(result.get("found", ""))

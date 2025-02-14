@@ -133,7 +133,7 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
             if item_data.get("Price", ""):
                 price_without_currency = re.sub(r"[^\d.]", "", item_data.get("Price", ""))
             if item_data.get("Origin", "") is not None:
-                Origin = get_abbreviation_by_country(item_data.get("Origin", ""))
+                Origin = item_data.get("Origin", "")#get_abbreviation_by_country(item_data.get("Origin", ""))
             else :
                 Origin = ""
             item_entry = {
