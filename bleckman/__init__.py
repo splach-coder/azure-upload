@@ -125,7 +125,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
                             logging.error(voorblad_data_items)
                             collis, grosses = voorblad_data_items
-                            
+                              
                             collis, grosses = process_arrays(collis, grosses)
 
                         else:

@@ -82,8 +82,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         cmrs = []
 
-
-        
         for file in files["cmrs"] :
             documents = file["documents"]
 
