@@ -10,7 +10,7 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
 from Crosby.excel.createExcel import write_to_excel
-from Crosby.helpers.functions import clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
+from Crosby.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -189,7 +189,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     for item in results:    
         item["Reference"] = reference
-        item["Email"] = email_data      
+        item["Email"] = email_data  
+
+    for inv in results:  
+        prev_date = inv.get('Inv Date', '')
+        new_date = change_date_format(prev_date)
+        inv["Inv Date"] = new_date
+
+    logging.error(f"Results: {results}")
     
     # Proceed with data processing
     try:

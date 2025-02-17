@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import re
 import difflib
 from collections import defaultdict
+from datetime import datetime
 
 def safe_int_conversion(value: str) -> int:
     try:
@@ -204,3 +205,13 @@ def process_email_location(email_body):
         'found': postal_code is not None,
         'message': f"Found postal code: {postal_code}" if postal_code else "No valid postal code found"
     }
+
+
+
+def change_date_format(date_str):
+    # Convert from dd.mm.yyyy to dd/mm/yyyy
+    try:
+        date_obj = datetime.strptime(date_str, '%d.%m.%Y')
+        return date_obj.strftime('%d/%m/%Y')
+    except ValueError:
+        return "Invalid date format"

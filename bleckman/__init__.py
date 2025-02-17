@@ -128,34 +128,52 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                             poller = client.begin_analyze_document("Bleckman-voorblad-model", document)
                             result = poller.result()
-
                             document = result.documents
-                            result_dict = {}
-                            fields = document[0].fields
-                            for key, value in fields.items():
-                                if key in ["Voorblad_Items"]:  # Fields that contain arrays
-                                    arr = value.value
-                                    result_dict[key] = []
-                                    for item in arr:
-                                        value_object = item.value
-                                        obj = {}
-                                        for key_obj, value_obj in value_object.items():
-                                            obj[key_obj] = value_obj.value
-                                        result_dict[key].append(obj)
-                                else:
-                                    result_dict[key] = value.value
                             
-                            logging.error(result_dict)
+                            # Initialize the result dictionary
+                            result_dict = {}
+                            
+                            # Extract top-level fields
+                            if document:
+                                fields = document[0].fields
+                            
+                                # Add top-level fields (e.g., ID, Exit Office)
+                                for key, value in fields.items():
+                                    if key != "Voorblad_Items":
+                                        result_dict[key] = value.value if hasattr(value, 'value') else None
+                            
+                                # Process the "Voorblad_Items" field
+                                if "Voorblad_Items" in fields:
+                                    voorblad_items = fields["Voorblad_Items"]
+                            
+                                    # Ensure Voorblad_Items is a dictionary
+                                    if hasattr(voorblad_items, 'value') and isinstance(voorblad_items.value, dict):
+                                        result_dict["Voorblad_Items"] = {}
+                            
+                                        # Iterate through each item in Voorblad_Items (e.g., Collis, Weight)
+                                        for item_name, item_data in voorblad_items.value.items():
+                                            if hasattr(item_data, 'value') and isinstance(item_data.value, dict):
+                                                values = []
+                            
+                                                # Extract values for keys like "one", "two", "three", etc.
+                                                for sub_key in ["one", "two", "three", "four", "five"]:
+                                                    sub_item = item_data.value.get(sub_key, {})
+                                                    values.append(sub_item.value if hasattr(sub_item, 'value') else None)
+                            
+                                                # Assign the extracted values to the result dictionary
+                                                result_dict["Voorblad_Items"][item_name] = values
 
-                            voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
-                            voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
-                            logging.error(voorblad_data_items)
-                            collis, grosses = voorblad_data_items
-                              
+                            logging.error(json.dumps(result_dict, indent=4))  # Log the result_dict for debugging purposes    
+                            #voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
+                            #voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
+                            voorblad_data = {"Reference" : result_dict.get("ID", ""), "Exit Office" : result_dict.get("Exit Office", "")}
+                            voorblad_data_items = result_dict.get("Voorblad_Items", {})
+                            collis, grosses = voorblad_data_items.get("Collis", {}), voorblad_data_items.get("Weight", {})
+                            #voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
+                            #logging.error(voorblad_data_items)
+                            #collis, grosses = voorblad_data_items
+
                             collis, grosses = process_arrays(collis, grosses)
-
-
-
                         else:
                             if "to" in file_name.lower():
                                 invoice_type = "dollar"
@@ -202,7 +220,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 "invoice_type": invoice_type,
                 "data": invoices_data,
                 "collis": collis,
-                "grosses": grosses,
+                "grosses": grosses,  
             }              
                         
         except zipfile.BadZipFile as e:
