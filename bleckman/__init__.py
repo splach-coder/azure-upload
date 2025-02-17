@@ -121,12 +121,40 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         if "Voorblad".lower() in file_name.lower():
                             logging.info(f"Processing Voorblad PDF: {file_name}")
                             # Process Voorblad PDFs (custom logic here)
+
+                            pdf_path = os.path.join(temp_dir, file_name)    
+                            with open(pdf_path, "rb") as f:
+                                document = f.read()
+
+                            poller = client.begin_analyze_document("Bleckman-voorblad-model", document)
+                            result = poller.result()
+
+                            document = result.documents
+                            result_dict = {}
+                            fields = document[0].fields
+                            for key, value in fields.items():
+                                if key in ["Voorblad_Items"]:  # Fields that contain arrays
+                                    arr = value.value
+                                    result_dict[key] = []
+                                    for item in arr:
+                                        value_object = item.value
+                                        obj = {}
+                                        for key_obj, value_obj in value_object.items():
+                                            obj[key_obj] = value_obj.value
+                                        result_dict[key].append(obj)
+                                else:
+                                    result_dict[key] = value.value
+                            
+                            logging.error(result_dict)
+
                             voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
                             voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
                             logging.error(voorblad_data_items)
                             collis, grosses = voorblad_data_items
                               
                             collis, grosses = process_arrays(collis, grosses)
+
+
 
                         else:
                             if "to" in file_name.lower():
