@@ -497,6 +497,10 @@ countries = [
         "abbreviation": "KW"
     },
     {
+        "country": "KOWEÏT",
+        "abbreviation": "KW"
+    },
+    {
         "country": "Kyrgyzstan",
         "abbreviation": "KG"
     },
