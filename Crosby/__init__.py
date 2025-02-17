@@ -105,9 +105,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             continue
         
         # Validate the file format (optional)
-        if not is_invoice(filename):
-            logging.error(f"File '{filename}' is not an invoice. Skipping analysis.")
-            continue
+        # if not is_invoice(filename):
+        #     logging.error(f"File '{filename}' is not an invoice. Skipping analysis.")
+        #     continue
         
         # Analyze the document
         try: 
