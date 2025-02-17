@@ -123,7 +123,7 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    ws.append([round(Total)])
+    ws.append([round(Total, 2)])
     ws.append(row_empty)
 
     ws.append(["Total Collis"])

@@ -62,8 +62,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             total = result.get("Total", "")
             if total:
                 value = total
+                logging.error(value)
                 value = normalize_number_format(value)
+                logging.error(value)
                 value = safe_float_conversion(value)
+                logging.error(value)
                 total = value
                 result["Total"] = total
             else : 
@@ -80,6 +83,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             invs.append(result) 
         
+        
+
         cmrs = []
 
         for file in files["cmrs"] :
