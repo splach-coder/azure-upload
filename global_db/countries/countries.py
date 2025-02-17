@@ -205,6 +205,10 @@ countries = [
         "abbreviation": "CN"
     },
     {
+        "country": "CHINA CHINE",
+        "abbreviation": "CN"
+    },
+    {
         "country": "Christmas Island",
         "abbreviation": "CX"
     },

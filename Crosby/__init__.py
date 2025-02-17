@@ -12,6 +12,7 @@ from azure.core.credentials import AzureKeyCredential
 from Crosby.excel.createExcel import write_to_excel
 from Crosby.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
+from global_db.functions.numbers.functions import normalize_numbers
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -156,7 +157,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             item["Qty"] = safe_int_conversion(item.get("Qty", 0))
             item["Gross"] = safe_float_conversion(normalize_number(item.get("Gross", 0.0)))
             item["Net"] = safe_float_conversion(normalize_number(item.get("Net", 0.0)))
-            item["Amount"] = safe_float_conversion(normalize_number(item.get("Amount", 0.0)))
+            item["Amount"] = safe_float_conversion(normalize_numbers(item.get("Amount", 0.0).replace("€", "").replace("$", "")))
             item["Inv Ref"] = result_dict.get("Inv Ref", "")
             
         items = fill_origin_country_on_items(items)
@@ -167,7 +168,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             item["Total Qty"] = safe_int_conversion(item.get("Total Qty", 0))
             item["Total Gross"] = safe_float_conversion(normalize_number(item.get("Total Gross", 0.0)))
             item["Total Net"] = safe_float_conversion(normalize_number(item.get("Total Net", 0.0)))
-            item["Total Amount"] = safe_float_conversion(normalize_number(item.get("Total Amount", 0.0)))
+            item["Total Amount"] = safe_float_conversion(normalize_numbers(item.get("Total Amount", 0.0).replace("€", "").replace("$", "")))
             
         results.append(result_dict)  
         

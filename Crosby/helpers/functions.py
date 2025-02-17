@@ -17,7 +17,7 @@ def safe_float_conversion(value: str) -> float:
         return 0.0
     
 def normalize_number(value: str) -> str:
-    return value.replace(" ", "").replace(".", "").replace(",", ".")  
+    return value.replace(" ", "").replace(".", "").replace(",", ".")
 
 def clean_incoterm(inco : str) -> list :
     return inco.split(' ', maxsplit=1)
