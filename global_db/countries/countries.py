@@ -249,6 +249,10 @@ countries = [
         "abbreviation": "CZ"
     },
     {
+        "country": "Czechia",
+        "abbreviation": "CZ"
+    },
+    {
         "country": "Denmark",
         "abbreviation": "DK"
     },
