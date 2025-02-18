@@ -72,27 +72,38 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 valueF = safe_float_conversion(valueF)
                 result["Freight"] = valueF
 
-            #update the numbers in the HSandTotals
-            items = result.get("Items", "")  
+            # Update the numbers in the HSandTotals
+            items = result.get("Items", [])
+            logging.error(items)
             totalCollis = 0
-            for item in items :
-                for key, value in item.items():
-                    if key in ["Net weight", "Price", "Pieces"]:
-                        if key == "Pieces":
-                            Pieces = safe_int_conversion(item.get(key, 0))
-                            item[key] = Pieces
-                            totalCollis += Pieces 
-                        else:
-                            item[key] = normalize_numbers(item.get(key, 0.0))
-                            item[key] = safe_float_conversion(item.get(key, 0.0))
-                    elif key == "Origin" :
-                        origin = value     
-                        origin = clean_Origin(origin)        
-                        item[key] = get_abbreviation_by_country(origin)
-                    elif key == "HS code":
-                        item[key] = clean_HS_code(item.get(key, ""))
-                
-                item["Inv Reference"] = result.get("Inv Reference", "")  
+
+            # Filter items that have 'Article nbr'
+            filtered_items = []
+            for item in items:
+                if "Article nbr" in item:
+                    filtered_items.append(item)
+                    for key, value in item.items():
+                        if key in ["Net weight", "Price", "Pieces"]:
+                            if key == "Pieces":
+                                Pieces = safe_int_conversion(item.get(key, 0))
+                                item[key] = Pieces
+                                totalCollis += Pieces 
+                            else:
+                                item[key] = normalize_numbers(item.get(key, 0.0))
+                                item[key] = safe_float_conversion(item.get(key, 0.0))
+                        elif key == "Origin":
+                            origin = value     
+                            origin = clean_Origin(origin)        
+                            item[key] = get_abbreviation_by_country(origin)
+                        elif key == "HS code":
+                            item[key] = clean_HS_code(item.get(key, ""))
+
+                    item["Inv Reference"] = result.get("Inv Reference", "")  
+                else:
+                    logging.warning(f"Item removed because 'Article nbr' key is missing: {item}")
+
+            # Update result with filtered items
+            result["Items"] = filtered_items
             result["Total pallets"] = totalCollis
             
             resutls.append(result)
@@ -109,7 +120,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             # Call writeExcel to generate the Excel file in memory
-            logging.info(merged_result)
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             
