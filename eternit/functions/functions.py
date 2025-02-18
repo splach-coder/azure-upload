@@ -76,12 +76,11 @@ def extract_and_clean(html_content):
     
     return data    
 
-
 def extract_data(input_text):
     # Define regex patterns
-    collis_pattern = r"Pal:\s*(\d+)"
-    freight_pattern = r"Transportprijs:\s*(\d+)\s+(\w{3})"
-    exit_office_pattern = r"Poort of Exit\s+(\w+)"
+    collis_pattern = r"Pal:\s*(\d+)|(\d+)\s+pallets?"
+    freight_pattern = r"(?:Transportprijs:|Vrachtkost:|Transportprijs)\s*\s*(\d+(?:[.,]\d+)?)\s*(\w{1,3})"
+    exit_office_pattern = r"(?:Poort of Exit|Poort of Exit:|Port of EXIT:)\s*(\w+)"
     
     # Extract data using regex
     collis_match = re.search(collis_pattern, input_text)
@@ -89,10 +88,18 @@ def extract_data(input_text):
     exit_office_match = re.search(exit_office_pattern, input_text)
     
     # Parse the matches
-    collis = int(collis_match.group(1)) if collis_match else None
-    freight = [int(freight_match.group(1)), freight_match.group(2)] if freight_match else None
-    exit_office = exit_office_match.group(1).strip() if exit_office_match else None
+    collis = None
+    if collis_match:
+        collis = int(collis_match.group(1) or collis_match.group(2))
     
+    freight = None
+    if freight_match:
+        amount = float(freight_match.group(1).replace(',', '.'))  # Handle both ',' and '.' as decimal separators
+        currency = freight_match.group(2)
+        freight = [amount, currency]
+    
+    exit_office = exit_office_match.group(1).strip() if exit_office_match else None
+
     # Create the output JSON structure
     output = {
         "collis": collis,
@@ -100,7 +107,8 @@ def extract_data(input_text):
         "Exit office": exit_office
     }
     
-    return output
+    # Remove None values from the dictionary
+    return {k: v for k, v in output.items() if v is not None}
 
 def extract_container_number(text):
     """

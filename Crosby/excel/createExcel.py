@@ -1,3 +1,4 @@
+from datetime import datetime
 from io import BytesIO
 import zipfile
 import logging
@@ -102,7 +103,13 @@ def write_to_excel(data):
                             elif ordered_key == "Invoicenumber":
                                 mini_row.append(obj.get("Inv Ref", ''))
                             elif ordered_key == "Invoice date":
-                                mini_row.append(entry.get("Inv Date", ''))
+                                # Convert string to date if possible
+                                inv_date_str = entry.get("Inv Date", '')
+                                try:
+                                    inv_date = datetime.strptime(inv_date_str, "%Y-%m-%d")  # Adjust format as needed
+                                    mini_row.append(inv_date)
+                                except ValueError:
+                                    mini_row.append(inv_date_str)  # If conversion fails, keep as string
                             elif ordered_key == "Pieces":
                                 mini_row.append(obj.get("Qty", ''))
                             elif ordered_key == "Rex/other":

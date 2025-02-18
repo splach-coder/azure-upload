@@ -569,6 +569,10 @@ countries = [
         "abbreviation": "MY"
     },
     {
+        "country": "MALAISIE",
+        "abbreviation": "MY"
+    },
+    {
         "country": "Maldives",
         "abbreviation": "MV"
     },
@@ -1015,6 +1019,10 @@ countries = [
     {
         "country": "GBR",
         "abbreviation": "GB"
+    },
+    {
+        "country": "United States",
+        "abbreviation": "US"
     },
     {
         "country": "United States",

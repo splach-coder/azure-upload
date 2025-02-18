@@ -12,20 +12,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Attempt to parse JSON body
     try:
         req_body = req.get_json()
-        files = req_body["files"]
-        email = req_body["body"]
-        
+        files = req_body.get("files", "")
+        email = req_body.get("body", "")
+
         resutls = []
         
         for file in files :
-            documents = file["documents"]
+            documents = file.get("documents")
 
             result = {}
 
             for page in documents:
                 fields = page["fields"]
                 for key, value in fields.items():
-                    if key in ["Address", "Items", "HSandTotals"]: 
+                    if key in ["Adress", "Items", "HSandTotals"]: 
                         arr = value.get("valueArray")
                         result[key] = []
                         for item in arr:
@@ -42,7 +42,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
             
-            
             #clean and convert the Gross weight
             gross_weight_total = result.get("Gross weight Total", "")
             gross_weight_total = clean_number_from_chars(gross_weight_total)
@@ -51,69 +50,42 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result["Gross weight Total"] = safe_float_conversion(gross_weight_total)
             
             #clean the customs code
-            customs_code = result.get("Customs Code", "") if result.get("Customs Code", "") else ""
+            customs_code = result.get("Customs code", "") if result.get("Customs code", "") else ""
+            del result["Customs code"]
             result["Customs Code"] = clean_customs_code(customs_code)
 
-            #switch the origin country to abbr
-            origin_country = result.get("Origin Country", "") if result.get("Origin Country", "") else ""
-            result["Origin Country"] = get_abbreviation_by_country(origin_country)
-
             #switch the address country to abbr
-            address = result.get("Address", "")[0]
+            address = result.get("Adress", "")[0]
             address["Country"] = get_abbreviation_by_country(address["Country"])
 
             #clean and split the total value
-            total = result.get("Total", "").split(' ', maxsplit=1)
-            if(len(total) > 1):
-                value, currency = total
-                value = normalize_numbers(value)
-                value = safe_float_conversion(value)
-                total = [round(value, 2), currency]
-                logging.error(total)
-                result["Total"] = total
-            else : 
-                total = [0.00, ""]
+            total = result.get("Total", "")
+            value = normalize_numbers(total)
+            value = safe_float_conversion(value)
+            total = round(value, 2)
+            result["Total"] = total
 
             #update the numbers in the items
             items = result.get("Items", "")  
             for item in items :
-                item["Pieces"] = safe_int_conversion(item.get("Pieces", ""))
-                Price = item.get("Price", "")
+                #handle the value
+                Price = item.get("Value", "")
                 Price = normalize_numbers(Price)
                 Price = safe_float_conversion(Price)
-                item["Price"] = Price 
+                item["Value"] = Price
+
+                #handle the value
+                Gross = item.get("Gross", "")
+                Gross = normalize_numbers(Gross)
+                Gross = safe_float_conversion(Gross)
+                item["Gross"] = Gross
+
+                #handle the value
+                Net = item.get("Net", "")
+                Net = normalize_numbers(Net)
+                Net = safe_float_conversion(Net)
+                item["Net"] = Net 
             
-            #update items with HS code based on TVA CT and CA match
-            items = result.get("Items", "")
-            hs_and_totals = result.get("HSandTotals")
-            result["HSandTotals"] = add_pieces_to_hs_and_totals(items, hs_and_totals)
-
-            #update the numbers in the HSandTotals
-            items = result.get("HSandTotals", "")  
-            for item in items :
-                if not item.get("Net Value", "") and item["HS code"] == "Z0000000":
-                    items.remove(item)
-
-                for key, value in item.items():
-                    if key in ["Gross Weight", "Net weight", "Net Value"]:
-                        item[key] = normalize_numbers(item.get(key, 0.0))
-                        item[key] = safe_float_conversion(item.get(key, 0.0))
-                    elif key == "Origin" :
-                        if not item[key]:
-                            if result.get("Origin Country", ""):
-                                item[key] = result.get("Origin Country", "")
-                            else :
-                                item[key] = ""
-                        else :
-                            item[key] = get_abbreviation_by_country(value)        
-                
-                item["Inv Reference"] = result.get("Inv Reference", "")  
-                item["Customs Code"] = result.get("Customs Code", "")  
-
-            del result["Items"]
-            
-            
-
             resutls.append(result)
             
         # Merge JSON objects
@@ -126,21 +98,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         #extract the table as json object
         email_table = extract_data(cleaned_email_body_html)
         
-        merged_result["Exit office"] = email_table.get("Exit office", "")
-        merged_result["Total pallets"] = email_table.get("collis", "")
-        #clean and split the total value
-        freight = email_table.get("freight", "")
-        if(len(freight) > 1):
-            valueF, currencyF = freight
-            freight = [valueF, currencyF.upper()]
-            merged_result["Freight"] = freight
-        else : 
-            merged_result["Freight"] = [0.00, ""]
-            
-        logging.error(json.dumps(merged_result, indent=4))    
+        merged_result["Exit office"] = email_table.get("Exit office", "").replace("Best", "").strip()
+        merged_result["Total pallets"] = email_table.get("collis", 0)
+        merged_result["Freight"] = email_table.get("freight", "")[0]
         
         try:
             # Call writeExcel to generate the Excel file in memory
+            logging.info(json.dumps(merged_result, indent=4))
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             
