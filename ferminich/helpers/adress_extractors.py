@@ -1,3 +1,4 @@
+import logging
 import re
 
 from ferminich.helpers.functions import get_abbreviation_by_country
@@ -148,8 +149,10 @@ def get_address_structure(text, countries):
     company_name = address_lines[0] if len(address_lines) > 0 else ''
     street_name = ' '.join(address_lines[1:3]) if len(address_lines) > 1 else ''
     city = address_lines[-2] if len(address_lines) > 2 else ''
-    country = address_lines[-1]
+    country = address_lines[-1] if len(address_lines) > 0 else ''
     
     country = get_abbreviation_by_country(countries, country)
+    if code_postal is None:
+        code_postal = ''
 
     return [company_name, street_name, city, code_postal, country]

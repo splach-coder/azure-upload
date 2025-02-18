@@ -145,6 +145,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
     # Proceed with data processing
     try:
+        logging.error(result)
         excel_file= write_to_excel(result)
         reference = result["reference"]
 
