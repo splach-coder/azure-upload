@@ -697,6 +697,10 @@ countries = [
         "abbreviation": "KP"
     },
     {
+        "country": "CORÉE DU NORD",
+        "abbreviation": "KP"
+    },
+    {
         "country": "Northern Ireland",
         "abbreviation": "GB"
     },
@@ -846,6 +850,10 @@ countries = [
     },
     {
         "country": "Singapore",
+        "abbreviation": "SG"
+    },
+    {
+        "country": "SINGAPOUR",
         "abbreviation": "SG"
     },
     {

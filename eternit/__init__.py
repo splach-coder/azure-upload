@@ -25,7 +25,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             for page in documents:
                 fields = page["fields"]
                 for key, value in fields.items():
-                    if key in ["Adress", "Items", "HSandTotals"]: 
+                    if key in ["Adress", "Items"]: 
                         arr = value.get("valueArray")
                         result[key] = []
                         for item in arr:
