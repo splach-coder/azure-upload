@@ -160,4 +160,3 @@ def write_to_excel(json_string):
     file_stream.seek(0)
 
     return file_stream
-

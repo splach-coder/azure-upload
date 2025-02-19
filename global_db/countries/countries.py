@@ -1013,6 +1013,10 @@ countries = [
         "abbreviation": "AE"
     },
     {
+        "country": "Unit.Arab Emir.",
+        "abbreviation": "AE"
+    },
+    {
         "country": "United Kingdom",
         "abbreviation": "GB"
     },

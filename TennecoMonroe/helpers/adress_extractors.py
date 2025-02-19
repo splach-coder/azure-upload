@@ -1,6 +1,6 @@
 import re
 
-from TennecoMonroe.helpers.functions import get_abbreviation_by_country
+from global_db.countries.functions import get_abbreviation_by_country
 
 postal_code_patterns = [
     # US-style ZIP codes (5 digits, optionally followed by a dash and 4 digits)
@@ -125,7 +125,7 @@ def detect_postal_code(address):
     # If no postal code found, return None
     return None
 
-def get_address_structure(text, countries):
+def get_address_structure(text):
     text = text
     code_postal = detect_postal_code(text)
 
@@ -146,6 +146,6 @@ def get_address_structure(text, countries):
     city = address_lines[-2] if len(address_lines) > 2 else ''
     country = address_lines[-1]
     
-    country = get_abbreviation_by_country(countries, country)
+    country = get_abbreviation_by_country(country)
 
     return [company_name, street_name, city, code_postal, country]

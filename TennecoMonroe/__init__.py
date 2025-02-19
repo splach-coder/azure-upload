@@ -12,7 +12,7 @@ from global_db.extractors.functions import extract_Exitoffice
 
 from TennecoMonroe.config.coords import first_page_coords, totals_page_coords
 from TennecoMonroe.config.key_maps import first_page_key_map, totals_page_key_map, table_page_key_map
-from TennecoMonroe.data.countries import countries
+from global_db.countries.countries import countries
 
 
 
@@ -89,7 +89,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # extract the file and put it on global for multiple files case
             first_page_data = json.loads(extract_text_from_first_page(uploaded_file_path, first_page_coords, first_page_key_map))
             #extract the the adress into company name, street, city ....
-            first_page_data["Address"] = get_address_structure(first_page_data["Address"], countries)
+            first_page_data["Address"] = get_address_structure(first_page_data["Address"])
             #clean the VAT from other chars
             first_page_data["Vat"] = clean_VAT(first_page_data["Vat"])
 
