@@ -131,11 +131,12 @@ def write_to_excel(data):
             ws.append(row_empty)
             
             Totals = entry.get("Totals")
-            if type(Totals) == list:
+            if type(Totals) == list and len(Totals) > 0:
                 Totals = entry.get("Totals")[0]
             
             ws.append(["Total invoices"])
-            ws.append([Totals.get("Total Amount", 0)])
+            TotalAmount = Totals.get("Total Amount", 0) if len(Totals) > 0 else 0
+            ws.append([TotalAmount])
             ws.append(row_empty)
         
             ws.append(["Total Collis"])
@@ -143,7 +144,8 @@ def write_to_excel(data):
             ws.append(row_empty)
         
             ws.append(["Total Gross"])
-            ws.append([Totals.get("Total Gross", 0)])
+            TotalGross = Totals.get("Total Gross", 0) if len(Totals) > 0 else 0
+            ws.append([TotalGross])
             ws.append(row_empty)
         
             # Add items

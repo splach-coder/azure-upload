@@ -163,12 +163,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         items = fill_origin_country_on_items(items)
 
         #update the numbers in the items
-        totals = result_dict.get("Totals", "")  
-        for item in totals :
-            item["Total Qty"] = safe_int_conversion(item.get("Total Qty", 0))
-            item["Total Gross"] = safe_float_conversion(normalize_number(item.get("Total Gross", 0.0)))
-            item["Total Net"] = safe_float_conversion(normalize_number(item.get("Total Net", 0.0)))
-            item["Total Amount"] = safe_float_conversion(normalize_numbers(item.get("Total Amount", 0.0).replace("€", "").replace("$", "")))
+        totals = result_dict.get("Totals", "")
+        if totals:
+            for item in totals :
+                item["Total Qty"] = safe_int_conversion(item.get("Total Qty", 0))
+                item["Total Gross"] = safe_float_conversion(normalize_number(item.get("Total Gross", 0.0)))
+                item["Total Net"] = safe_float_conversion(normalize_number(item.get("Total Net", 0.0)))
+                item["Total Amount"] = safe_float_conversion(normalize_numbers(item.get("Total Amount", 0.0).replace("€", "").replace("$", "")))
             
         results.append(result_dict)  
         
@@ -197,7 +198,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         new_date = change_date_format(prev_date)
         inv["Inv Date"] = new_date
 
-    logging.error(f"Results: {results}")
+    logging.error(json.dumps(results, indent=4))
     
     # Proceed with data processing
     try:

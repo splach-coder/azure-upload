@@ -109,6 +109,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             resutls.append(result)
             
         # Merge JSON objects
+        logging.info(json.dumps(resutls, indent=4))
         merged_result = merge_json_objects(resutls)
         
         '''------------------   Extract data from the email   ------------------ '''    

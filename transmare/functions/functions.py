@@ -109,20 +109,20 @@ def merge_json_objects(json_objects):
         # Sum fields like Total, Freight, and Gross weight Total
         if "Total" in obj and obj["Total"] is not None:
             if "Total" in merged_object and merged_object["Total"] is not None:
-                merged_object["Total"][0] += obj["Total"][0]
+                merged_object["Total"] += obj["Total"]
             else:
                 merged_object["Total"] = obj["Total"]
                 
         # Sum fields like Total, Freight, and Gross weight Total
         if "Total pallets" in obj and obj["Total pallets"] is not None:
             if "Total pallets" in merged_object and merged_object["Total pallets"] is not None:
-                merged_object["Total pallets"][0] += obj["Total pallets"][0]
+                merged_object["Total pallets"] += obj["Total pallets"]
             else:
                 merged_object["Total pallets"] = obj["Total pallets"]
 
         if "Freight" in obj and obj["Freight"] is not None:
             if "Freight" in merged_object and merged_object["Freight"] is not None:
-                merged_object["Freight"][0] += obj["Freight"][0]
+                merged_object["Freight"] += obj["Freight"]
             else:
                 merged_object["Freight"] = obj["Freight"]
 
