@@ -48,6 +48,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             if '.' in gross_weight_total or ',' in gross_weight_total:
                 gross_weight_total = normalize_numbers(gross_weight_total)
             result["Gross weight Total"] = safe_float_conversion(gross_weight_total)
+
+            #clean and convert the Gross weight
+            gross_weight_total = result.get("Freight", "")
+            gross_weight_total = clean_number_from_chars(gross_weight_total)
+            if '.' in gross_weight_total or ',' in gross_weight_total:
+                gross_weight_total = normalize_numbers(gross_weight_total)
+            result["Freight"] = safe_float_conversion(gross_weight_total)
             
             #clean the customs code
             customs_code = result.get("Customs code", "") if result.get("Customs code", "") else ""
@@ -84,7 +91,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Net = item.get("Net", "")
                 Net = normalize_numbers(Net)
                 Net = safe_float_conversion(Net)
-                item["Net"] = Net 
+                item["Net"] = Net
+
+                item["Inv Reference"] = result.get("Inv Reference", "")
             
             resutls.append(result)
             
@@ -104,7 +113,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             # Call writeExcel to generate the Excel file in memory
-            logging.info(json.dumps(merged_result, indent=4))
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             

@@ -93,7 +93,7 @@ def write_to_excel(json_string):
                     elif ordered_key == "Currency":
                         mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":
-                        mini_row.append(data.get("Inv Reference", ''))
+                        mini_row.append(obj.get("Inv Reference", ''))
                     elif ordered_key == "Invoice date":
                         # Convert string to date if possible
                         inv_date_str = data.get("Inv Date", '')

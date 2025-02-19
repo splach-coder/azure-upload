@@ -175,15 +175,9 @@ def merge_json_objects(json_objects):
         # Sum fields like Total, Freight, and Gross weight Total
         if "Total" in obj and obj["Total"] is not None:
             if "Total" in merged_object and merged_object["Total"] is not None:
-                merged_object["Total"][0] += obj["Total"][0]
+                merged_object["Total"] += obj["Total"]
             else:
                 merged_object["Total"] = obj["Total"]
-
-        if "Freight" in obj and obj["Freight"] is not None:
-            if "Freight" in merged_object and merged_object["Freight"] is not None:
-                merged_object["Freight"][0] += obj["Freight"][0]
-            else:
-                merged_object["Freight"] = obj["Freight"]
 
         if "Gross weight Total" in obj and obj["Gross weight Total"] is not None:
             if "Gross weight Total" in merged_object and merged_object["Gross weight Total"] is not None:
@@ -192,10 +186,10 @@ def merge_json_objects(json_objects):
                 merged_object["Gross weight Total"] = obj["Gross weight Total"]
 
         # Append HSandTotals items
-        if "HSandTotals" in obj and obj["HSandTotals"] is not None:
-            if "HSandTotals" not in merged_object or merged_object["HSandTotals"] is None:
-                merged_object["HSandTotals"] = []
-            merged_object["HSandTotals"].extend(obj["HSandTotals"])
+        if "Items" in obj and obj["Items"] is not None:
+            if "Items" not in merged_object or merged_object["Items"] is None:
+                merged_object["Items"] = []
+            merged_object["Items"].extend(obj["Items"])
 
         # Copy values for Address, Incoterm, and Origin (ensure to not overwrite)
         for key in ["Incoterm", "Address"]:
