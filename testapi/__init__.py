@@ -45,8 +45,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     df_balance, balance_blob_client = load_csv_from_blob(BALANCE_BLOB)
     df_leave, leave_blob_client = load_csv_from_blob(LEAVE_BLOB)
 
-    logging.error(f"API Key: {api_key}")
-
     # **GET /balance** → Get all balances (Manager)
     if method == "GET" and route == "balance" and not user_id:
         return func.HttpResponse(df_balance.to_json(orient="records"), mimetype="application/json")
