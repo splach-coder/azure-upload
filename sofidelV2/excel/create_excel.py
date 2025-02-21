@@ -45,7 +45,7 @@ def write_to_excel(json_string):
     
     values1 = [
         data.get('Vat Number', ''),
-        data.get('Principal', ''),
+        data.get('Principal', '').upper(),
         Reference_sofidel,
         data.get('Other Ref', ''),
         Freight,

@@ -82,8 +82,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Amount"] = Price            
 
             invs.append(result) 
-        
-        
 
         cmrs = []
 

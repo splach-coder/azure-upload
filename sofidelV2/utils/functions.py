@@ -152,6 +152,7 @@ def extract_and_clean(html_content):
 
     parking_trailer_pattern_exact = r"Parking trailer:\s*(\w+)"
     parking_trailer_pattern_fallback = r"[Pp]arking.*?(\w+)"
+    parking_trailer_pattern_fallback2 = r"[Pp]arking*?(\w+)"
 
     exit_port_value = exit_port_match.group(1).strip() if exit_port_match else None
 
@@ -166,7 +167,13 @@ def extract_and_clean(html_content):
             # If not found, use fallback pattern to find any mention of 'parking'
             parking_trailer_fallback = re.search(parking_trailer_pattern_fallback, cleaned_data)
             if parking_trailer_fallback:
-                result["Parking trailer"] = parking_trailer_fallback.group(1)    
+                result["Parking trailer"] = parking_trailer_fallback.group(1)
+
+            if not parking_trailer_fallback:
+                # If still not found, use another fallback pattern
+                parking_trailer_fallback2 = re.search(parking_trailer_pattern_fallback2, cleaned_data)
+                if parking_trailer_fallback2:
+                    result["Parking trailer"] = parking_trailer_fallback2.group(1)        
     
     return result
 
