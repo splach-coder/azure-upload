@@ -63,7 +63,7 @@ def add_pieces_to_hs_and_totals(items, hs_and_totals):
     # Loop through items and sum pieces based on CA in TVA CT
     for item in items:
         for hs in hs_and_totals:
-            if hs["CA"] in item["TVA CT"]:
+            if hs.get("CA", "") in item.get("TVA CT", ""):
                 hs["Pieces"] += item.get("Pieces", 0)
                 hs["Price"] += item.get("Price", 0.00)
                 hs["Origin"] = item.get("Origin", "")
@@ -76,27 +76,39 @@ def extract_and_clean(html_content):
     
     return data    
 
-def extract_key_value_pairs_from_email(html_content):
-    # Parse the HTML
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # Get the first table
-    first_table = soup.find('table')
-
-    # Extract key-value pairs
-    data = {}
-    for row in first_table.find_all('tr'):
-        cells = row.find_all('td')
-        if len(cells) == 2:
-            # Extract text, strip unnecessary whitespaces
-            key = cells[0].get_text(strip=True)
-            value = cells[1].get_text(strip=True)
-            data[key] = value
-
-    # Convert to JSON
-    json_output = json.dumps(data, indent=4, ensure_ascii=False)
+def extract_data(input_text):
+    # Define regex patterns
+    collis_pattern = r"Pal:\s*(\d+)|(\d+)\s+pallets?"
+    freight_pattern = r"(?:Transportprijs:|Vrachtkost:|Transportprijs)\s*\s*(\d+(?:[.,]\d+)?)\s*(\w{1,3})"
+    exit_office_pattern = r"(?:Poort of Exit|Poort of Exit:|Port of EXIT:)\s*(\w+)"
     
-    return json_output
+    # Extract data using regex
+    collis_match = re.search(collis_pattern, input_text)
+    freight_match = re.search(freight_pattern, input_text)
+    exit_office_match = re.search(exit_office_pattern, input_text)
+    
+    # Parse the matches
+    collis = None
+    if collis_match:
+        collis = int(collis_match.group(1) or collis_match.group(2))
+    
+    freight = None
+    if freight_match:
+        amount = float(freight_match.group(1).replace(',', '.'))  # Handle both ',' and '.' as decimal separators
+        currency = freight_match.group(2)
+        freight = [amount, currency]
+    
+    exit_office = exit_office_match.group(1).strip() if exit_office_match else None
+
+    # Create the output JSON structure
+    output = {
+        "collis": collis,
+        "freight": freight,
+        "Exit office": exit_office
+    }
+    
+    # Remove None values from the dictionary
+    return {k: v for k, v in output.items() if v is not None}
 
 def extract_container_number(text):
     """
@@ -163,15 +175,9 @@ def merge_json_objects(json_objects):
         # Sum fields like Total, Freight, and Gross weight Total
         if "Total" in obj and obj["Total"] is not None:
             if "Total" in merged_object and merged_object["Total"] is not None:
-                merged_object["Total"][0] += obj["Total"][0]
+                merged_object["Total"] += obj["Total"]
             else:
                 merged_object["Total"] = obj["Total"]
-
-        if "Freight" in obj and obj["Freight"] is not None:
-            if "Freight" in merged_object and merged_object["Freight"] is not None:
-                merged_object["Freight"][0] += obj["Freight"][0]
-            else:
-                merged_object["Freight"] = obj["Freight"]
 
         if "Gross weight Total" in obj and obj["Gross weight Total"] is not None:
             if "Gross weight Total" in merged_object and merged_object["Gross weight Total"] is not None:
@@ -180,10 +186,10 @@ def merge_json_objects(json_objects):
                 merged_object["Gross weight Total"] = obj["Gross weight Total"]
 
         # Append HSandTotals items
-        if "HSandTotals" in obj and obj["HSandTotals"] is not None:
-            if "HSandTotals" not in merged_object or merged_object["HSandTotals"] is None:
-                merged_object["HSandTotals"] = []
-            merged_object["HSandTotals"].extend(obj["HSandTotals"])
+        if "Items" in obj and obj["Items"] is not None:
+            if "Items" not in merged_object or merged_object["Items"] is None:
+                merged_object["Items"] = []
+            merged_object["Items"].extend(obj["Items"])
 
         # Copy values for Address, Incoterm, and Origin (ensure to not overwrite)
         for key in ["Incoterm", "Address"]:
@@ -191,3 +197,41 @@ def merge_json_objects(json_objects):
                 merged_object[key] = obj[key]
 
     return merged_object
+
+
+def extract_key_value_pairs_from_email(html_content):
+    # Parse the HTML
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Get the first table
+    first_table = soup.find('table')
+
+    # Extract key-value pairs
+    data = {}
+    for row in first_table.find_all('tr'):
+        cells = row.find_all('td')
+        if len(cells) == 2:
+            # Extract text, strip unnecessary whitespaces
+            key = cells[0].get_text(strip=True)
+            value = cells[1].get_text(strip=True)
+            data[key] = value
+
+    # Convert to JSON
+    json_output = json.dumps(data, indent=4, ensure_ascii=False)
+    
+    return json_output
+
+def extract_container_number(text):
+    """
+    Extract the container number from a given text.
+    The format is: Two characters (letters), optional space, four numbers.
+    
+    Args:
+        text (str): The input text.
+    
+    Returns:
+        str or None: The container number if found, otherwise None.
+    """
+    pattern = r"\b([A-Za-z]{4}\d{4})\b"
+    match = re.search(pattern, text)
+    return match.group(1) if match else ""
