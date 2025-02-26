@@ -75,6 +75,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # **GET /leave/{id}** → Get leave data for one user (User)
     elif method == "GET" and route == "leave" and user_id:
+        user_leaves = df_leave[df_leave.get("Team", "") == user_id]
+        return func.HttpResponse(user_leaves.to_json(orient="records"), mimetype="application/json")
+    
+    # **GET /leave/{id}** → Get leave data for one user (User)
+    elif method == "GET" and route == "leave" and user_id:
         user_leave = df_leave[df_leave.get("Employee name", "") == user_id]
         if user_leave.empty:
             return func.HttpResponse("User not found", status_code=404)
