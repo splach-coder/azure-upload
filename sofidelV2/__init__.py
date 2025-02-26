@@ -2,6 +2,7 @@ import azure.functions as func
 import logging
 import json
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from sofidelV2.excel.create_excel import write_to_excel
 from global_db.functions.numbers.functions import clean_customs_code, clean_incoterm, clean_number_from_chars, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
@@ -56,7 +57,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             #switch the address country to abbr
             address = result.get("Address", "")[0]
-            address["Country"] = get_abbreviation_by_country(address["Country"])
+            parser = AddressParser()
+            address = parser.format_address_to_line_old_addresses(address)
+            parsed_result = parser.parse_address(address)
+            result["Address"] = parsed_result
+            #address["Country"] = get_abbreviation_by_country(address["Country"])
 
             #clean and split the total value
             total = result.get("Total", "")
