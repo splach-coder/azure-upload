@@ -5,6 +5,7 @@ import json
 import os
 import base64
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
 from capsugel.helpers.functions import extract_date, extract_vat_number, print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number, vat_validation
@@ -120,7 +121,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_1["Inv Date"] = remove_g_from_date(data_1["Inv Date"])
                 data_1["Inv Date"] = extract_date(data_1["Inv Date"])
                 data_1["Inv Ref"] = clean_number(data_1["Inv Ref"])
-                data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
+                address = data_1.get("ship to")
+                parser = AddressParser()
+                parsed_result = parser.parse_address(address)
+                data_1["ship to"] = parsed_result
+                #data_1["ship to"] = get_address_structure(data_1["ship to"], countries)
                 
                 pattern = re.compile(r'[\(]?(incoterms[:]? 2010|incoterms:|incoterms)[\)]?', re.IGNORECASE)
                 

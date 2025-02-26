@@ -4,6 +4,7 @@ import json
 import os
 import base64
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, check_invoice_in_pdf, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
 from TennecoMonroe.service.extractors import extract_dynamic_text_from_pdf, extract_freight_and_exit_office_from_html, extract_text_from_first_page, find_customs_authorisation_coords, find_page_in_invoice
 from TennecoMonroe.helpers.adress_extractors import get_address_structure
@@ -89,7 +90,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # extract the file and put it on global for multiple files case
             first_page_data = json.loads(extract_text_from_first_page(uploaded_file_path, first_page_coords, first_page_key_map))
             #extract the the adress into company name, street, city ....
-            first_page_data["Address"] = get_address_structure(first_page_data["Address"])
+            address = first_page_data.get("Address")
+            parser = AddressParser()
+            parsed_result = parser.parse_address(address)
+            #first_page_data["Address"] = get_address_structure(first_page_data["Address"])
+            first_page_data["Address"] = parsed_result
             #clean the VAT from other chars
             first_page_data["Vat"] = clean_VAT(first_page_data["Vat"])
 

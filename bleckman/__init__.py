@@ -235,7 +235,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         os.remove(uploaded_file_path)
     
     result = process_invoice_data(invoices_data_and_type)
-    #logging.error(json.dumps(result, indent=4))  
+    logging.error(json.dumps(result, indent=4))  
     
     # Call writeExcel to generate the Excel file in memory
     excel_file = create_excel(result)

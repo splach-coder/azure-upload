@@ -99,7 +99,10 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         address[0]["Country"] = get_abbreviation_by_country(address[0].get("Country", ""))
     
     # Remove special characters from Incoterm and split
-    cleaned_incoterm = re.sub(r'[+,.]', '', incoterm).split(' ', maxsplit=1)
+    if incoterm:
+        cleaned_incoterm = re.sub(r'[+,.]', '', incoterm).split(' ', maxsplit=1)
+    else:
+        cleaned_incoterm = []
 
     # Process and merge all data items
     for item in input_data['data']:
@@ -111,7 +114,6 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
 
         # Append to invoices array
         merged_invoices.append(item['Inv Reference'])
-
 
         if item.get('Total') is not None:
             merged_totals.append(safe_float_conversion(item.get('Total', 0).replace(",", "").replace("\u20ac", "").replace("?", "").replace("$", "").replace("USD", "")))

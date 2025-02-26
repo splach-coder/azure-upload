@@ -4,6 +4,7 @@ import json
 import os
 import base64
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from ferminich.excel.create_excel import write_to_excel
 from ferminich.helpers.adress_extractors import get_address_structure
 from ferminich.helpers.functions import clean_invoice_text, combine_invoices, get_currency_abbr, get_inco_arr, normalise_number, safe_float_conversion
@@ -82,7 +83,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         #extract vat 
         header_inv_data["Vat"] = vat_validation(extract_vat_number(header_inv_data["Vat"]))
         #extract the address
-        header_inv_data["Address"] = get_address_structure(header_inv_data["Address"], countries)
+
+        address = header_inv_data.get("Address")
+
+        parser = AddressParser()
+        parsed_result = parser.parse_address(address)
+        header_inv_data["Address"] = parsed_result
+
         #extract the currency
         header_inv_data["Currency"] = get_currency_abbr(header_inv_data["Currency"])
         #extract the currency

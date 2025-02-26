@@ -6,7 +6,7 @@
             "direction": "in",
             "name": "req",
             "methods": ["get", "post"],
-            "route": "user/{route}/{id?}"
+            "route": "holidays/{route}/{id?}"
         },
         {
             "type": "http",

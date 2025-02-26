@@ -36,7 +36,40 @@ class AddressParser:
         except Exception as e:
             logging.error(f"Failed to retrieve secret: {str(e)}")
             return False
-            
+
+    def format_address_to_line_old_addresses(self, address_dict):
+        """
+        Converts an address dictionary to a single line string.
+
+        Args:
+            address_dict (dict): Dictionary containing address components
+
+        Returns:
+            str: Single line formatted address
+        """
+        # Extract address components with empty string as default
+        company = address_dict.get('Company name', '')
+        street = address_dict.get('Street', '')
+        city = address_dict.get('City', '')
+        postal_code = address_dict.get('Postal Code', '')
+        country = address_dict.get('Country', '')
+
+        # Build address parts that exist
+        address_parts = []
+        if company:
+            address_parts.append(company)
+        if street:
+            address_parts.append(street)
+        if city:
+            address_parts.append(city)
+        if postal_code:
+            address_parts.append(postal_code)
+        if country:
+            address_parts.append(country)
+
+        # Join with commas
+        return ' '.join(address_parts)
+
     def parse_address(self, address):
         """
         Parse an address string into structured components using Gemini API.
@@ -52,7 +85,7 @@ class AddressParser:
             logging.error("No API key available")
             return None
             
-        prompt = f"""Parse the following address into company name, street, city, postal code, and country. Return the result as a Python list with string elements only, without any additional text or code formatting. The country should be represented by its 2-letter abbreviation code. If any field is missing, represent it with an empty string.
+        prompt = f"""Parse the following address into company name, street, city, postal code, and country. Return the result as a Python list with string elements only, without any additional text or code formatting. The country should be represented by its 2-letter abbreviation code. If any field is missing, represent it with an empty string. If city or postal code only those two fields not mentioned find the correct ones from data and add it please.
         [{address}]"""
         
         try:
@@ -69,16 +102,3 @@ class AddressParser:
         except Exception as e:
             logging.error(f"Unexpected error during address parsing: {e}")
             return None
-
-# Example usage
-if __name__ == "__main__":
-    parser = AddressParser()
-    address = "Hemofarm Doo Hajduk Veljkova Bb Sabac 15000 Serbia"
-    parsed_result = parser.parse_address(address)
-    if parsed_result:
-        company, street, city, postal_code, country = parsed_result
-        print(f"Company: {company}")
-        print(f"Street: {street}")
-        print(f"City: {city}")
-        print(f"Postal Code: {postal_code}")
-        print(f"Country: {country}")

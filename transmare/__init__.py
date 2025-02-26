@@ -2,6 +2,7 @@ import azure.functions as func
 import logging
 import json
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from global_db.countries.functions import get_abbreviation_by_country
 from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from transmare.excel.create_excel import write_to_excel
@@ -52,10 +53,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 gross_weight_total = normalize_numbers(gross_weight_total)
             result["Gross weight Total"] = safe_float_conversion(gross_weight_total)
 
-
             #switch the address country to abbr
             address = result.get("Address", "")[0]
-            address["Country"] = get_abbreviation_by_country(address["Country"])
+            parser = AddressParser()
+            address = parser.format_address_to_line_old_addresses(address)
+            parsed_result = parser.parse_address(address)
+            result["Address"] = parsed_result
 
             #clean and split the total value
             total = result.get("Total", "")
@@ -74,7 +77,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             # Update the numbers in the HSandTotals
             items = result.get("Items", [])
-            logging.error(items)
             totalCollis = 0
 
             # Filter items that have 'Article nbr'
@@ -109,7 +111,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             resutls.append(result)
             
         # Merge JSON objects
-        logging.info(json.dumps(resutls, indent=4))
         merged_result = merge_json_objects(resutls)
         
         '''------------------   Extract data from the email   ------------------ '''    

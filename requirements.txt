@@ -14,3 +14,4 @@ azure-ai-formrecognizer==3.3.3
 azure-keyvault-secrets==4.9.0
 azure-identity
 cachetools==5.5.1
+azure-storage-blob==12.24.1
