@@ -36,12 +36,14 @@ def write_to_excel(data):
                 "Rex/Other"
             ]
         
-            address = entry.get('Adrress', "")[0]
+            address = entry.get('Adrress', "")
             if address:
-                name, street, city, code_postal, country = address.get('Company name', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal code', ''), address.get('Country', '') 
+                name, street, city, code_postal, country = address#.get('Company name', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal code', ''), address.get('Country', '') 
                 
-            if entry.get('Incoterm', ""):
+            if len(entry.get('Incoterm', "")) > 1:
                 term, place = entry.get('Incoterm', ('', ''))
+            else:
+                term, place = ['', '']    
                 
             Freight = entry.get('Email', '').get('Freight', '')    
         
@@ -169,7 +171,7 @@ def write_to_excel(data):
                 ws.column_dimensions[column].width = adjusted_width
         
             # Save the file with the container name
-            excel_filename = f"{entry['Reference']}.xlsx"
+            excel_filename = f"{entry['Inv Ref']}.xlsx"
             with BytesIO() as excel_buffer:
                 wb.save(excel_buffer)
                 excel_buffer.seek(0)

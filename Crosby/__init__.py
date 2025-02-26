@@ -9,6 +9,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from Crosby.excel.createExcel import write_to_excel
 from Crosby.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
@@ -149,7 +150,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         #switch the address country to abbr
         address = result_dict.get("Adrress", "")[0]
-        address["Country"] = get_abbreviation_by_country(address.get("Country", ""))    
+        parser = AddressParser()
+        address = parser.format_address_to_line_old_addresses(address)
+        parsed_result = parser.parse_address(address)
+        result_dict["Adrress"] = parsed_result
+        #address["Country"] = get_abbreviation_by_country(address.get("Country", ""))    
             
         #update the numbers in the items
         items = result_dict.get("Items", "")  
@@ -197,8 +202,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         prev_date = inv.get('Inv Date', '')
         new_date = change_date_format(prev_date)
         inv["Inv Date"] = new_date
-
-    logging.error(json.dumps(results, indent=4))
     
     # Proceed with data processing
     try:

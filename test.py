@@ -73,7 +73,7 @@ class AddressParser:
 # Example usage
 if __name__ == "__main__":
     parser = AddressParser()
-    address = "Hemofarm Doo Hajduk Veljkova Bb Sabac 15000 Serbia"
+    address = "VONIN REFA AS STAKKEVOLLVEIEN 67 TROMSØ NORVÈGE"
     parsed_result = parser.parse_address(address)
     if parsed_result:
         company, street, city, postal_code, country = parsed_result

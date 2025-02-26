@@ -39,11 +39,11 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     def normalize_address(address):
         """Normalize full address for comparison."""
         address_fields = [
-            address[0]['Company name'],
-            address[0]['Street'],
-            address[0]['City'],
-            address[0]['Postal code'],
-            address[0]['Country']
+            address[0],
+            address[1],
+            address[2],
+            address[3],
+            address[4]
         ]
         return ' '.join(str(field).lower() for field in address_fields if field)
     
