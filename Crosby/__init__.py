@@ -186,9 +186,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if email_data.get("Freight", "") is not None and email_data.get("Collis", "") is not None:
             email_data["Freight"] = safe_float_conversion(clean_numbers(email_data.get("Freight", "")))
             email_data["Collis"] = safe_int_conversion(email_data.get("Collis", ""))
-            goodsLocationCode = process_email_location(email)
-            if goodsLocationCode.get("found", ""):
-                email_data["Goods Location"] = goodsLocationCode.get("postal_code", "")
+        goodsLocationCode = process_email_location(email)
+        if goodsLocationCode.get("found", ""):
+            email_data["Goods Location"] = goodsLocationCode.get("postal_code", "")         
                  
     reference = ""
     if subject: 
@@ -202,6 +202,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         prev_date = inv.get('Inv Date', '')
         new_date = change_date_format(prev_date)
         inv["Inv Date"] = new_date
+
+      
     
     # Proceed with data processing
     try:

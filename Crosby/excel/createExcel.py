@@ -53,7 +53,7 @@ def write_to_excel(data):
                 entry.get('Reference', ''),
                 entry.get('Other Ref', ''),
                 Freight,
-                entry.get('Goods Location', ''),
+                entry.get('Email', '').get('Goods Location', ''),
                 entry.get('Export office', ''),
                 entry.get('Email', '').get('Exit office', ''),
                 name if 'name' in locals() else '',  # Safely handle variables

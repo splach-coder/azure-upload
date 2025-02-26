@@ -62,11 +62,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             total = result.get("Total", "")
             if total:
                 value = total
-                logging.error(value)
                 value = normalize_number_format(value)
-                logging.error(value)
                 value = safe_float_conversion(value)
-                logging.error(value)
                 total = value
                 result["Total"] = total
             else : 
@@ -184,7 +181,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result["Reference"] = extract_id_from_string(subject_body)
             
         try:
-             # Call writeExcel to generate the Excel file in memory
+            # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(json_result)
             logging.info("Generated Excel file.")
             
