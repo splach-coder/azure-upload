@@ -2,7 +2,8 @@ from datetime import datetime
 import logging
 import fitz
 import re
-from typing import Any, List, Dict, Tuple, Union
+from typing import Any, List, Dict, Optional, Tuple, Union
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from global_db.countries.functions import get_abbreviation_by_country
 
 def detect_pdf_type(pdf_path):
@@ -95,8 +96,13 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
         address = merge_inputs(address)
     
     #handle the adress 
-    if address[0]["Country"] is not None:
-        address[0]["Country"] = get_abbreviation_by_country(address[0].get("Country", ""))
+    if address[0] is not None:
+        addressTEMP = address[0]
+        parser = AddressParser()
+        addressTEMP = parser.format_address_to_line_old_addresses(addressTEMP)
+        parsed_result = parser.parse_address(addressTEMP)
+        address[0] = parsed_result
+        #address[0] = get_abbreviation_by_country(address[0].get("Country", ""))
     
     # Remove special characters from Incoterm and split
     if incoterm:
@@ -162,7 +168,7 @@ def process_invoice_data(input_data: Dict[str, Union[str, List]]) -> Dict[str, U
 
     # Construct the final output JSON
     output_data = {
-        "Exit office": input_data.get("Exit office", ""),
+        "Exit Office": input_data.get("Exit Office", ""),
         "Reference": input_data.get("Reference", ""),
         "inv Reference": merged_reference,
         "Vat Number": vat_number,
@@ -203,3 +209,8 @@ def process_arrays(collis: List[float], gross: List[float]) -> Tuple[List[float]
                       
     return collis, gross
    
+def cast_arrays_to_float(gross: List[Optional[str]]) -> List[Optional[float]]:
+    return [safe_float_conversion(item.replace(".", "").replace(",", ".")) if item else None for item in gross]
+
+def cast_arrays_to_int(collis: List[Optional[str]]) -> List[Optional[int]]:
+    return [safe_int_conversion(item.replace(".", "").replace(",", ".")) if item else None for item in collis] 

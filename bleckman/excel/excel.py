@@ -19,13 +19,13 @@ def create_excel(data):
     name, street, city, postal, country = ['', '', '', '', '']
     if address and len(address) == 1:
         address = address[0]
-        name, street, city, postal, country = address.get("Company name", ""), address.get("Street", ""), address.get("City", ""), address.get("Postal Code", ""), address.get("Country", ""),
+        name, street, city, postal, country = address#.get("Company name", ""), address.get("Street", ""), address.get("City", ""), address.get("Postal Code", ""), address.get("Country", ""),
 
     # Data for the labels
     datat = [
         ["Instruction 1", data.get("Instruction 1", "")],
         ["Instruction 2", "---"],
-        ["Exit Office", data.get("Exit office", "")],
+        ["Exit Office", data.get("Exit Office", "")],
         ["Site", "KR"],
         ["EUR1", "XXXXX"],
         ["Inco", inco, term],

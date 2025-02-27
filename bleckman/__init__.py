@@ -10,7 +10,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient # Use this API key to call Azure Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 
-from bleckman.helpers.functions import process_arrays, process_invoice_data
+from bleckman.helpers.functions import cast_arrays_to_float, cast_arrays_to_int, process_arrays, process_invoice_data
 from bleckman.service.extractors import extract_text_from_first_page, extract_text_from_first_page_arrs
 from bleckman.config.keywords import key_map, coordinates
 from bleckman.excel.excel import create_excel
@@ -162,8 +162,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             
                                                 # Assign the extracted values to the result dictionary
                                                 result_dict["Voorblad_Items"][item_name] = values
-
-                            logging.error(json.dumps(result_dict, indent=4))  # Log the result_dict for debugging purposes    
+                             # Log the result_dict for debugging purposes    
                             #voorblad_data = json.loads(extract_text_from_first_page(pdf_path, coordinates, key_map))
                             #voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
                             voorblad_data = {"Reference" : result_dict.get("ID", ""), "Exit Office" : result_dict.get("Exit Office", "")}
@@ -172,23 +171,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             #voorblad_data_items = extract_text_from_first_page_arrs(pdf_path)
                             #logging.error(voorblad_data_items)
                             #collis, grosses = voorblad_data_items
-
+                            collis, grosses = cast_arrays_to_int(collis), cast_arrays_to_float(grosses)
                             collis, grosses = process_arrays(collis, grosses)
+
                         else:
-                            if "to" in file_name.lower():
-                                invoice_type = "dollar"
-                                logging.info(f"Processing TO inv: {file_name}")
-                            elif "if" in file_name.lower():
-                                invoice_type = "euro"
-                                logging.info(f"Processing IF inv: {file_name}")
-                            else:    
-                                logging.error("Invalid invoice format.")
-                                return func.HttpResponse(
-                                    body=json.dumps({"error": "Invalid invoice format"}),
-                                    status_code=400,
-                                    mimetype="application/json"
-                                )    
-                                
                             pdf_path = os.path.join(temp_dir, file_name)    
                             with open(pdf_path, "rb") as f:
                                 document = f.read()
@@ -212,6 +198,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 else:
                                     result_dict[key] = value.value
                             
+                            if "to" in result_dict.get('Inv Reference', "").lower():
+                                invoice_type = "dollar"
+                                logging.info(f"Processing TO inv: {file_name}")
+                            elif "if" in result_dict.get('Inv Reference', "").lower():
+                                invoice_type = "euro"
+                                logging.info(f"Processing IF inv: {file_name}")
+                            else:    
+                                logging.error("Invalid invoice format.")
+                                return func.HttpResponse(
+                                    body=json.dumps({"error": "Invalid invoice format"}),
+                                    status_code=400,
+                                    mimetype="application/json"
+                                ) 
+                            
                             invoices_data.append(result_dict)
 
             # Append the processed JSON to extracted_data
@@ -221,7 +221,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 "data": invoices_data,
                 "collis": collis,
                 "grosses": grosses,  
-            }              
+            }            
                         
         except zipfile.BadZipFile as e:
             logging.error(f"Failed to unzip file '{filename}': {e}")
@@ -235,7 +235,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         os.remove(uploaded_file_path)
     
     result = process_invoice_data(invoices_data_and_type)
-    logging.error(json.dumps(result, indent=4))  
     
     # Call writeExcel to generate the Excel file in memory
     excel_file = create_excel(result)
