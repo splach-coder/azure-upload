@@ -113,7 +113,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         # Analyze the document
         try: 
-            poller = client.begin_analyze_document("Crosby-model", file_content)
+            poller = client.begin_analyze_document("Crosby-model2", file_content)
             result = poller.result()
             
             document = result.documents
