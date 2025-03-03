@@ -162,7 +162,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             item["Qty"] = safe_int_conversion(item.get("Qty", 0))
             item["Gross"] = safe_float_conversion(normalize_number(item.get("Gross", 0.0)))
             item["Net"] = safe_float_conversion(normalize_number(item.get("Net", 0.0)))
-            item["Amount"] = safe_float_conversion(normalize_numbers(item.get("Amount", 0.0).replace("€", "").replace("$", "")))
+            if item.get("Amount", 0.0) is not None:
+                item["Amount"] = safe_float_conversion(normalize_numbers(item.get("Amount", 0.0).replace("€", "").replace("$", "")))
+            else:
+                item["Amount"] = 0.00
             item["Inv Ref"] = result_dict.get("Inv Ref", "")
             
         items = fill_origin_country_on_items(items)
