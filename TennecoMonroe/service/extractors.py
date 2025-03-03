@@ -60,7 +60,7 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
     extracted_text = []
     
     # Get the first page
-    first_page = pdf_document[page[0] - 1]  # Assuming we are always extracting from the first page
+    first_page = pdf_document[page[0] - 1]
 
     # Initialize y_start and y_end based on the y_range
     y_start, y_end = y_range
@@ -76,7 +76,9 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
         for x in x_coords:
             rect = fitz.Rect(x[0], current_y, x[1], current_y + row_height)
             text = first_page.get_text("text", clip=rect).strip()
-            row_data.append(text)     
+            row_data.append(text)  
+
+        logging.error(row_data)       
 
         # Check if the row meets the criteria
         if (

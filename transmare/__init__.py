@@ -78,6 +78,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Update the numbers in the HSandTotals
             items = result.get("Items", [])
             totalCollis = 0
+            totalNet = 0
 
             # Filter items that have 'Article nbr'
             filtered_items = []
@@ -93,6 +94,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             else:
                                 item[key] = normalize_numbers(item.get(key, 0.0))
                                 item[key] = safe_float_conversion(item.get(key, 0.0))
+                                if key == "Net weight" :
+                                    totalNet += item.get(key, 0)
+
                         elif key == "Origin":
                             origin = value     
                             origin = clean_Origin(origin)        
@@ -107,6 +111,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Update result with filtered items
             result["Items"] = filtered_items
             result["Total pallets"] = totalCollis
+            result["Total net"] = totalNet
             
             resutls.append(result)
             

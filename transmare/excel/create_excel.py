@@ -134,9 +134,10 @@ def write_to_excel(json_string):
     ws.append([total_pallets])
     ws.append(row_empty)
 
-    ws.append(["Total Gross"])
+    ws.append(["Total Gross", "Total Net"])
     total_weight = data.get('Gross weight Total', 0)
-    ws.append([total_weight])
+    total_net = data.get('Total net', 0)
+    ws.append([total_weight, total_net])
     ws.append(row_empty)
 
     # Add items

@@ -70,6 +70,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     invoices_data = []
     invoice_type = ""
     invoices_data_and_type = {}
+    collis, grosses = 0.00, 0.00
     
     for file_info in files:
         file_content_base64 = file_info.get('file')
@@ -198,6 +199,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 else:
                                     result_dict[key] = value.value
                             
+                            logging.error(result_dict)
+
                             if "to" in result_dict.get('Inv Reference', "").lower():
                                 invoice_type = "dollar"
                                 logging.info(f"Processing TO inv: {file_name}")

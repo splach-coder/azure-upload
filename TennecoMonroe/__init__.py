@@ -121,6 +121,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Call the function
             result = extract_dynamic_text_from_pdf(uploaded_file_path, x_coords, y_range, table_page_key_map, table_page)
 
+            logging.error(result)
+
             #cast it to json
             result = json.loads(result)
             #update countries to abbr
