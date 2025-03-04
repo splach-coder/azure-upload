@@ -18,5 +18,5 @@ def normalize_numbers(number_str : str) -> float:
     
     return normalized
 
-nbr = '1'
+nbr = '10,200'
 print(len(normalize_numbers(nbr)))

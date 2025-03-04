@@ -1,3 +1,4 @@
+import json
 import logging
 import azure.functions as func
 import pandas as pd
@@ -34,7 +35,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # GET /data - Fetch all data from the blob
     if method == "GET":
-        return func.HttpResponse(df_data.to_json(orient="records"), mimetype="application/json")
+        response = df_data.to_json(orient="records")
+        # Convert JSON string to Python list of dictionaries
+        response_list = json.loads(response)
+        # Process the response to convert Associated containers to a real list
+        processed_response = []
+        for item in response_list:
+            # Convert the string representation of the list to an actual list
+            item['Associated containers'] = json.loads(item['Associated containers'])
+            processed_response.append(item)
+        return func.HttpResponse(json.dumps(response_list), mimetype="application/json")
 
     # POST /data - Add new data to the blob
     elif method == "POST":
