@@ -87,17 +87,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 if "Article nbr" in item:
                     filtered_items.append(item)
                     for key, value in item.items():
-                        if key in ["Net weight", "Price", "Pieces"]:
+                        if key in ["Net weight", "Gross weight", "Price", "Pieces"]:
                             if key == "Pieces":
                                 Pieces = safe_int_conversion(item.get(key, 0))
                                 item[key] = Pieces
                                 totalCollis += Pieces 
                             else:
-                                item[key] = normalize_numbers(item.get(key, 0.0))
+                                number_value = item.get(key, 0.0)
+                                item[key] = normalize_numbers(number_value)
+                                if len(item[key]) == 0:
+                                    item[key] = safe_int_conversion(number_value)
                                 item[key] = safe_float_conversion(item.get(key, 0.0))
                                 if key == "Net weight" :
                                     totalNet += item.get(key, 0)
-
                         elif key == "Origin":
                             origin = value     
                             origin = clean_Origin(origin)        
@@ -124,7 +126,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         cleaned_email_body_html = extract_and_clean(email)
         
         #Extract the body data
-        merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html)
+        merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html.replace(merged_result.get("Inv Reference", "") ,''))
 
         prev_date = merged_result.get('Inv Date', '')
         new_date = change_date_format(prev_date)
