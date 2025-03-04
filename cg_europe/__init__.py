@@ -210,8 +210,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     reference = extract_ref(subject)
 
     for inv in results:  
+        if inv.get("Inv Reference") is None:
+            inv['Inv Reference'] = inv.get("Other Ref")
         prev_date = inv.get('Inv Date', '')
-        new_date = change_date_format(prev_date)
+        if prev_date is not None:
+            new_date = change_date_format(prev_date)
+        else:
+            new_date = ""
         inv["Inv Date"] = new_date
         inv["Reference"] = reference
     
@@ -221,7 +226,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(results)
         logging.info("Generated Excel file.")
 
-                # Set response headers for the Excel file download
+        # Set response headers for the Excel file download
         headers = {
             'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
