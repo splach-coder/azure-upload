@@ -10,10 +10,11 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
+from AI_agents.Gemeni.email_Parser import EmailParser
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.Gemeni.functions.functions import convert_to_list
 from cg_europe.excel.createExcel import write_to_excel
-from cg_europe.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_text_from_pdf, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
-from global_db.countries.functions import get_abbreviation_by_country
+from cg_europe.helpers.functions import change_date_format, clean_vat_number, clean_customs_code, clean_incoterm, combine_invoices_by_address, extract_text_from_pdf, extract_totals_info,  normalize_number, safe_float_conversion, safe_int_conversion
 from global_db.functions.numbers.functions import normalize_numbers
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -123,7 +124,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not skip_file:
             # Analyze the document
             try: 
-                poller = client.begin_analyze_document("cg-europe-model2", file_content)
+                poller = client.begin_analyze_document("Gc-europe-model2", file_content)
                 result = poller.result()
                 
                 document = result.documents
@@ -132,7 +133,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                 for key, value in fields.items():
                     
-                    if key == "Items":  # Fields that contain arrays
+                    if key in ["Items", "Address"]:  # Fields that contain arrays
                         arr = value.value
                         result_dict[key] = []
                         for item in arr:
@@ -140,19 +141,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             obj = {}
                             for key_obj, value_obj in value_object.items():
                                 obj[key_obj] = value_obj.value
-                            result_dict[key].append(obj)
-
-                    elif key == "Address" :
-                        arr = value['value']  # Assuming value is a dictionary with a 'value' key
-                        result_dict[key] = []
-                        if not isinstance(arr, list):
-                            arr = [arr]  # Convert to list if it's not already a list
-
-                        for item in arr:
-                            value_object = item['value']  # Assuming item is a dictionary with a 'value' key
-                            obj = {}
-                            for key_obj, value_obj in value_object.items():
-                                obj[key_obj] = value_obj['value']  # Extract the actual value
                             result_dict[key].append(obj)
                     else:
                         result_dict[key] = value.value
@@ -166,10 +154,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 )   
             
             
-
+            
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the incoterm
             result_dict["Incoterm"] = clean_incoterm(result_dict.get("Incoterm", ""))
+
+            #clean and split the incoterm
+            result_dict["Vat Number"] = clean_vat_number(result_dict.get("Vat Number", ""))
 
             #clean the customs code
             customs_code = result_dict.get("Customs Code", "") if result_dict.get("Customs Code", "") else ""
@@ -180,7 +171,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             parser = AddressParser()
             address = parser.format_address_to_line_old_addresses(address)
             parsed_result = parser.parse_address(address)
-            result_dict["Address"] = parsed_result 
+            result_dict["Address"] = parsed_result
+
+            #update the type of Gross weight Total
+            result_dict["Gross weight Total"] = safe_float_conversion(normalize_numbers(result_dict.get("Gross weight Total", 0.0)))
+
+            #update the type of Total 
+            result_dict["Total"] = safe_float_conversion(normalize_numbers(result_dict.get("Total", 0.0)))
 
             #update the numbers in the items
             items = result_dict.get("Items", "")  
@@ -189,31 +186,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Gross"] = safe_float_conversion(normalize_number(item.get("Gross", 0.0)))
                 item["Net"] = safe_float_conversion(normalize_number(item.get("Net", 0.0)))
                 item["Amount"] = safe_float_conversion(normalize_numbers(item.get("Amount", 0.0).replace("€", "").replace("$", "")))
-                item["Inv Ref"] = result_dict.get("Inv Ref", "")
-
-            #items = fill_origin_country_on_items(items)
+                item["Inv Ref"] = result_dict.get("Inv Reference", "")
     
             results.append(result_dict)  
-        
+    
     results = combine_invoices_by_address(results)
     
     '''------------------Extract data from mail body-----------------------'''
     if email:
-        email_data = extract_totals_info(email)
-        if email_data.get("Freight", "") is not None and email_data.get("Collis", "") is not None:
-            email_data["Freight"] = safe_float_conversion(clean_numbers(email_data.get("Freight", "")))
-            email_data["Collis"] = safe_int_conversion(email_data.get("Collis", ""))
-        goodsLocationCode = process_email_location(email)
-        if goodsLocationCode.get("found", ""):
-            email_data["Goods Location"] = goodsLocationCode.get("postal_code", "")         
-                 
+        parser = EmailParser()
+        parsed_result = parser.extract_email_body(email)
+        goodsLocation = parser.search_for_location(email)
+        parsed_result = parser.parse_address(email)
+        parsed_result = parsed_result.replace('json', '').replace('```', '').strip()
+        parsed_result = convert_to_list(parsed_result)
+        parsed_result["GoodsLocation"] = goodsLocation
+        for item in results:
+            item["Email"] = parsed_result
+
+    logging.error(json.dumps(results, indent=4)) 
     reference = ""
-    if subject: 
-        reference = extract_reference(subject).replace('/', '-')
-    
-    for item in results:    
-        item["Reference"] = reference
-        item["Email"] = email_data  
 
     for inv in results:  
         prev_date = inv.get('Inv Date', '')
@@ -223,6 +215,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
+        
         zip_data = write_to_excel(results)
         logging.info("Generated Zip folder.")
 

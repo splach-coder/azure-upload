@@ -6,7 +6,7 @@ def clean_incoterm(inco : str) -> list :
     return inco.split(' ', maxsplit=1)
 
 def clean_Origin(value : str) -> str :
-    return value.replace("Origin:", "")
+    return value.replace("Origin:", "").replace("d'origine:", "")
 
 def clean_HS_code(value : str) -> str :
     return value.replace(",", "")
@@ -131,6 +131,12 @@ def merge_json_objects(json_objects):
                 merged_object["Gross weight Total"] += obj["Gross weight Total"]
             else:
                 merged_object["Gross weight Total"] = obj["Gross weight Total"]
+
+        if "Total net" in obj and obj["Total net"] is not None:
+            if "Total net" in merged_object and merged_object["Total net"] is not None:
+                merged_object["Total net"] += obj["Total net"]
+            else:
+                merged_object["Total net"] = obj["Total net"]
 
         # Append Items items
         if "Items" in obj and obj["Items"] is not None:

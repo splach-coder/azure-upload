@@ -18,12 +18,9 @@ def write_to_excel(data_entry):
     ]
 
     # Extract and process address details
-    address = data_entry.get('Adrress', {})
-    name = address.get('Company name', '') if isinstance(address, dict) else ''
-    street = address.get('Street', '') if isinstance(address, dict) else ''
-    city = address.get('City', '') if isinstance(address, dict) else ''
-    code_postal = address.get('Postal code', '') if isinstance(address, dict) else ''
-    country = address.get('Country', '') if isinstance(address, dict) else ''
+    data_entry = data_entry[0]
+    address = data_entry.get('Address', {})
+    name, street, city, code_postal, country = address
 
     # Extract Incoterm details
     incoterm = data_entry.get('Incoterm', ('', ''))

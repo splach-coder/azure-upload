@@ -4,6 +4,7 @@ import json
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from global_db.countries.functions import get_abbreviation_by_country
+from global_db.functions.dates import change_date_format
 from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from transmare.excel.create_excel import write_to_excel
 
@@ -124,6 +125,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         #Extract the body data
         merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html)
+
+        prev_date = merged_result.get('Inv Date', '')
+        new_date = change_date_format(prev_date)
+        merged_result["Inv Date"] = new_date
         
         try:
             # Call writeExcel to generate the Excel file in memory

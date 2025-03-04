@@ -47,11 +47,11 @@ def write_to_excel(json_string):
         data.get('Parking trailer', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
-        name if 'name' in locals() else '',  # Safely handle variables
-        street if 'street' in locals() else '',
-        code_postal if 'code_postal' in locals() else '',
-        city if 'city' in locals() else '',
-        country if 'country' in locals() else '',
+        name.upper() if 'name' in locals() else '',  # Safely handle variables
+        street.upper() if 'street' in locals() else '',
+        code_postal.upper() if 'code_postal' in locals() else '',
+        city.upper() if 'city' in locals() else '',
+        country.upper() if 'country' in locals() else '',
         term if 'term' in locals() else '',
         place if 'place' in locals() else '',
         data.get('container', ''),

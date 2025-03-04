@@ -4,8 +4,10 @@ import logging
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from AI_agents.Gemeni.functions.functions import convert_to_list, query_gemini
+from bs4 import BeautifulSoup
+import re
 
-class AddressParser:
+class EmailParser:
     def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="Gemeni-api-key"):
         """
         Initialize the AddressParser with the Azure Key Vault configuration.
@@ -36,40 +38,41 @@ class AddressParser:
         except Exception as e:
             logging.error(f"Failed to retrieve secret: {str(e)}")
             return False
+        
+    def search_for_location(self, email_body: str) -> str:
+        """Searches for 'Wijnegem' or 'Maasmechelen' in the email body and returns the found word."""
+        # Define the keywords to search for (case-insensitive)
+        keywords = ["Wijnegem", "Maasmechelen"]
 
-    def format_address_to_line_old_addresses(self, address_dict):
-        """
-        Converts an address dictionary to a single line string.
+        # Search for keywords in the entire email body
+        for keyword in keywords:
+            if re.search(rf'\b{keyword}\b', email_body, re.IGNORECASE):
+                return keyword.capitalize()
 
-        Args:
-            address_dict (dict): Dictionary containing address components
+        # Return an empty string if none found
+        return ""    
+        
+    def extract_email_body(self, html_content: str) -> str:
+        """Extracts and cleans the main body text from an HTML email."""
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
 
-        Returns:
-            str: Single line formatted address
-        """
-        # Extract address components with empty string as default
-        company =  address_dict.get('Company name', '') if address_dict.get('Company name', '')  else address_dict.get('Company', '') 
-        street = address_dict.get('Street', '')
-        city = address_dict.get('City', '')
-        postal_code = address_dict.get('Postal Code', '')
-        country = address_dict.get('Country', '')
+            # Remove unnecessary elements like scripts, styles, and hidden elements
+            for tag in soup(['script', 'style', 'head', 'meta', 'link', 'title', '[hidden]']):
+                tag.decompose()
 
-        # Build address parts that exist
-        address_parts = []
-        if company:
-            address_parts.append(company)
-        if street:
-            address_parts.append(street)
-        if city:
-            address_parts.append(city)
-        if postal_code:
-            address_parts.append(postal_code)
-        if country:
-            address_parts.append(country)
+            # Extract visible text only
+            body_text = soup.get_text(separator='\n', strip=True)
 
-        # Join with commas
-        return ' '.join(address_parts)
+            # Remove excessive whitespace and clean the text
+            cleaned_text = '\n'.join(line.strip() for line in body_text.splitlines() if line.strip())
 
+            return cleaned_text
+
+        except Exception as e:
+            print(f"Error while extracting email body: {e}")
+            return ""    
+            
     def parse_address(self, address):
         """
         Parse an address string into structured components using Gemini API.
@@ -85,14 +88,24 @@ class AddressParser:
             logging.error("No API key available")
             return None
             
-        prompt = f"""Parse the following address into company name, street, city, postal code, and country. Return the result as a Python list with string elements only, without any additional text or code formatting. The country should be represented by its 2-letter abbreviation code. If any field is missing, represent it with an empty string. If city or postal code only those two fields not mentioned find the correct ones from data and add it please.
-        [{address}]"""
+        prompt = f"""Extract the following information from the provided email:
+
+            Collis: The number of collis as a string.
+            Weight: The weight as a float, with all formatting cleaned (e.g., "5,610kg" → "5610").
+            Exit Office: The exit office code in the format of two letters followed by six numbers (e.g., "FR002300").
+            If any field is missing, return an empty string for it.
+            Return the result as a Python dictionary with all values as strings.
+            Provide only the JSON-like output with no additional text or formatting no json text.
+
+            extract data from here:
+
+            [{address}]"""
         
         try:
             result = query_gemini(self.api_key, prompt)
             result = result.get("candidates")[0].get("content").get("parts")[0].get("text")
-            parsed_address = convert_to_list(result)
-            return parsed_address
+            #parsed_address = convert_to_list(result)
+            return result
         except requests.exceptions.RequestException as e:
             logging.error(f"Error making request: {e}")
             return None
