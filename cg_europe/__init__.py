@@ -14,7 +14,7 @@ from AI_agents.Gemeni.email_Parser import EmailParser
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.Gemeni.functions.functions import convert_to_list
 from cg_europe.excel.createExcel import write_to_excel
-from cg_europe.helpers.functions import change_date_format, clean_vat_number, clean_customs_code, clean_incoterm, combine_invoices_by_address, extract_text_from_pdf, extract_totals_info,  normalize_number, safe_float_conversion, safe_int_conversion
+from cg_europe.helpers.functions import change_date_format, clean_vat_number, clean_customs_code, clean_incoterm, combine_invoices_by_address, extract_ref, extract_text_from_pdf, extract_totals_info,  normalize_number, safe_float_conversion, safe_int_conversion
 from global_db.functions.numbers.functions import normalize_numbers
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -201,30 +201,34 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         parsed_result = parsed_result.replace('json', '').replace('```', '').strip()
         parsed_result = convert_to_list(parsed_result)
         parsed_result["GoodsLocation"] = goodsLocation
+        parsed_result["Collis"] = safe_int_conversion(parsed_result.get("Collis", ""))
+        parsed_result["Weight"] = safe_float_conversion(normalize_number(parsed_result.get("Weight", "")))
         for item in results:
             item["Email"] = parsed_result
 
-    logging.error(json.dumps(results, indent=4)) 
-    reference = ""
+    # Extract the ref
+    reference = extract_ref(subject)
 
     for inv in results:  
         prev_date = inv.get('Inv Date', '')
         new_date = change_date_format(prev_date)
         inv["Inv Date"] = new_date
+        inv["Reference"] = reference
     
     # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
-        
-        zip_data = write_to_excel(results)
-        logging.info("Generated Zip folder.")
+        excel_file = write_to_excel(results)
+        logging.info("Generated Excel file.")
 
-        # Return the ZIP file as a response
-        return func.HttpResponse(
-            zip_data,
-            mimetype="application/zip",
-            headers={"Content-Disposition": 'attachment; filename="' + reference + '".zip'}
-        )
+                # Set response headers for the Excel file download
+        headers = {
+            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+
+               # Return the Excel file as an HTTP response
+        return func.HttpResponse(excel_file, headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
     except TypeError as te:
         logging.error(f"TypeError during processing: {te}")

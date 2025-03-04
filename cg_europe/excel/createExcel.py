@@ -29,14 +29,14 @@ def write_to_excel(data_entry):
 
     # Prepare header1 row values
     values1 = [
-        data_entry.get('Vat', ''),
+        data_entry.get('Vat Number', ''),
         data_entry.get('Principal', ''),
         data_entry.get('Reference', ''),
         data_entry.get('Other Ref', ''),
         data_entry.get('Email', {}).get('Freight', ''),
-        data_entry.get('Email', {}).get('Goods Location', ''),
+        data_entry.get('Email', {}).get('GoodsLocation', ''),
         data_entry.get('Export office', ''),
-        data_entry.get('Email', {}).get('Exit office', ''),
+        data_entry.get('Email', {}).get('Exit Office', ''),
         name,
         street,
         code_postal,
@@ -61,13 +61,13 @@ def write_to_excel(data_entry):
     items = data_entry.get('Items', [])
     for item in items:
         row = [
-            item.get("HS code", ''),
+            item.get("HS Code", ''),
             item.get("Description", ''),
             item.get("Article", ''),
             item.get("Collis", ''),
             item.get("Gross", ''),
             item.get("Net", ''),
-            item.get("Origin", ''),
+            item.get("COO", ''),
             item.get("Amount", ""),
             data_entry.get("Currency", ""),
             item.get("Statistical Value", ''),
@@ -93,9 +93,8 @@ def write_to_excel(data_entry):
     ws.append([])  # Another empty row
 
     # Process totals
-    totals = data_entry.get("Totals", [{}])[0]
     ws.append(["Total invoices"])
-    ws.append([totals.get("Total Amount", 0)])
+    ws.append([data_entry.get("Total", 0)])
     ws.append([])  # Empty row
 
     ws.append(["Total Collis"])
@@ -103,7 +102,7 @@ def write_to_excel(data_entry):
     ws.append([])  # Empty row
 
     ws.append(["Total Gross"])
-    ws.append([totals.get("Total Gross", 0)])
+    ws.append([data_entry.get("Gross weight Total", 0)])
     ws.append([])  # Empty row
 
     # Add items

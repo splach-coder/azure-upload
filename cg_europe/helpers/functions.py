@@ -164,3 +164,16 @@ def change_date_format(date_str):
         return date_obj.strftime('%d/%m/%Y')
     except ValueError:
         return "Invalid date format"
+
+def extract_ref(text):
+    # Define regex patterns for the required information
+    inv_number_pattern = r'CI \d{7}(?: - \d)?'  # Optional '- d' part
+
+    # Search for the patterns in the text
+    inv_number_match = re.search(inv_number_pattern, text)
+
+    # Extract the information if found
+    inv_number = inv_number_match.group(0) if inv_number_match else None
+
+    return inv_number
+ 
