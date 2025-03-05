@@ -40,10 +40,16 @@ def clean_incoterm(inco : str) -> list :
         return ["", ""]
 
 def clean_customs_code(value : str) -> str:
-    return value.replace(')', '').replace(' ', '')
+    if value is not None:
+        return value.replace(')', '').replace(' ', '')
+    else :
+        ""
 
 def clean_vat_number(value : str) -> str:
-    return value.replace('.', '').replace(' ', '')
+    if value is not None:
+        return value.replace('.', '').replace(' ', '')
+    else :
+        ""
 
 def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     """
