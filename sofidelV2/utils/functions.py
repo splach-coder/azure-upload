@@ -157,23 +157,22 @@ def extract_and_clean(html_content):
     exit_port_value = exit_port_match.group(1).strip() if exit_port_match else None
 
     # Check if Exit Port BE is "Zeebrugge" and extract parking trailer information
-    if exit_port_value and exit_port_value.lower() == "zeebrugge":
-        # First try to match the exact "Parking trailer:" pattern
-        parking_trailer = re.search(parking_trailer_pattern_exact, cleaned_data)
+    # First try to match the exact "Parking trailer:" pattern
+    parking_trailer = re.search(parking_trailer_pattern_exact, cleaned_data)
 
-        if parking_trailer:
-            result["Parking trailer"] = parking_trailer.group(1)
-        else:
-            # If not found, use fallback pattern to find any mention of 'parking'
-            parking_trailer_fallback = re.search(parking_trailer_pattern_fallback, cleaned_data)
-            if parking_trailer_fallback:
-                result["Parking trailer"] = parking_trailer_fallback.group(1)
+    if parking_trailer:
+        result["Parking trailer"] = parking_trailer.group(1)
+    else:
+        # If not found, use fallback pattern to find any mention of 'parking'
+        parking_trailer_fallback = re.search(parking_trailer_pattern_fallback, cleaned_data)
+        if parking_trailer_fallback:
+            result["Parking trailer"] = parking_trailer_fallback.group(1)
 
-            if not parking_trailer_fallback:
-                # If still not found, use another fallback pattern
-                parking_trailer_fallback2 = re.search(parking_trailer_pattern_fallback2, cleaned_data)
-                if parking_trailer_fallback2:
-                    result["Parking trailer"] = parking_trailer_fallback2.group(1)        
+        if not parking_trailer_fallback:
+            # If still not found, use another fallback pattern
+            parking_trailer_fallback2 = re.search(parking_trailer_pattern_fallback2, cleaned_data)
+            if parking_trailer_fallback2:
+                result["Parking trailer"] = parking_trailer_fallback2.group(1)        
     
     return result
 

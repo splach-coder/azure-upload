@@ -78,12 +78,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             items = result.get("Items", "")  
             for item in items :
                 item["Pieces"] = safe_int_conversion(item.get("Pieces", 0))
-                Price = item.get("Amount", 0.0)
+                Price = item.get("Amount", "")
                 Price = normalize_number_format(Price)
                 Price = safe_float_conversion(Price)
                 item["Amount"] = Price            
 
-            invs.append(result) 
+            invs.append(result)
 
         cmrs = []
 
