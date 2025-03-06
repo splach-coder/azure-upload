@@ -199,7 +199,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
             results.append(result_dict)  
     
-    logging.error(json.dumps(results, indent=4))
     results = combine_invoices_by_address(results)
     
     '''------------------Extract data from mail body-----------------------'''
@@ -217,7 +216,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             item["Email"] = parsed_result
 
     # Extract the ref
-    reference = extract_ref(subject)
+    reference = extract_ref(subject) or "no-ref"
 
     for inv in results:  
         if inv.get("Inv Reference") is None:
@@ -233,6 +232,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
+        logging.error(results)
         excel_file = write_to_excel(results)
         logging.info("Generated Excel file.")
 

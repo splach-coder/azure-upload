@@ -94,15 +94,15 @@ def write_to_excel(data_entry):
 
     # Process totals
     ws.append(["Total invoices"])
-    ws.append([data_entry.get("Total", 0)])
+    ws.append([round(data_entry.get("Total", 0), 2)])
     ws.append([])  # Empty row
 
     ws.append(["Total Collis"])
     ws.append([data_entry.get("Email", {}).get("Collis", 0)])
     ws.append([])  # Empty row
 
-    ws.append(["Total Gross"])
-    ws.append([data_entry.get("Gross weight Total", 0)])
+    ws.append(["Total Gross", "Total Net"])
+    ws.append([round(data_entry.get("Gross weight Total", 0), 2), round(data_entry.get("Total Net", 0), 2)])
     ws.append([])  # Empty row
 
     # Add items

@@ -1,3 +1,4 @@
+import logging
 from bs4 import BeautifulSoup
 import re
 import difflib
@@ -77,7 +78,7 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     
     def are_addresses_similar(addr1, addr2, threshold):
         """Determine if two addresses are similar based on a similarity ratio."""
-        if not addr1 or not addr2:
+        if len(addr1) > 0 or len(addr2) > 0:
             return True 
         ratio = difflib.SequenceMatcher(None, addr1, addr2).ratio()
         return ratio >= threshold
@@ -87,18 +88,27 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     processed_addresses = []
 
     for invoice in invoices:
-        address = []
-        if len(invoice.get('Address')) > 0:
-            address = normalize_address(invoice.get('Address'))
+        if len(invoice.get('Address', [])) > 0:  
+            address = normalize_address(invoice.get('Address', []))
+        else :
+            address = []    
         matched_group = None
 
         # Find a matching group for the current address
         for group_addr in processed_addresses:
-            if are_addresses_similar(address, group_addr, similarity_threshold):
+            if are_addresses_similar(address, group_addr, 0.8):
                 matched_group = group_addr
                 break
 
-        # Add to matched group or create a new group
+        # Handle empty address scenario
+        if not matched_group and not address:
+            # Merge with the first group if exists, else create new
+            if processed_addresses:
+                matched_group = processed_addresses[0]
+            else:
+                matched_group = address
+
+        # Add to the matched group or create a new group
         if matched_group:
             grouped_invoices[matched_group].append(invoice)
         else:
@@ -112,23 +122,24 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
             # No combination needed
             combined_invoices.append(group_invoices[0])
         else:
+
+
             # Combine invoices
             combined_invoice = {
-                "Inv Ref": " + ".join(inv["Inv Ref"] for inv in group_invoices),
+                "Vat Number": group_invoices[0]["Vat Number"],
+                "Inv Reference": " + ".join(inv["Inv Reference"] for inv in group_invoices),
                 "Inv Date": group_invoices[0]["Inv Date"],
                 "Other Ref": group_invoices[0]["Other Ref"],
                 "Incoterm": group_invoices[0]["Incoterm"],
                 "Currency": group_invoices[0]["Currency"],
                 "Customs Code": group_invoices[0]["Customs Code"],
-                "Adrress": group_invoices[0]["Adrress"],
+                "Address": group_invoices[0]["Address"],
                 "Items": [item for inv in group_invoices for item in inv.get("Items", [])],
-                "Totals": {
-                    "Total Qty": sum(item.get("Qty", 0) for inv in group_invoices for item in inv.get("Items", [])),
-                    "Total Gross": sum(item.get("Gross", 0) for inv in group_invoices for item in inv.get("Items", [])),
-                    "Total Net": sum(item.get("Net", 0) for inv in group_invoices for item in inv.get("Items", [])),
-                    "Total Amount": sum(item.get("Amount", 0) for inv in group_invoices for item in inv.get("Items", [])),
-                }
+                "Gross weight Total": sum(inv.get("Gross weight Total", 0) for inv in group_invoices),
+                "Total Net": sum(item.get("Net", 0) for inv in group_invoices for item in inv.get("Items", [])),
+                "Total": sum(item.get("Amount", 0) for inv in group_invoices for item in inv.get("Items", [])),
             }
+
             combined_invoices.append(combined_invoice)
 
     return combined_invoices
