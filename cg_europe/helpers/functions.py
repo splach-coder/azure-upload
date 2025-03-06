@@ -123,7 +123,6 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
             combined_invoices.append(group_invoices[0])
         else:
 
-
             # Combine invoices
             combined_invoice = {
                 "Vat Number": group_invoices[0]["Vat Number"],
@@ -193,7 +192,7 @@ def change_date_format(date_str):
 
 def extract_ref(text):
     # Define regex patterns for the required information
-    inv_number_pattern = r'CI \d{7}(?: - \d)?'  # Optional '- d' part
+    inv_number_pattern = r'CI\s?\d{7}(?: - \d)?'  # Optional '- d' part
 
     # Search for the patterns in the text
     inv_number_match = re.search(inv_number_pattern, text)

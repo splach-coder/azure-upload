@@ -200,6 +200,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             results.append(result_dict)  
     
     results = combine_invoices_by_address(results)
+    if "Total Net" not in results:
+        for inv in results : 
+            inv["Total Net"] = sum(item.get("Net", 0) for item in inv.get("Items", []))
+
     
     '''------------------Extract data from mail body-----------------------'''
     if email:
