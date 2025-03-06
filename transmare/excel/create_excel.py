@@ -26,7 +26,8 @@ def write_to_excel(json_string):
         "Place",
         "Container",
         "Truck",
-        "Rex/Other"
+        "Rex/Other",
+        "Vissel"
     ]
 
     address = data.get('Address', [])
@@ -44,7 +45,7 @@ def write_to_excel(json_string):
         data.get('Inv Reference', ''),
         data.get('Other Ref', ''),
         freight,
-        data.get('Parking trailer', ''),
+        data.get('kaai', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
         name.upper() if 'name' in locals() else '',  # Safely handle variables
@@ -54,9 +55,10 @@ def write_to_excel(json_string):
         country.upper() if 'country' in locals() else '',
         term if 'term' in locals() else '',
         place if 'place' in locals() else '',
-        data.get('container', ''),
+        data.get('Container'),
         data.get('Truck', ''),
-        data.get("Customs Code", '')
+        data.get("Customs Code", ''),
+        data.get("Vissel", '')
     ]
 
     header2 = [

@@ -10,7 +10,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient # Use this API key to call Azure Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 
-from bleckman.helpers.functions import cast_arrays_to_float, cast_arrays_to_int, process_arrays, process_invoice_data
+from bleckman.helpers.functions import cast_arrays_to_float, cast_arrays_to_int, process_arrays, process_invoice_data, safe_lower
 from bleckman.service.extractors import extract_text_from_first_page, extract_text_from_first_page_arrs
 from bleckman.config.keywords import key_map, coordinates
 from bleckman.excel.excel import create_excel
@@ -200,23 +200,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                     result_dict[key] = value.value
                             
                             logging.error(result_dict)
-
-                            if "to" in result_dict.get('Inv Reference', "").lower():
+                            
+                            if "to" in safe_lower(result_dict.get('Inv Reference', "")):
                                 invoice_type = "dollar"
+                                if len(result_dict.get('Items', "")) > 0 :
+                                    invoices_data.append(result_dict)
                                 logging.info(f"Processing TO inv: {file_name}")
-                            elif "if" in result_dict.get('Inv Reference', "").lower():
+                            elif "if" in safe_lower(result_dict.get('Inv Reference', "")):
                                 invoice_type = "euro"
+                                if len(result_dict.get('Items', "")) > 0 :
+                                    invoices_data.append(result_dict)
                                 logging.info(f"Processing IF inv: {file_name}")
                             else:    
-                                logging.error("Invalid invoice format.")
-                                return func.HttpResponse(
-                                    body=json.dumps({"error": "Invalid invoice format"}),
-                                    status_code=400,
-                                    mimetype="application/json"
-                                ) 
+                                logging.error("Invalid invoice format... Ignore File")
                             
-                            invoices_data.append(result_dict)
-
             # Append the processed JSON to extracted_data
             invoices_data_and_type = {
                 **voorblad_data,

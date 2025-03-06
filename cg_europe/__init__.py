@@ -124,7 +124,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not skip_file:
             # Analyze the document
             try: 
-                poller = client.begin_analyze_document("Gc-europe-model2", file_content)
+                poller = client.begin_analyze_document("Gc-europe-model3", file_content)
                 result = poller.result()
                 
                 document = result.documents

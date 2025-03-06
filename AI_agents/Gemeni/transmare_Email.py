@@ -7,7 +7,7 @@ from AI_agents.Gemeni.functions.functions import convert_to_list, query_gemini
 from bs4 import BeautifulSoup
 import re
 
-class EmailParser:
+class TransmareEmailParser:
     def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="Gemeni-api-key"):
         """
         Initialize the AddressParser with the Azure Key Vault configuration.
@@ -37,20 +37,7 @@ class EmailParser:
             return True
         except Exception as e:
             logging.error(f"Failed to retrieve secret: {str(e)}")
-            return False
-        
-    def search_for_location(self, email_body: str) -> str:
-        """Searches for 'Wijnegem' or 'Maasmechelen' in the email body and returns the found word."""
-        # Define the keywords to search for (case-insensitive)
-        keywords = ["Wijnegem", "Maasmechelen"]
-
-        # Search for keywords in the entire email body
-        for keyword in keywords:
-            if re.search(rf'\b{keyword}\b', email_body, re.IGNORECASE):
-                return keyword.capitalize()
-
-        # Return an empty string if none found
-        return ""    
+            return False   
         
     def extract_email_body(self, html_content: str) -> str:
         """Extracts and cleans the main body text from an HTML email."""
@@ -73,7 +60,7 @@ class EmailParser:
             print(f"Error while extracting email body: {e}")
             return ""    
             
-    def parse_address(self, address):
+    def parse_email(self, address):
         """
         Parse an address string into structured components using Gemini API.
         
@@ -90,9 +77,9 @@ class EmailParser:
             
         prompt = f"""Understand the email well and Extract carefully the following information from the provided email:
 
-            Collis: The number of collis/pallets as a string.
-            Weight: The weight as a float, with all formatting cleaned (e.g., "5,610kg" → "5610").
-            Exit Office: The exit office code in the format of two letters followed by six numbers (e.g., "FR002300").
+            Vissel name: The vissel name as a string.
+            Export kaai: The Export kaai as a string, but in one case if the kaii is begins with K and following by numbers (e.g., K1742) if it's a string don't extract it leave it empty.
+            Container Number: The Container Number in the format of four letters followed by seven numbers (e.g., "MSDU7723003").
             If any field is missing, return an empty string for it.
             Return the result as a Python dictionary with all values as strings.
             Provide only the JSON-like output with no additional text or formatting no json text.

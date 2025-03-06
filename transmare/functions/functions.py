@@ -1,6 +1,6 @@
-import json
 import re
 from bs4 import BeautifulSoup
+
 
 def clean_incoterm(inco : str) -> list :
     return inco.split(' ', maxsplit=1)
@@ -28,6 +28,36 @@ def normalize_numbers(number_str : str) -> float:
         normalized = number_str.replace(',', '')
     
     return normalized
+
+def normalize_numbers_gross(number_str: str) -> float:
+    """
+    Normalize a number string to a consistent float format.
+    :param number_str: A string representing a number (e.g., "3.158,6" or "28,158.23").
+    :return: A float representing the normalized number.
+    """
+    # Handle comma as decimal separator
+    if re.match(r"^\d{1,3}(\.\d{3})*,\d{1,2}$", number_str):
+        # Replace dots (thousands separator) with nothing, replace comma (decimal) with a dot
+        normalized = number_str.replace('.', '').replace(',', '.')
+    # Handle dot as decimal separator
+    elif re.match(r"^\d{1,3}(,\d{3})*\.\d{1,2}$", number_str):
+        # Replace commas (thousands separator) with nothing
+        normalized = number_str.replace(',', '')
+    # Handle cases with only thousands separator (no decimal part)
+    elif re.match(r"^\d{1,3}(\.\d{3})*$", number_str):
+        # Replace dots (thousands separator) with nothing
+        normalized = number_str.replace('.', '')
+    elif re.match(r"^\d{1,3}(,\d{3})*$", number_str):
+        # Replace commas (thousands separator) with nothing
+        normalized = number_str.replace(',', '')
+    else:
+        # If the format is not recognized, return None
+        return None
+
+    try:
+        return float(normalized)
+    except ValueError:
+        return None
 
 def clean_number_from_chars(value: str) -> str:
     # Use regex to keep only digits, commas, and periods
@@ -150,3 +180,5 @@ def merge_json_objects(json_objects):
                 merged_object[key] = obj[key]
 
     return merged_object
+
+

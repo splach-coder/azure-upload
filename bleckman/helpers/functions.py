@@ -50,7 +50,16 @@ def safe_float_conversion(value: str) -> float:
         return float(value)
     except (ValueError, TypeError):
         return 0.0
-    
+
+def safe_lower(var):
+    """
+    Returns the lower-case version of var if it is not None,
+    otherwise returns an empty string.
+    """
+    if var is None:
+        return ""
+    return var.lower()
+
 def normalize_number(value: str) -> str:
     return value.replace(" ", "").replace(".", "").replace(",", ".")    
 

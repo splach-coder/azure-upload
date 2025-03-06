@@ -178,6 +178,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result = join_cmr_invoice_objects(inv, cmr)
         
         body = handle_body_request(email_body)
+
+        logging.error(json.dumps(body, indent=4))
         
         json_result = {**json_result, **body}
 

@@ -3,10 +3,15 @@ import logging
 import json
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.Gemeni.functions.functions import convert_to_list
+from AI_agents.Gemeni.transmare_Email import TransmareEmailParser
 from global_db.countries.functions import get_abbreviation_by_country
 from global_db.functions.dates import change_date_format
-from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
+from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
 from transmare.excel.create_excel import write_to_excel
+from global_db.functions.container import is_valid_container_number, is_valid_quay_number
+
+
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -92,7 +97,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 Pieces = safe_int_conversion(item.get(key, 0))
                                 item[key] = Pieces
                                 totalCollis += Pieces 
-                            else:
+                            elif key == "Gross weight" :
+                                number_value = item.get(key, 0.0)
+                                logging.error(number_value)
+                                number_value = normalize_numbers_gross(number_value)
+                                logging.error(number_value)
+                                item[key] = safe_float_conversion(number_value)
+                            else:    
                                 number_value = item.get(key, 0.0)
                                 item[key] = normalize_numbers(number_value)
                                 if len(item[key]) == 0:
@@ -127,6 +138,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         #Extract the body data
         merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html.replace(merged_result.get("Inv Reference", "") ,''))
+
+        parser = TransmareEmailParser()
+        parsed_result = parser.parse_email(cleaned_email_body_html)
+        parsed_result = parsed_result.replace('json', '').replace('```', '').strip()
+        parsed_result = convert_to_list(parsed_result)
+        merged_result["Vissel"] = parsed_result.get("Vissel name")
+        merged_result["kaai"] = parsed_result.get("Export kaai", "") if is_valid_quay_number(parsed_result.get("Export kaai", "")) else ""
+        merged_result["Container"] = parsed_result.get("Container Number", "") if is_valid_container_number(parsed_result.get("Container Number", "")) else ""
 
         prev_date = merged_result.get('Inv Date', '')
         new_date = change_date_format(prev_date)
