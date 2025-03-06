@@ -31,6 +31,8 @@ def safe_float_conversion(value: str) -> float:
         return 0.0
     
 def normalize_number(value: str) -> str:
+    if value is None:
+        return ""
     return value.replace(" ", "").replace(".", "").replace(",", ".")
 
 def clean_incoterm(inco : str) -> list :
@@ -75,6 +77,8 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     
     def are_addresses_similar(addr1, addr2, threshold):
         """Determine if two addresses are similar based on a similarity ratio."""
+        if not addr1 or not addr2:
+            return True 
         ratio = difflib.SequenceMatcher(None, addr1, addr2).ratio()
         return ratio >= threshold
 
@@ -83,7 +87,9 @@ def combine_invoices_by_address(invoices, similarity_threshold=0.8):
     processed_addresses = []
 
     for invoice in invoices:
-        address = normalize_address(invoice.get('Address'))
+        address = []
+        if len(invoice.get('Address')) > 0:
+            address = normalize_address(invoice.get('Address'))
         matched_group = None
 
         # Find a matching group for the current address

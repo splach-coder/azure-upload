@@ -154,7 +154,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 )   
             
             
-            
+           
+
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the incoterm
             result_dict["Incoterm"] = clean_incoterm(result_dict.get("Incoterm", ""))
@@ -166,12 +167,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             customs_code = result_dict.get("Customs Code", "") if result_dict.get("Customs Code", "") else ""
             result_dict["Customs Code"] = clean_customs_code(customs_code)
 
+            #Handle Inv Reference
+            if result_dict.get("Inv Reference") is None and result_dict.get("Other Ref") is not None:
+                result_dict["Inv Reference"] = result_dict.get("Other Ref")
+            elif result_dict.get("Inv Reference") is None and result_dict.get("Other Ref") is None:
+                result_dict["Inv Reference"] = ""
+                result_dict["Other Ref"] = ""
+
             #switch the address country to abbr
-            address = result_dict.get("Address", "")[0]
-            parser = AddressParser()
-            address = parser.format_address_to_line_old_addresses(address)
-            parsed_result = parser.parse_address(address)
-            result_dict["Address"] = parsed_result
+            if len( result_dict.get("Address", "")) > 0:
+                address = result_dict.get("Address", "")[0]
+                parser = AddressParser()
+                address = parser.format_address_to_line_old_addresses(address)
+                parsed_result = parser.parse_address(address)
+                result_dict["Address"] = parsed_result
 
             #update the type of Gross weight Total
             result_dict["Gross weight Total"] = safe_float_conversion(normalize_numbers(result_dict.get("Gross weight Total", 0.0)))
@@ -190,6 +199,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
             results.append(result_dict)  
     
+    logging.error(json.dumps(results, indent=4))
     results = combine_invoices_by_address(results)
     
     '''------------------Extract data from mail body-----------------------'''

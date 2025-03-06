@@ -11,7 +11,7 @@ from azure.core.credentials import AzureKeyCredential
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from Crosby.excel.createExcel import write_to_excel
-from Crosby.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, is_invoice, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
+from Crosby.helpers.functions import change_date_format, clean_customs_code, clean_incoterm, clean_numbers, combine_invoices_by_address, extract_reference, extract_totals_info, fill_origin_country_on_items, safe_replace, normalize_number, process_email_location, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
 from global_db.functions.numbers.functions import normalize_numbers
 
@@ -195,7 +195,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                  
     reference = ""
     if subject: 
-        reference = extract_reference(subject).replace('/', '-')
+        reference = safe_replace(extract_reference(subject))
     
     for item in results:    
         item["Reference"] = reference
