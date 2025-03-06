@@ -42,12 +42,17 @@ class EmailParser:
     def search_for_location(self, email_body: str) -> str:
         """Searches for 'Wijnegem' or 'Maasmechelen' in the email body and returns the found word."""
         # Define the keywords to search for (case-insensitive)
-        keywords = ["Wijnegem", "Maasmechelen"]
+        keywords = ["Wijnegem", "Maasmechelen", "MM", "WY"]
 
         # Search for keywords in the entire email body
         for keyword in keywords:
             if re.search(rf'\b{keyword}\b', email_body, re.IGNORECASE):
-                return keyword.capitalize()
+                if keyword == "WY":
+                    return "Wijnegem".capitalize()
+                elif keyword == "MM":
+                    return "Maasmechelen".capitalize()
+                else:
+                    return keyword.capitalize()
 
         # Return an empty string if none found
         return ""    
