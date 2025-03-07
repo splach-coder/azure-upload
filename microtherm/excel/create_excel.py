@@ -30,8 +30,8 @@ def write_to_excel(json_string):
         "Rex/Other"
     ]
 
-    address = data.get('Adress', [])[0]
-    name, street, city, code_postal, country = address.get('Company', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal code', ''), address.get('Country', '') 
+    address = data.get('Adress', [])
+    name, street, city, code_postal, country = address#.get('Company', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal code', ''), address.get('Country', '') 
 
     term, place = data.get('Incoterm', ['', ''])
     

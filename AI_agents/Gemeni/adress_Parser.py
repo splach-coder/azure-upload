@@ -51,7 +51,7 @@ class AddressParser:
         company =  address_dict.get('Company name', '') if address_dict.get('Company name', '')  else address_dict.get('Company', '') 
         street = address_dict.get('Street', '')
         city = address_dict.get('City', '')
-        postal_code = address_dict.get('Postal Code', '')
+        postal_code = address_dict.get('Postal Code', '') if address_dict.get('Postal Code', '') else address_dict.get('Postal code', '')
         country = address_dict.get('Country', '')
 
         # Build address parts that exist

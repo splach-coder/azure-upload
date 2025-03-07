@@ -2,6 +2,7 @@ import azure.functions as func
 import logging
 import json
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from global_db.countries.functions import get_abbreviation_by_country
 from microtherm.functions.functions import  clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_container_number, extract_customs_code, extract_data, extract_key_value_pairs_from_email, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from microtherm.excel.create_excel import write_to_excel
@@ -62,8 +63,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result["Customs Code"] = clean_customs_code(customs_code)
 
             #switch the address country to abbr
-            address = result.get("Adress", "")[0]
-            address["Country"] = get_abbreviation_by_country(address["Country"])
+            address = result.get("Adress", "")[0]   
+            parser = AddressParser()
+            address = parser.format_address_to_line_old_addresses(address)
+            parsed_result = parser.parse_address(address)
+            result["Adress"] = parsed_result
+            #address["Country"] = get_abbreviation_by_country(address["Country"])
 
             #clean and split the total value
             total = result.get("Total", "")

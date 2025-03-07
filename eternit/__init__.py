@@ -2,6 +2,7 @@ import azure.functions as func
 import logging
 import json
 
+from AI_agents.Gemeni.adress_Parser import AddressParser
 from global_db.countries.functions import get_abbreviation_by_country
 from eternit.functions.functions import add_pieces_to_hs_and_totals, clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_customs_code, extract_data, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from eternit.excel.create_excel import write_to_excel
@@ -63,7 +64,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             #switch the address country to abbr
             address = result.get("Adress", "")[0]
-            address["Country"] = get_abbreviation_by_country(address["Country"])
+            parser = AddressParser()
+            address = parser.format_address_to_line_old_addresses(address)
+            parsed_result = parser.parse_address(address)
+            result["Adress"] = parsed_result
+            #address["Country"] = get_abbreviation_by_country(address["Country"])
 
             #clean and split the total value
             total = result.get("Total", "")
