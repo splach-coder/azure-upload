@@ -27,7 +27,8 @@ def write_to_excel(json_string):
         "Container",
         "Truck",
         "Rex/Other",
-        "Vissel"
+        "Vissel",
+        "Email"
     ]
 
     address = data.get('Address', [])
@@ -58,7 +59,8 @@ def write_to_excel(json_string):
         data.get('Container'),
         data.get('Truck', ''),
         data.get("Customs Code", ''),
-        data.get("Vissel", '')
+        data.get("Vissel", ''),
+        data.get("Email")
     ]
 
     header2 = [

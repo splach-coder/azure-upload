@@ -146,6 +146,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_result["Vissel"] = parsed_result.get("Vissel name")
         merged_result["kaai"] = parsed_result.get("Export kaai", "") if is_valid_quay_number(parsed_result.get("Export kaai", "")) else ""
         merged_result["Container"] = parsed_result.get("Container Number", "") if is_valid_container_number(parsed_result.get("Container Number", "")) else ""
+        merged_result["Email"] = parsed_result.get("Email", "")
 
         prev_date = merged_result.get('Inv Date', '')
         new_date = change_date_format(prev_date)

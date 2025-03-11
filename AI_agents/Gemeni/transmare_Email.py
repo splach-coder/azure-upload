@@ -80,6 +80,7 @@ class TransmareEmailParser:
             Vissel name: The vissel name as a string.
             Export kaai: The Export kaai as a string, but in one case if the kaii is begins with K and following by numbers (e.g., K1742) if it's a string don't extract it leave it empty.
             Container Number: The Container Number in the format of four letters followed by seven numbers (e.g., "MSDU7723003").
+            Email: this email is forwarded so the body has an email next "From" strings Grab it 
             If any field is missing, return an empty string for it.
             Return the result as a Python dictionary with all values as strings.
             Provide only the JSON-like output with no additional text or formatting no json text.

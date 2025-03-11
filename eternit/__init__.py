@@ -114,7 +114,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         merged_result["Exit office"] = email_table.get("Exit office", "").replace("Best", "").strip()
         merged_result["Total pallets"] = email_table.get("collis", 0)
-        merged_result["Freight"] = email_table.get("freight", "")[0]
+        if email_table.get("freight", ""):
+            merged_result["Freight"] = email_table.get("freight", "")[0]
         
         try:
             # Call writeExcel to generate the Excel file in memory
