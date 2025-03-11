@@ -7,7 +7,7 @@ from AI_agents.Gemeni.functions.functions import convert_to_list
 from AI_agents.Gemeni.transmare_Email import TransmareEmailParser
 from global_db.countries.functions import get_abbreviation_by_country
 from global_db.functions.dates import change_date_format
-from FMinvoices.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
+from FMinvoices.functions.functions import  clean_incoterm, format_references, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
 from FMinvoices.excel.create_excel import write_to_excel
 from global_db.functions.container import is_valid_container_number, is_valid_quay_number
 
@@ -53,14 +53,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             gross_weight_total = result.get("Total Gross", "")
             gross_weight_total = clean_number_from_chars(gross_weight_total)
             if '.' in gross_weight_total or ',' in gross_weight_total:
-                gross_weight_total = normalize_numbers(gross_weight_total)
+                gross_weight_total = gross_weight_total.replace(',', '')
             result["Total Gross"] = safe_float_conversion(gross_weight_total)
 
             #clean and convert the Total Net
             gross_weight_total = result.get("Total Net", "")
             gross_weight_total = clean_number_from_chars(gross_weight_total)
             if '.' in gross_weight_total or ',' in gross_weight_total:
-                gross_weight_total = normalize_numbers(gross_weight_total)
+                gross_weight_total = gross_weight_total.replace(',', '')
             result["Total Net"] = safe_float_conversion(gross_weight_total)
 
             #clean and convert the Total Price
@@ -119,12 +119,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             new_date = change_date_format(prev_date)
             inv["Inv Date"] = new_date
 
-                
-            
         # Merge JSON objects
         merged_result = merge_json_objects(resutls)
-        logging.error(merged_result)
-
+        merged_result['Inv Ref'] = format_references(merged_result['Inv Ref'])
         
         try:
             # Call writeExcel to generate the Excel file in memory
