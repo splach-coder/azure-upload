@@ -206,8 +206,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         new_date = change_date_format(prev_date)
         inv["Inv Date"] = new_date
 
-      
-    
     # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
