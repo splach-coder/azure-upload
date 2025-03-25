@@ -25,6 +25,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         req_body = req.get_json()
         files = req_body.get('files', [])
         body = req_body.get('body', {})
+        subject = req_body.get('subject', {})
 
     except ValueError:
         logging.error("Invalid JSON in request body.")
@@ -235,7 +236,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_data = {**merged_data, **totals}
         
         # Extract valid codes from the body texts
-        valid_codes = extract_exitoffices_from_body(body)
+        email_text = body.replace(subject, '')
+        valid_codes = extract_exitoffices_from_body(email_text)
         #asssign it to the global json data
         merged_data['Exit Port BE'] = valid_codes
 
