@@ -236,8 +236,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_data = {**merged_data, **totals}
         
         # Extract valid codes from the body texts
-        email_text = body.replace(subject, '')
-        valid_codes = extract_exitoffices_from_body(email_text)
+
+        invalid_codes = extract_exitoffices_from_body(subject)
+        cleaned_email = body.replace(invalid_codes, '')
+        valid_codes = extract_exitoffices_from_body(cleaned_email)
         #asssign it to the global json data
         merged_data['Exit Port BE'] = valid_codes
 
