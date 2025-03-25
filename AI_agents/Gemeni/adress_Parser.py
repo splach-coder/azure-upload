@@ -85,7 +85,7 @@ class AddressParser:
             logging.error("No API key available")
             return None
             
-        prompt = f"""Parse the following address into company name, street, city, postal code, and country. Return the result as a Python list with string elements only, without any additional text or code formatting. The country should be represented by its 2-letter abbreviation code. If any field is missing, represent it with an empty string. If city or postal code only those two fields not mentioned find the correct ones from data and add it please.
+        prompt = f"""Parse the following address into company name, street, city, postal code, and country. Return the result as a Python list with string elements only, without any additional text or code formatting. The country should be represented by its 2-letter abbreviation code. If any field is missing, represent it with an empty string. If city or postal code only those two fields not mentioned find the correct ones from data and add it please. if the country is united kingdom put GB instead of UK.
         [{address}]"""
         
         try:
