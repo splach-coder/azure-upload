@@ -54,6 +54,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             if record_id is None:
                 return func.HttpResponse("ID is required in the data.", status_code=400)
+
+            # Check if the ID already exists in the records
+            if record_id in df_data["ID"].values:
+                return func.HttpResponse(f"ID {record_id} already exists. Duplicate IDs are not allowed.", status_code=200)
             
             # Ensure 'Associated containers' is serialized as a JSON string
             if "Associated containers" in new_data:
@@ -83,6 +87,5 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except Exception as e:
             logging.error(f"Error: {str(e)}")
             return func.HttpResponse(f"Error: {str(e)}", status_code=400)
-
 
     return func.HttpResponse("Invalid request", status_code=400)

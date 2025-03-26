@@ -1,12 +1,31 @@
 import azure.functions as func
 import logging
 import json
-from cachetools import TTLCache
-
+import pandas as pd
+import io
+from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
 from DailyContainerCheck.functions.functions import is_valid_container_number, string_to_unique_array
 
-# Initialize the TTLCache with a maximum size and time-to-live (TTL)
-error_cache = TTLCache(maxsize=2000, ttl=86400000)  # Cache stores up to 2000 items for 1 day (86400 seconds)
+# Key Vault Configuration
+key_vault_url = "https://kv-functions-python.vault.azure.net"
+secret_name = "azure-storage-account-access-key2"
+credential = DefaultAzureCredential()
+client = SecretClient(vault_url=key_vault_url, credential=credential)
+api_key = client.get_secret(secret_name).value
+
+# Blob Storage Configuration
+CONNECTION_STRING = api_key
+CONTAINER_NAME = "document-intelligence"
+BLOB_NAME = "WRONG_CONTAINERS_CHECKER.csv"
+
+# Load CSV from Blob
+def load_csv_from_blob():
+    blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
+    stream = blob_client.download_blob().readall()
+    return pd.read_csv(io.StringIO(stream.decode("utf-8"))), blob_client
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -28,15 +47,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-        
+
+    # Load existing records from the blob
+    try:
+        existing_data, blob_client = load_csv_from_blob()
+    except Exception as e:
+        logging.error(f"Error loading data from blob: {e}")
+        return func.HttpResponse(
+            body=json.dumps({"error": "Failed to load existing records from blob."}),
+            status_code=500,
+            mimetype="application/json"
+        )
+
     queryData = data.get("Table1", [])
     data = []
-    wrong_data = [] 
-    
+    wrong_data = []
+
     for row in queryData:
         containers = row.get("CONTAINERS", "")
         containers = string_to_unique_array(containers)
-        
+
         data.append({
             "CONTAINERS": containers,
             "DECLARATIONID": row.get("DECLARATIONID", ""),
@@ -58,15 +88,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     if container_number_length == 11:
                         # Check container validity
                         if not is_valid_container_number(container):
-                            if container not in error_cache:
-                                # Add container to cache
-                                error_cache[container] = newObj
+                            # Check if the container already exists in the blob records
+                            if container not in existing_data["CONTAINERS"].values:
                                 newObj["CONTAINERS"].append(container)
                                 wrong_data.append(newObj)
                 else:
                     # Invalid length containers
-                    if container not in error_cache:
-                        error_cache[container] = newObj
+                    if container not in existing_data["CONTAINERS"].values:
                         newObj["CONTAINERS"].append(container)
                         wrong_data.append(newObj)
 
