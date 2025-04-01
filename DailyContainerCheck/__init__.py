@@ -78,25 +78,28 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     for obj in data:
         containers = obj.get("CONTAINERS", "")
+        declaration_id = obj.get("DECLARATIONID", "")
         newObj = {**obj}
         newObj["CONTAINERS"] = []
-        for container in containers:
-            container_number_length = len(container)
-            # If container length is valid, check further
-            if container_number_length != 0:
-                if container_number_length == 11 or container_number_length == 17:
-                    if container_number_length == 11:
-                        # Check container validity
-                        if not is_valid_container_number(container):
-                            # Check if the container already exists in the blob records
-                            if container not in existing_data["CONTAINERS"].values:
+
+        # Check if DECLARATIONID exists in blob storage
+        if float(declaration_id) not in existing_data["DECLARATIONID"].astype(float).values:
+            for container in containers:
+                container_number_length = len(container)
+                # If container length is valid, check further
+                if container_number_length != 0:
+                    if container_number_length == 11 or container_number_length == 17:
+                        if container_number_length == 11:
+                            # Check container validity
+                            if not is_valid_container_number(container):
                                 newObj["CONTAINERS"].append(container)
                                 wrong_data.append(newObj)
-                else:
-                    # Invalid length containers
-                    if container not in existing_data["CONTAINERS"].values:
+                                break  # Break after first invalid container
+                    else:
+                        # Invalid length containers
                         newObj["CONTAINERS"].append(container)
                         wrong_data.append(newObj)
+                        break  # Break after first invalid container
 
     try:
         return func.HttpResponse(

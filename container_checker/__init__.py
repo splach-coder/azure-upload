@@ -88,4 +88,57 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f"Error: {str(e)}")
             return func.HttpResponse(f"Error: {str(e)}", status_code=400)
 
+    # PATCH /data - Update existing data by ID
+    elif method == "PATCH":
+        try:
+            update_data = req.get_json()
+            record_id = update_data.get("ID")
+            new_handler = update_data.get("handler")
+
+            if record_id is None:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "ID is required for update"}),
+                    status_code=400,
+                    mimetype="application/json"
+                )
+
+            if new_handler is None:
+                return func.HttpResponse(
+                    body=json.dumps({"error": "handler value is required for update"}),
+                    status_code=400,
+                    mimetype="application/json"
+                )
+                
+            if float(record_id) not in df_data["ID"].values:
+                return func.HttpResponse(
+                    body=json.dumps({"error": f"Record with ID {record_id} not found"}),
+                    status_code=404,
+                    mimetype="application/json"
+                )
+
+            # Convert record_id to float for comparison
+            record_id = float(record_id)
+            mask = df_data["ID"].astype(float) == record_id
+            df_data.loc[mask, "handler"] = new_handler
+            df_data.loc[mask, "handled"] = True
+
+            # Write updated DataFrame back to blob
+            output = io.StringIO()
+            df_data.to_csv(output, index=False)
+            blob_client.upload_blob(output.getvalue(), overwrite=True)
+
+            return func.HttpResponse(
+                body=json.dumps({"message": "Record updated successfully"}),
+                status_code=200,
+                mimetype="application/json"
+            )
+
+        except Exception as e:
+            logging.error(f"Error during update: {str(e)}")
+            return func.HttpResponse(
+                body=json.dumps({"error": f"Update failed: {str(e)}"}),
+                status_code=500,
+                mimetype="application/json"
+            )
+
     return func.HttpResponse("Invalid request", status_code=400)

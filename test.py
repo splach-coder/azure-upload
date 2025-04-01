@@ -1,7 +1,7 @@
 import mysql.connector
 
 db_config = {
-    "host": "10.61.0.36", 
+    "host": "mysql-webapp-internal.mysql.database.azure.com", 
     "user": "mysqldb_webapp_internal_write",  
     "password": "HdAYnxZe3954u@d",
     "database": "mysqldb-webapp-internal",

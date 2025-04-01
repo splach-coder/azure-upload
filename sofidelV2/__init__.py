@@ -147,6 +147,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # Clean the items
             cleaned_items = []
             data_fix_ai = transform_data(items)
+            logging.error(data_fix_ai)
             result_fix_ai = arrays_to_objects(data_fix_ai)
             result["items"] = result_fix_ai
             for item in result_fix_ai:
