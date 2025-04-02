@@ -83,7 +83,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         newObj["CONTAINERS"] = []
 
         # Check if DECLARATIONID exists in blob storage
-        if float(declaration_id) not in existing_data["DECLARATIONID"].astype(float).values:
+        if float(declaration_id) not in existing_data["ID"].astype(float).values:
             for container in containers:
                 container_number_length = len(container)
                 # If container length is valid, check further
