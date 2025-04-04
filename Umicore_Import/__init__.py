@@ -10,6 +10,7 @@ from azure.keyvault.secrets.aio import SecretClient
 import asyncio
 
 from Umicore_Import.helpers.functions import merge_into_items, split_cost_centers, transform_afschrijfgegevens, transform_inklaringsdocument
+from Umicore_Import.excel.create_excel import write_to_excel
 
 def is_pdf(filename):
     """Check if file is PDF based on extension"""
@@ -156,8 +157,8 @@ For Each Container Under a KP:
 Extract the container data and ensure proper formatting:
 - Container: Extract the container number, remove spaces and special characters (e.g., "TGBU 686125-4" → "TGBU6861254").
 - Packages: Extract the number of packages (PK value).
-- Gross Weight: Extract the Bruto kg (gross weight) as Number correct be aware of the seperator give te correct number.
-- Net Weight: Extract the Netto kg (net weight) as Number correct be aware of the seperator give te correct number.
+- Gross Weight: Extract the "Bruto kg" value as a number. If the value uses a period as decimal separator (e.g., "7.453"), convert it to a whole number by removing the decimal point (→ 7453). If the value uses a comma as a decimal separator (e.g., "7,453"), interpret it as a floating-point number (→ 7.453).
+- Net Weight: Extract the "Netto kg" value as a number. If the value uses a period as decimal separator (e.g., "6.292"), convert it to a whole number by removing the decimal point (→ 6292). If the value uses a comma as a decimal separator (e.g., "6,292"), interpret it as a floating-point number (→ 6.292).
 
 Return the extracted data in the following JSON format:
 {{
@@ -360,12 +361,35 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
         afschrijfgegevens_data = split_cost_centers(afschrijfgegevens_data)   
 
         # Merge the objects
-        result = merge_into_items(inklaringsdocument_data, afschrijfgegevens_data) 
+        result = merge_into_items(inklaringsdocument_data, afschrijfgegevens_data)
+        
+        # Calculate totals from the Items list directly
+        result["Total packages"] = sum(item.get("packages", 0) for item in result.get("Items", []))
+        result["Total gross"] = sum(item.get("gross_weight", 0) for item in result.get("Items", []))
+        result["Total net"] = sum(item.get("net_weight", 0) for item in result.get("Items", []))
+        result["Total Value"] = sum(item.get("invoice_value", 0) for item in result.get("Items", []))
 
-        return func.HttpResponse(
-            body=result,
-            mimetype="application/json"
-        )
+        try:
+            # Call writeExcel to generate the Excel file in memory
+            excel_file = write_to_excel(result)
+            logging.info("Generated Excel file.")
+            
+            reference = result.get("commercial_reference", "")
+
+            # Set response headers for the Excel file download
+            headers = {
+                'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+                'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            }
+
+            # Return the Excel file as an HTTP response
+            return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            return func.HttpResponse(
+                f"Error processing request: {e}", status_code=500
+            )   
         
     except Exception as e:
         logging.error("Error during data processing: %s", str(e))

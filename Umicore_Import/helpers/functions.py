@@ -5,8 +5,6 @@ def merge_into_items(first_json_str, second_json_str):
     first_data = first_json_str
     second_data = json.loads(second_json_str)
     
-    print(second_data)
-    
     # Create a lookup dictionary for the second JSON using contract_number as the key
     contract_to_data = {obj["contract_number"]: obj for obj in second_data}
     
@@ -20,7 +18,7 @@ def merge_into_items(first_json_str, second_json_str):
             item.update(matched_data)
     
     # Return the modified first JSON with enriched Items
-    return json.dumps(first_data, indent=2)
+    return first_data
 
 def transform_afschrijfgegevens(input_data):
     """
