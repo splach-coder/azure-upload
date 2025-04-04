@@ -88,7 +88,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 container_number_length = len(container)
                 # If container length is valid, check further
                 if container_number_length != 0:
-                    if container_number_length == 11 or container_number_length == 17:
+                    if container_number_length == 11 or container_number_length == 17 or container_number_length == 16:
                         if container_number_length == 11:
                             # Check container validity
                             if not is_valid_container_number(container):
