@@ -4,28 +4,39 @@ import fitz
 import json
 import re
 
-from TennecoMonroe.helpers.functions import is_valid_number
+from TennecoMonroe.helpers.functions import clean_VAT, is_valid_number
 
-def extract_text_from_first_page(pdf_path, coordinates, key_map, page=[1]):
+def is_valid_vat(vat):
+    vat = vat.strip()
+    return bool(re.match(r'^[A-Z]{2}[A-Z0-9]{8,12}$', vat, re.IGNORECASE))
+
+def extract_text_from_first_page(pdf_path, coordinates, key_map, page=[1], useVatBackup=False):
     pdf_document = fitz.open(pdf_path)
     extracted_text = []
 
     # Get the first page
-    first_page = pdf_document[page[0] - 1]#minus one to make 0 indexed
+    first_page = pdf_document[page[0] - 1]
 
     # Extract text from specific coordinates on the first page
-    for (x0, y0, x1, y1) in coordinates:
+    for idx, (x0, y0, x1, y1) in enumerate(coordinates):
         rect = fitz.Rect(x0, y0, x1, y1)
-        text = first_page.get_text("text", clip=rect)
-        extracted_text.append(text.strip())
+        text = first_page.get_text("text", clip=rect).strip()
 
-    # Ensure the number of extracted texts matches the key_map
+        # VAT field check (last one in your list)
+        if idx == len(coordinates) - 1 and useVatBackup:
+            vat = clean_VAT(text)
+            if not is_valid_vat(vat):
+                # Try backup VAT rect
+                backup_rect = fitz.Rect(27, 35, 163, 45)
+                backup_text = first_page.get_text("text", clip=backup_rect).strip()
+                text = backup_text  # use backup if valid
+
+        extracted_text.append(text)
+
     if len(extracted_text) != len(key_map):
-        raise ValueError("Length of extracted text and key map must be equal for the first page.")
+        raise ValueError("Length of extracted text and key map must match.")
 
-    # Map the extracted text to the provided key_map
     data_dict = dict(zip(key_map, extracted_text))
-
     return json.dumps(data_dict, indent=2)
 
 def find_page_in_invoice(pdf_path, keywords=["Packaging", "No.units", "Weight (KG)", "Terms of delivery", "Total w/o VAT"]):
@@ -76,9 +87,7 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
         for x in x_coords:
             rect = fitz.Rect(x[0], current_y, x[1], current_y + row_height)
             text = first_page.get_text("text", clip=rect).strip()
-            row_data.append(text)  
-
-        logging.error(row_data)       
+            row_data.append(text)      
 
         # Check if the row meets the criteria
         if (

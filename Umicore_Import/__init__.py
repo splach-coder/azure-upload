@@ -347,7 +347,7 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
             result = await process_file(base64_file) 
 
             if result:
-                processed_results.append(result)    
+                processed_results.append(result)      
 
         afschrijfgegevens_data = {}
         inklaringsdocument_data = {}

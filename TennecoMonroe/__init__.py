@@ -15,8 +15,6 @@ from TennecoMonroe.config.coords import first_page_coords, totals_page_coords
 from TennecoMonroe.config.key_maps import first_page_key_map, totals_page_key_map, table_page_key_map
 from global_db.countries.countries import countries
 
-
-
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
 
@@ -85,10 +83,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         inv = check_invoice_in_pdf(uploaded_file_path)
         if inv:  
-        
             '''------------------- Extract the Static Values from the first page ------------------'''
             # extract the file and put it on global for multiple files case
-            first_page_data = json.loads(extract_text_from_first_page(uploaded_file_path, first_page_coords, first_page_key_map))
+            first_page_data = json.loads(extract_text_from_first_page(uploaded_file_path, first_page_coords, first_page_key_map, useVatBackup=True))
+            #logging.error(first_page_data)
             #extract the the adress into company name, street, city ....
             address = first_page_data.get("Address")
             parser = AddressParser()
@@ -120,8 +118,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             table_page = find_page_in_invoice(uploaded_file_path, keywords=["Customs Tariff", "Origin", "Net Weight", "Quantity", "Value Payable"])
             # Call the function
             result = extract_dynamic_text_from_pdf(uploaded_file_path, x_coords, y_range, table_page_key_map, table_page)
-
-            logging.error(result)
 
             #cast it to json
             result = json.loads(result)
@@ -167,7 +163,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_data)
-        logging.info("Generated Excel file.")
+        logging.info("Generated Excel file.") 
         
         reference = merged_data.get("Inv No", "")
         reference = reference.replace('Invoice no.', '').replace('\n', '')

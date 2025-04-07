@@ -68,7 +68,7 @@ def write_to_excel(json_string):
         "Net",
         "Origin",
         "Invoice value",
-        "Currency",
+        "currency",
         "Pieces",
         "Invoicenumber",
         "Invoice date",
