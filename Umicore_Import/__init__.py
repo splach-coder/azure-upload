@@ -8,9 +8,23 @@ from io import BytesIO
 from azure.identity.aio import DefaultAzureCredential
 from azure.keyvault.secrets.aio import SecretClient
 import asyncio
+import time
+import re
+from contextlib import asynccontextmanager
 
 from Umicore_Import.helpers.functions import merge_into_items, split_cost_centers, transform_afschrijfgegevens, transform_inklaringsdocument
 from Umicore_Import.excel.create_excel import write_to_excel
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Constants
+KEY_VAULT_URL = "https://kv-functions-python.vault.azure.net"
+OPENAI_SECRET_NAME = "OPENAI-API-KEY"
+MAX_RETRY_ATTEMPTS = 3
+RETRY_DELAY = 2  # seconds
+MAX_CONCURRENCY = 3  # Maximum number of concurrent API calls
 
 def is_pdf(filename):
     """Check if file is PDF based on extension"""
@@ -25,31 +39,73 @@ def check_filename_pattern(filename):
         return "afschrijfgegevens"
     return None
 
-async def get_openai_api_key():
-    """Fetch OpenAI API key from Azure Key Vault asynchronously"""
-    key_vault_url = "https://kv-functions-python.vault.azure.net"
-    secret_name = "OPENAI-API-KEY"
-    
-    credential = None
+@asynccontextmanager
+async def get_openai_client():
+    """Context manager to safely create and close OpenAI client"""
     client = None
+    credential = None
     
     try:
+        # Create credential and secret client
         credential = DefaultAzureCredential()
-        client = SecretClient(vault_url=key_vault_url, credential=credential)
-        secret = await client.get_secret(secret_name)
-        return secret.value
+        secret_client = SecretClient(vault_url=KEY_VAULT_URL, credential=credential)
+        
+        try:
+            # Get API key
+            secret = await secret_client.get_secret(OPENAI_SECRET_NAME)
+            api_key = secret.value
+            
+            # Create OpenAI client
+            client = AsyncOpenAI(api_key=api_key)
+            yield client
+            
+        finally:
+            # Close secret client
+            await secret_client.close()
+            
     except Exception as e:
-        logging.error(f"Failed to retrieve OpenAI API key from Key Vault: {str(e)}")
+        logger.error(f"Failed to initialize OpenAI client: {str(e)}")
         raise
     finally:
-        if client:
-            await client.close()
+        # Ensure credential is closed
         if credential:
             await credential.close()
+        
+        # Ensure client is closed
+        if client:
+            await client.close()
+
+@asynccontextmanager
+async def open_pdf(pdf_content):
+    """Context manager to safely open and close PDF document"""
+    doc = None
+    try:
+        pdf_file = BytesIO(pdf_content)
+        doc = fitz.open(stream=pdf_file, filetype="pdf")
+        yield doc
+    finally:
+        if doc:
+            doc.close()
+
+async def retry_async(func, *args, max_attempts=MAX_RETRY_ATTEMPTS, **kwargs):
+    """Retry an async function with exponential backoff"""
+    last_exception = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return await func(*args, **kwargs)
+        except Exception as e:
+            last_exception = e
+            if attempt < max_attempts:
+                wait_time = RETRY_DELAY * (2 ** (attempt - 1))  # Exponential backoff
+                logger.warning(f"Attempt {attempt} failed with error: {str(e)}. Retrying in {wait_time} seconds...")
+                await asyncio.sleep(wait_time)
+            else:
+                logger.error(f"All {max_attempts} attempts failed. Last error: {str(e)}")
+                raise last_exception
 
 async def process_page_with_openai_a(client, text_content, page_num, total_pages):
-    """Process a single page with OpenAI API"""
-    logging.info(f"Processing page {page_num + 1}/{total_pages}")
+    """Process a single page with OpenAI API for inklaringsdocument"""
+    logger.info(f"Processing inklaringsdocument page {page_num + 1}/{total_pages}")
     
     try:
         response = await client.chat.completions.create(
@@ -93,21 +149,21 @@ async def process_page_with_openai_a(client, text_content, page_num, total_pages
                   "description": ,
                   "origin":,
                   "invoice_value": ,
-                  "currency": 
+                  "currency": ,
                   "License" : ,
                   "Vak 24" : ,
                   "Vak 37" : ,
                   "Vak 44" : ,
-                  "cost center" : ,
+                  "cost center" : 
                 }}```"""}
-            ]
+            ],
+            temperature=0.3,
+            max_tokens=2000
         )
         
         result = response.choices[0].message.content
         
-        # Ensure we get valid JSON
-        # Find JSON content between triple backticks if present
-        import re
+        # Extract JSON content between triple backticks if present
         json_match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
         if json_match:
             result = json_match.group(1)
@@ -120,16 +176,24 @@ async def process_page_with_openai_a(client, text_content, page_num, total_pages
             "extracted_data": page_data
         }
         
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error on page {page_num + 1}: {str(e)}")
+        logger.error(f"Raw content: {result}")
+        return {
+            "page_number": page_num + 1,
+            "error": f"JSON parsing error: {str(e)}",
+            "raw_content": result
+        }
     except Exception as e:
-        logging.error(f"Error processing page {page_num + 1}: {str(e)}")
+        logger.error(f"Error processing page {page_num + 1}: {str(e)}")
         return {
             "page_number": page_num + 1,
             "error": str(e)
         }
 
 async def process_page_with_openai_b(client, text_content, page_num, total_pages):
-    """Process a single page with OpenAI API"""
-    logging.info(f"Processing page {page_num + 1}/{total_pages}")
+    """Process a single page with OpenAI API for afschrijfgegevens"""
+    logger.info(f"Processing afschrijfgegevens page {page_num + 1}/{total_pages}")
     
     try:
         prompt = f"""Extract the following details from the document and return them as a structured JSON object:
@@ -199,9 +263,7 @@ Return the extracted data in the following JSON format:
         
         result = response.choices[0].message.content
         
-        # Ensure we get valid JSON
-        # Find JSON content between triple backticks if present
-        import re
+        # Extract JSON content between triple backticks if present
         json_match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
         if json_match:
             result = json_match.group(1)
@@ -214,106 +276,103 @@ Return the extracted data in the following JSON format:
             "extracted_data": page_data
         }
         
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error on page {page_num + 1}: {str(e)}")
+        logger.error(f"Raw content: {result}")
+        return {
+            "page_number": page_num + 1, 
+            "error": f"JSON parsing error: {str(e)}",
+            "raw_content": result
+        }
     except Exception as e:
-        logging.error(f"Error processing page {page_num + 1}: {str(e)}")
+        logger.error(f"Error processing page {page_num + 1}: {str(e)}")
         return {
             "page_number": page_num + 1,
             "error": str(e)
         }
 
 async def process_pdf_with_openai(pdf_content, file_type):
-    """Process PDF content with OpenAI API page by page asynchronously"""
-    client = None
-    doc = None     
-    
-    try:
-        api_key = await get_openai_api_key()
-        client = AsyncOpenAI(api_key=api_key)
+    """Process PDF content with OpenAI API page by page with controlled concurrency"""
+    async with get_openai_client() as client:
+        async with open_pdf(pdf_content) as doc:
+            total_pages = len(doc)
+            
+            # Extract text content from all pages first
+            pages_text = []
+            for page_num in range(total_pages):
+                page = doc[page_num]
+                text_content = page.get_text()
+                pages_text.append(text_content)
         
-        # Initialize PDF document
-        pdf_file = BytesIO(pdf_content)
-        doc = fitz.open(stream=pdf_file, filetype="pdf")
-        total_pages = len(doc)
+        # Process pages with controlled concurrency
+        pages_data = []
+        semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
         
-        # Extract text content from all pages first
-        pages_text = []
-        for page_num in range(total_pages):
-            page = doc[page_num]
-            text_content = page.get_text()
-            pages_text.append(text_content)
+        async def process_with_semaphore(page_num, text_content):
+            async with semaphore:
+                if file_type == "inklaringsdocument":
+                    return await retry_async(process_page_with_openai_a, client, text_content, page_num, total_pages)
+                elif file_type == "afschrijfgegevens":
+                    return await retry_async(process_page_with_openai_b, client, text_content, page_num, total_pages)
         
-        # Close the document after extracting text
-        doc.close()
-        doc = None
+        # Create tasks for each page with controlled concurrency
+        tasks = [process_with_semaphore(page_num, text_content) 
+                for page_num, text_content in enumerate(pages_text)]
         
-        # Create tasks for each page
-        tasks = []
-        for page_num, text_content in enumerate(pages_text):
-            if file_type == "inklaringsdocument":
-                tasks.append(process_page_with_openai_a(client, text_content, page_num, total_pages))
-            elif file_type == "afschrijfgegevens":
-                tasks.append(process_page_with_openai_b(client, text_content, page_num, total_pages))
-        
-        # Process pages concurrently (with reasonable concurrency)
+        # Process pages and collect results
         pages_data = await asyncio.gather(*tasks)
         
-        # Combine results from all pages
+        # Check for errors
+        errors = [page for page in pages_data if "error" in page]
+        if errors:
+            logger.warning(f"Encountered {len(errors)} pages with errors")
+            for error in errors:
+                logger.warning(f"Page {error['page_number']} error: {error.get('error')}")
+        
+        # Return combined results
         return {
             "total_pages": total_pages,
             "pages": pages_data
         }
 
-    except Exception as e:
-        logging.error(f"Error in PDF processing: {str(e)}")
-        raise
-    finally:
-        # Ensure resources are properly closed
-        if doc:
-            doc.close()
-        if client:
-            await client.close()
-
 async def process_file(base64_file):
-    """Process a single file asynchronously"""
+    """Process a single file asynchronously with improved error handling"""
     filename = base64_file.get('filename')
     file_data = base64_file.get('file')
 
     if not filename or not file_data:
+        logger.warning(f"Missing filename or file data")
         return None
 
     # Check if file is PDF and has correct name pattern
     if not is_pdf(filename):
-        logging.info(f"Skipping non-PDF file: {filename}")
+        logger.info(f"Skipping non-PDF file: {filename}")
         return None
 
     file_type = check_filename_pattern(filename)
     if not file_type:
-        logging.info(f"Skipping file with invalid name pattern: {filename}")
+        logger.info(f"Skipping file with invalid name pattern: {filename}")
         return None
 
     try:
         # Decode the base64-encoded file
         decoded_data = base64.b64decode(file_data)
 
-        # Process inklaringsdocument with OpenAI
-        if file_type == "inklaringsdocument":
-            extracted_data = await process_pdf_with_openai(decoded_data, file_type)
-            return {
-                "filename": filename,
-                "type": file_type,
-                "data": extracted_data
-            }
-        elif file_type == "afschrijfgegevens":
-            extracted_data = await process_pdf_with_openai(decoded_data, file_type)
-            return {
-                "filename": filename,
-                "type": file_type,
-                "data": extracted_data
-            }   
-        return None
+        # Process file with OpenAI based on type
+        start_time = time.time()
+        extracted_data = await process_pdf_with_openai(decoded_data, file_type)
+        elapsed_time = time.time() - start_time
+        
+        logger.info(f"Processed {filename} in {elapsed_time:.2f} seconds")
+        
+        return {
+            "filename": filename,
+            "type": file_type,
+            "data": extracted_data
+        }
 
     except Exception as e:
-        logging.error(f"Error processing file {filename}: {str(e)}")
+        logger.error(f"Error processing file {filename}: {str(e)}")
         return {
             "filename": filename,
             "type": "error",
@@ -321,90 +380,130 @@ async def process_file(base64_file):
         }
 
 async def main_async(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Processing file upload request asynchronously.')
+    """Main asynchronous handler with improved error handling"""
+    logger.info('Processing file upload request asynchronously.')
+    start_time = time.time()
 
     try:
-        body = req.get_json()
-        base64_files = body.get('files', [])
-    except Exception as e:
-        return func.HttpResponse(
-            body=json.dumps({"error": f"Invalid request format: {str(e)}"}),
-            status_code=400,
-            mimetype="application/json"
-        )
+        # Parse request body
+        try:
+            body = req.get_json()
+            base64_files = body.get('files', [])
+        except Exception as e:
+            logger.error(f"Invalid request format: {str(e)}")
+            return func.HttpResponse(
+                body=json.dumps({"error": f"Invalid request format: {str(e)}"}),
+                status_code=400,
+                mimetype="application/json"
+            )
 
-    if not base64_files:
-        return func.HttpResponse(
-            body=json.dumps({"error": "No files provided"}),
-            status_code=400,
-            mimetype="application/json"
-        )
+        if not base64_files:
+            logger.warning("No files provided in request")
+            return func.HttpResponse(
+                body=json.dumps({"error": "No files provided"}),
+                status_code=400,
+                mimetype="application/json"
+            )
 
-    try:
-        # Process files one by one to avoid resource issues
+        # Process files sequentially to avoid resource issues
         processed_results = []
         for base64_file in base64_files:
-            result = await process_file(base64_file) 
-
+            result = await process_file(base64_file)
             if result:
-                processed_results.append(result)      
+                processed_results.append(result)
+                
+        # Check if we have required files
+        if not processed_results:
+            logger.warning("No valid files were processed")
+            return func.HttpResponse(
+                body=json.dumps({"error": "No valid files were processed"}),
+                status_code=400,
+                mimetype="application/json"
+            )
 
+        # Transform extracted data
         afschrijfgegevens_data = {}
         inklaringsdocument_data = {}
+        
+        logging.info(processed_results)
 
-        for object in processed_results:
-            if object.get("type") == "afschrijfgegevens" :
-                afschrijfgegevens_data = transform_afschrijfgegevens(object)
-            elif object.get("type") == "inklaringsdocument" :
-                inklaringsdocument_data = transform_inklaringsdocument(object)
+        for result in processed_results:
+            if result.get("type") == "afschrijfgegevens":
+                afschrijfgegevens_data = transform_afschrijfgegevens(result)
+            elif result.get("type") == "inklaringsdocument":
+                inklaringsdocument_data = transform_inklaringsdocument(result)
 
+        # Process and merge data
         afschrijfgegevens_data = split_cost_centers(afschrijfgegevens_data)   
-
-        # Merge the objects
         result = merge_into_items(inklaringsdocument_data, afschrijfgegevens_data)
         
-        # Calculate totals from the Items list directly
+        # Calculate totals
         result["Total packages"] = sum(item.get("packages", 0) for item in result.get("Items", []))
         result["Total gross"] = sum(item.get("gross_weight", 0) for item in result.get("Items", []))
         result["Total net"] = sum(item.get("net_weight", 0) for item in result.get("Items", []))
         result["Total Value"] = sum(item.get("invoice_value", 0) for item in result.get("Items", []))
 
+        # Generate Excel file
         try:
-            # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(result)
-            logging.info("Generated Excel file.")
+            logger.info("Generated Excel file.")
             
             reference = result.get("commercial_reference", "")
+            if not reference:
+                reference = "UMICORE"
 
-            # Set response headers for the Excel file download
+            # Set response headers for file download
             headers = {
-                'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+                'Content-Disposition': f'attachment; filename="{reference}.xlsx"',
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             }
 
-            # Return the Excel file as an HTTP response
-            return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    
-        except Exception as e:
-            logging.error(f"Error: {e}")
+            elapsed_time = time.time() - start_time
+            logger.info(f"Total processing time: {elapsed_time:.2f} seconds")
+            
+            # Return Excel file as response
             return func.HttpResponse(
-                f"Error processing request: {e}", status_code=500
-            )   
+                excel_file.getvalue(), 
+                headers=headers, 
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
         
+        except Exception as e:
+            logger.error(f"Error generating Excel: {str(e)}")
+            return func.HttpResponse(
+                body=json.dumps({"error": f"Error generating Excel: {str(e)}"}),
+                status_code=500,
+                mimetype="application/json"
+            )
+    
     except Exception as e:
-        logging.error("Error during data processing: %s", str(e))
+        logger.error(f"Unhandled exception in main_async: {str(e)}")
         return func.HttpResponse(
-            body=json.dumps({"error": f"Error processing data: {str(e)}"}),
+            body=json.dumps({"error": f"Error processing request: {str(e)}"}),
             status_code=500,
             mimetype="application/json"
         )
 
 # Azure Functions entry point
 async def main(req: func.HttpRequest) -> func.HttpResponse:
+    """Main entry point with timeout protection"""
     try:
-        return await main_async(req)
+        # Create a task for the main processing logic
+        task = asyncio.create_task(main_async(req))
+        
+        # Wait for the task to complete with a timeout
+        # Azure Functions have a default timeout of 5 minutes (300 seconds)
+        # We'll use a slightly shorter timeout to ensure clean shutdown
+        return await asyncio.wait_for(task, timeout=290)
+    except asyncio.TimeoutError:
+        logger.error("Request processing timed out")
+        return func.HttpResponse(
+            body=json.dumps({"error": "Request processing timed out"}),
+            status_code=408,
+            mimetype="application/json"
+        )
     except Exception as e:
-        logging.error(f"Unhandled exception in main: {str(e)}")
+        logger.error(f"Unhandled exception in main: {str(e)}")
         return func.HttpResponse(
             body=json.dumps({"error": f"Internal server error: {str(e)}"}),
             status_code=500,

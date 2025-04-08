@@ -124,7 +124,11 @@ def transform_inklaringsdocument(input_data):
     result.update(common_data)
     result["Items"] = items
     
-    result["Vak 44"] = result.get("Vak 44").split('+')[1].strip()
+    result["Vak 44"] = result.get("Vak 44").split('+')
+    if len(result["Vak 44"]) > 1:
+        result["Vak 44"] = result["Vak 44"][1].strip()
+    else:
+        result["Vak 44"] = result["Vak 44"][0].strip()    
     
     return result
 
