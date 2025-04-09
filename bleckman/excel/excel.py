@@ -4,7 +4,6 @@ from openpyxl.styles import Font
 from io import BytesIO
 
 def create_excel(data):
-    print("------------------------------------------------")
     # Create a workbook and a worksheet
     wb = Workbook()
     ws = wb.active
@@ -51,7 +50,7 @@ def create_excel(data):
         ["InvoiceValue", "", "", "", "", "", "", ""],
         ["Col #1", "Col #2", "", "", "", "", "", ""],
         data.get("Totals", ""),
-        ["", "", "", "", "", "", "", ""],
+        ["ILS Number",  data.get("ILS_NUMBER", ""), "", "", "", "", "", ""],
         ["Items", "", "", "", "", "", "", ""],
         ["Col #1", "Col #3", "Col #3", "Col #4", "Col #5"]
     ]
@@ -75,8 +74,8 @@ def create_excel(data):
             # Apply font to all cells
             cell.font = Font(bold=False, size=11)
       
-    ws["A1"].font = Font(bold=True)  # Make cell A1 bold
-    ws["A2"].font = Font(bold=True)  # Make cell B2 bold
+    ws["A1"].font = Font(bold=True)  
+    ws["A2"].font = Font(bold=True) 
     ws["A3"].font = Font(bold=True)        
     ws["A4"].font = Font(bold=True)        
     ws["A5"].font = Font(bold=True)        
@@ -106,6 +105,7 @@ def create_excel(data):
     ws["A26"].font = Font(bold=True)        
     ws["A27"].font = Font(bold=True)        
     ws["B27"].font = Font(bold=True)
+    ws["A29"].font = Font(bold=True)
             
     ws["A30"].font = Font(bold=True)        
     ws["A31"].font = Font(bold=True)        

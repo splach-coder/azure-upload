@@ -10,6 +10,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.ai.formrecognizer import DocumentAnalysisClient # Use this API key to call Azure Document Intelligence
 from azure.core.credentials import AzureKeyCredential
 
+from ILS_NUMBER.get_ils_number import call_logic_app
 from bleckman.helpers.functions import cast_arrays_to_float, cast_arrays_to_int, process_arrays, process_invoice_data, safe_lower
 from bleckman.service.extractors import extract_text_from_first_page, extract_text_from_first_page_arrs
 from bleckman.config.keywords import key_map, coordinates
@@ -235,6 +236,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         os.remove(uploaded_file_path)
     
     result = process_invoice_data(invoices_data_and_type)
+    
+    
+    try:
+        # Get the ILS number
+        response = call_logic_app("BLECKMANN")
+
+        if response["success"]:
+            result["ILS_NUMBER"] = response["doss_nr"]
+        else:
+            logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")  
     
     # Call writeExcel to generate the Excel file in memory
     excel_file = create_excel(result)

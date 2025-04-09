@@ -3,6 +3,7 @@ import logging
 import json
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from sofidelV2.excel.create_excel import write_to_excel
 from global_db.functions.numbers.functions import clean_customs_code, clean_incoterm, clean_number_from_chars, safe_float_conversion, safe_int_conversion
 from global_db.countries.functions import get_abbreviation_by_country
@@ -187,6 +188,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result["Export office"] = json_result.get("Exit Port BE", "")
         json_result["Exit Port BE"] = ""
         json_result["Reference"] = extract_id_from_string(subject_body)
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app(json_result.get('Principal', '').upper())
+
+            if response["success"]:
+                json_result["ILS_NUMBER"] = response["doss_nr"]
+                logging.info(f"ILS_NUMBER: {json_result['ILS_NUMBER']}")
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
             
         try:
             # Call writeExcel to generate the Excel file in memory

@@ -31,7 +31,7 @@ def write_to_excel(json_string):
         "Vak 24",
         "Vak 37",
         "Vak 44",
-        "Kostenplaats"
+        "ILS number",
     ]
 
     values1 = [
@@ -56,7 +56,8 @@ def write_to_excel(json_string):
         data.get('License', ''),
         data.get('Vak 24', ''),
         data.get('Vak 37', ''),
-        data.get('Vak 44', '')
+        data.get('Vak 44', ''),
+        data.get('ILS_NUMBER', ''),
     ]
 
     header2 = [

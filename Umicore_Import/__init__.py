@@ -1,3 +1,4 @@
+import datetime
 import azure.functions as func
 import logging
 import json
@@ -11,7 +12,9 @@ import asyncio
 import time
 import re
 from contextlib import asynccontextmanager
+import uuid
 
+from ILS_NUMBER.get_ils_number import call_logic_app
 from Umicore_Import.helpers.functions import merge_into_items, split_cost_centers, transform_afschrijfgegevens, transform_inklaringsdocument
 from Umicore_Import.excel.create_excel import write_to_excel
 
@@ -442,6 +445,19 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
         result["Total gross"] = sum(item.get("gross_weight", 0) for item in result.get("Items", []))
         result["Total net"] = sum(item.get("net_weight", 0) for item in result.get("Items", []))
         result["Total Value"] = sum(item.get("invoice_value", 0) for item in result.get("Items", []))
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("UMICORE")
+
+            if response["success"]:
+                result["ILS_NUMBER"] = response["doss_nr"]
+                logger.info(f"ILS_NUMBER: {result['ILS_NUMBER']}")
+            else:
+                logger.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+        except Exception as e:
+            logger.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
 
         # Generate Excel file
         try:
@@ -450,7 +466,9 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
             
             reference = result.get("commercial_reference", "")
             if not reference:
-                reference = "UMICORE"
+                ts = datetime.now().strftime("%y%m%d%H%M%S")
+                uid = uuid.uuid4().hex[:4]
+                reference = f"UMICORE_{ts}_{uid}"
 
             # Set response headers for file download
             headers = {

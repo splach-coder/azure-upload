@@ -5,14 +5,13 @@ import os
 import base64
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from ferminich.excel.create_excel import write_to_excel
-from ferminich.helpers.adress_extractors import get_address_structure
 from ferminich.helpers.functions import clean_invoice_text, combine_invoices, get_currency_abbr, get_inco_arr, normalise_number, safe_float_conversion
 from ferminich.service.extrators import clean_array_from_unwanted_items, extract_and_clean, extract_cleaned_invoice_text, extract_customs_code_from_text, extract_fields_from_item_text, extract_information, extract_invoice_details, extract_optional_from_pdf_invoice, extract_text_from_first_page, extract_vat_number, split_items_into_array, vat_validation
 
 from ferminich.coords.coords import header_inv_coords
 from ferminich.coords.keys import header_inv_keys
-from ferminich.data.countries import countries  
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -146,13 +145,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     else :
         email_body = {"reference": '', "colis": '', "weight": '', "location": ''}
     
-    
     """Add the email data to the result"""
     result = {**email_body, **result}
+    
+    try:
+        # Get the ILS number
+        response = call_logic_app("CORNEEL")
+
+        if response["success"]:
+            result["ILS_NUMBER"] = response["doss_nr"]
+            logging.info(f"ILS_NUMBER: {result['ILS_NUMBER']}")
+        else:
+            logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
             
     # Proceed with data processing
     try:
-        logging.error(result)
         excel_file= write_to_excel(result)
         reference = result["reference"]
 

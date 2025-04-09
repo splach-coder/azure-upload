@@ -6,6 +6,7 @@ import os
 import base64
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from capsugel.excel.createExcel import write_to_excel
 from capsugel.helpers.adress_extractors import get_address_structure
 from capsugel.helpers.functions import extract_date, extract_vat_number, print_json_to_file, calculate_totals, change_keys, detect_pdf_type, clean_invoice_data, clean_packing_list_data, clean_invoice_total, clean_grand_totals_in_packing_list, merge_invoice_with_packing_list, remove_g_from_date, clean_number, vat_validation
@@ -242,6 +243,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         valid_codes = extract_exitoffices_from_body(cleaned_email)
         #asssign it to the global json data
         merged_data['Exit Port BE'] = valid_codes
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("CAPSUGELBE")
+
+            if response["success"]:
+                merged_data["ILS_NUMBER"] = response["doss_nr"]
+                logging.info(f"ILS_NUMBER: {merged_data['ILS_NUMBER']}")
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
+            
 
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_data)

@@ -33,7 +33,8 @@ def write_to_excel(data):
                 "Place",
                 "Container",
                 "Truck",
-                "Rex/Other"
+                "Rex/Other",
+                "ILS number"
             ]
         
             address = entry.get('Adrress', "")
@@ -65,7 +66,8 @@ def write_to_excel(data):
                 place if 'place' in locals() else '',
                 entry.get('Container', ''),
                 entry.get('wagon', ''),
-                entry.get("Customs Code", '')
+                entry.get("Customs Code", ''),
+                entry.get("ILS_NUMBER", '')
             ]
         
             header2 = [
@@ -180,4 +182,3 @@ def write_to_excel(data):
     # Finalize the ZIP file and prepare it for the response
     zip_buffer.seek(0)  # Go to the beginning of the ZIP buffer
     return zip_buffer.getvalue()
-

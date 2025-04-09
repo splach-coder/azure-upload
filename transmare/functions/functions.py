@@ -1,3 +1,5 @@
+import json
+import logging
 import re
 from bs4 import BeautifulSoup
 
@@ -181,4 +183,83 @@ def merge_json_objects(json_objects):
 
     return merged_object
 
+async def process_page_with_openai_a(client, text_content):
+    """Process a single page with OpenAI API for inklaringsdocument"""
+    try:
+        response = await client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Extract specific information from customs documents and return as JSON."},
+                {"role": "user", "content": f"""Extract the following details from this email and return them as a structured JSON object: 
+                {text_content}
 
+                You are a document parser specialized in processing logistics/exportation request emails in Dutch.
+
+                Your job is to extract structured data in raw JSON only — no formatting, no styling, no explanation. Focus on precision and consistency.
+                
+                Your Rules:
+                Only respond with valid, raw JSON.
+                
+                eur1 and atr are booleans.
+                
+                If the line + EUR1 or similar contains an X or x before it (e.g. x + EUR1 or X + EUR1), mark eur1: true. Else, false.
+                
+                Same logic for + ATR.
+                
+                Ignore + sign — it means nothing.
+                
+                Extract all listed items with the following fields (if present):
+                
+                no
+                
+                item_code
+                
+                product_naam
+                
+                aantal_stuks
+                
+                eenheid
+                
+                net_weight
+                
+                gross_weight
+                
+                imaj_document_number
+                
+                If any field is missing, skip it or leave it blank (e.g. gross_weight: "").
+                
+                Do not change values. Keep units and formatting (e.g. "2400.00 KG").
+                
+                Order of items matters — keep the same sequence as in the original document.
+                
+                Never explain. Output must be only JSON."""}
+            ],
+            temperature=0.3,
+            max_tokens=2000
+        )
+        
+        result = response.choices[0].message.content
+        
+        # Extract JSON content between triple backticks if present
+        json_match = re.search(r'```json\s*([\s\S]*?)\s*```', result)
+        if json_match:
+            result = json_match.group(1)
+        
+        # Parse the JSON content
+        page_data = json.loads(result)
+        
+        return {
+            "extracted_data": page_data
+        }
+        
+    except json.JSONDecodeError as e:
+        logging.error(f"Raw content: {result}")
+        return {
+            "error": f"JSON parsing error: {str(e)}",
+            "raw_content": result
+        }
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}")
+        return {
+            "error": str(e)
+        }

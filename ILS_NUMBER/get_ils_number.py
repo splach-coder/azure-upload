@@ -1,3 +1,4 @@
+import logging
 import requests
 import json
 
@@ -36,10 +37,3 @@ def call_logic_app(principal: str) -> dict:
             "status_code": getattr(err.response, "status_code", 500),
             "error": str(err)
         }
-
-response = call_logic_app("UMICORE")
-
-if response["success"]:
-    print("✅ Got data:", response['doss_nr'])
-else:
-    print("❌ Error:", response)

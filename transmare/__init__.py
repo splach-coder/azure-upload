@@ -5,6 +5,7 @@ import json
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.Gemeni.functions.functions import convert_to_list
 from AI_agents.Gemeni.transmare_Email import TransmareEmailParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from global_db.countries.functions import get_abbreviation_by_country
 from global_db.functions.dates import change_date_format
 from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
@@ -151,6 +152,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         prev_date = merged_result.get('Inv Date', '')
         new_date = change_date_format(prev_date)
         merged_result["Inv Date"] = new_date
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("TRANSMA")
+
+            if response["success"]:
+                merged_result["ILS_NUMBER"] = response["doss_nr"]
+                logging.info(f"ILS_NUMBER: {merged_result['ILS_NUMBER']}")
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
         
         try:
             # Call writeExcel to generate the Excel file in memory
