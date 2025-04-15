@@ -1,3 +1,4 @@
+import uuid
 import azure.functions as func
 import logging
 import json
@@ -138,13 +139,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         cleaned_email_body_html = extract_and_clean(email)
         
         #Extract the body data
-        merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html.replace(merged_result.get("Inv Reference", "") ,''))
+        # inv = merged_result.get("Inv Reference", "") if merged_result.get("Inv Reference") is not None else ""
+        # merged_result["Exit office"] = extract_Exitoffice(cleaned_email_body_html.replace(inv ,''))
 
         parser = TransmareEmailParser()
         parsed_result = parser.parse_email(cleaned_email_body_html)
         parsed_result = parsed_result.replace('json', '').replace('```', '').strip()
         parsed_result = convert_to_list(parsed_result)
         merged_result["Vissel"] = parsed_result.get("Vissel name")
+        merged_result["Exit office"] = parsed_result.get("Exit office").replace(" ", "") if parsed_result.get("Exit office") else ""
         merged_result["kaai"] = parsed_result.get("Export kaai", "") if is_valid_quay_number(parsed_result.get("Export kaai", "")) else ""
         merged_result["Container"] = parsed_result.get("Container Number", "") if is_valid_container_number(parsed_result.get("Container Number", "")) else ""
         merged_result["Email"] = parsed_result.get("Email", "")
@@ -171,7 +174,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             
-            reference = merged_result.get("Inv Reference", "")
+            reference = merged_result.get("Inv Reference", "") or ("transmare_" + uuid.uuid4().hex[:8])
 
             # Set response headers for the Excel file download
             headers = {
