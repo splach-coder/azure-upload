@@ -18,7 +18,8 @@ def create_excel(data):
     name, street, city, postal, country = ['', '', '', '', '']
     if address and len(address) == 1:
         address = address[0]
-        name, street, city, postal, country = address#.get("Company name", ""), address.get("Street", ""), address.get("City", ""), address.get("Postal Code", ""), address.get("Country", ""),
+        if len(address) == 5:
+            name, street, city, postal, country = address#.get("Company name", ""), address.get("Street", ""), address.get("City", ""), address.get("Postal Code", ""), address.get("Country", ""),
 
     # Data for the labels
     datat = [

@@ -4,6 +4,7 @@ import json
 import os
 import base64
 
+from ILS_NUMBER.get_ils_number import call_logic_app
 from export.helpers.functions import write_to_excel, extract_key_value_pairs, extract_text_from_pdf, modify_and_correct_amounts, extract_body_text, extract_office_value, updateBTWnumber, updateAdress
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -87,6 +88,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         Referentienummer = json.loads(parsed_data)["Referentienummer"]
 
         body_number = extract_office_value(extract_body_text(body))
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("UMICORE")
+
+            if response["success"]:
+                # Add the ILS_NUMBER field to the parsed data
+                parsed_data_dict = json.loads(parsed_data)  # Convert parsed_data to a dictionary
+                parsed_data_dict["ILS_NUMBER"] = response["doss_nr"]  # Add the ILS_NUMBER field
+                parsed_data = json.dumps(parsed_data_dict)  # Convert it back to a JSON string
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
+
 
         # Write the extracted data to an Excel file
         excel_file = write_to_excel(parsed_data, body_number)

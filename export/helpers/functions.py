@@ -127,8 +127,8 @@ def write_to_excel(json_string, number):
     data = json.loads(json_string)
 
     # Prepare row keys (headers) and row values
-    row_string_exit_office = ["Exit office"]
-    row_number = [number]
+    row_string_exit_office = ["Exit office", "ILS NUMBER"]
+    row_number = [number, data["ILS_NUMBER"]]
     row_keys = []
     row_values = []
 
