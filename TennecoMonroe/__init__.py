@@ -5,6 +5,7 @@ import os
 import base64
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, check_invoice_in_pdf, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
 from TennecoMonroe.service.extractors import extract_dynamic_text_from_pdf, extract_freight_and_exit_office_from_html, extract_text_from_first_page, find_customs_authorisation_coords, find_page_in_invoice
 from TennecoMonroe.helpers.adress_extractors import get_address_structure
@@ -158,6 +159,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_data["Exit office"] = result["exit_office"]
         merged_data["Freight"] = result["freight"]
         merged_data["Container"] = result["Container"]
+        
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("TENNECOSTR")
+    
+            if response["success"]:
+                merged_data["ILS_NUMBER"] = response["doss_nr"]
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {merged_data['error']}")
+    
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")  
         
     # Proceed with data processing
     try:

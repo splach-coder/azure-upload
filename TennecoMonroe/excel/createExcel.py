@@ -27,7 +27,8 @@ def write_to_excel(json_string):
         "Place",
         "Container",
         "Truck",
-        "Rex/Other"
+        "Rex/Other",
+        "ILS number"
     ]
 
     if data.get('Address', ""):
@@ -54,7 +55,8 @@ def write_to_excel(json_string):
         (place.strip() if place is not None else '') if 'place' in locals() else '',
         data.get('Container', ''),
         data.get('wagon', ''),
-        data.get("Customs Code", '')
+        data.get("Customs Code", ''),
+        data.get("ILS_NUMBER", '')
     ]
 
     header2 = [
