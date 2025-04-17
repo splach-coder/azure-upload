@@ -24,7 +24,7 @@ def create_excel(data):
     # Data for the labels
     datat = [
         ["Instruction 1", data.get("Instruction 1", "")],
-        ["Instruction 2", "---"],
+        ["ILS Number", data.get("ILS_NUMBER", "")],
         ["Exit Office", data.get("Exit Office", "")],
         ["Site", "KR"],
         ["EUR1", "XXXXX"],
@@ -51,7 +51,7 @@ def create_excel(data):
         ["InvoiceValue", "", "", "", "", "", "", ""],
         ["Col #1", "Col #2", "", "", "", "", "", ""],
         data.get("Totals", ""),
-        ["ILS Number",  data.get("ILS_NUMBER", ""), "", "", "", "", "", ""],
+        ["",  "", "", "", "", "", "", ""],
         ["Items", "", "", "", "", "", "", ""],
         ["Col #1", "Col #3", "Col #3", "Col #4", "Col #5"]
     ]
