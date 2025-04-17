@@ -1,5 +1,4 @@
 from io import BytesIO
-import logging
 import openpyxl
 
 def write_to_excel(json_string):
