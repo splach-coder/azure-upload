@@ -3,6 +3,7 @@ import logging
 import json
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from ILS_NUMBER.get_ils_number import call_logic_app
 from global_db.countries.functions import get_abbreviation_by_country
 from eternit.functions.functions import add_pieces_to_hs_and_totals, clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_customs_code, extract_data, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
 from eternit.excel.create_excel import write_to_excel
@@ -110,12 +111,28 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         cleaned_email_body_html = extract_and_clean(email)
         
         #extract the table as json object
-        email_table = extract_data(cleaned_email_body_html)
+        from AI_agents.OpenAI.email_parser import EmailDataExtractor
+
+        extractor = EmailDataExtractor()
+        result = extractor.extract_data_from_email(cleaned_email_body_html)
+        result = json.loads(result)
         
-        merged_result["Exit office"] = email_table.get("Exit office", "").replace("Best", "").strip()
-        merged_result["Total pallets"] = email_table.get("collis", 0)
-        if email_table.get("freight", ""):
-            merged_result["Freight"] = email_table.get("freight", "")[0]
+        merged_result["Exit office"] = result.get("exit_office", "")
+        merged_result["Total pallets"] = result.get("collis", 0)
+        merged_result["Freight"] = result.get("freight_cost", 0.0)
+        
+        try:
+            # Get the ILS number
+            response = call_logic_app("CAPSUGELBE")
+
+            if response["success"]:
+                merged_result["ILS_NUMBER"] = response["doss_nr"]
+                logging.info(f"ILS_NUMBER: {merged_result['ILS_NUMBER']}")
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")        
         
         try:
             # Call writeExcel to generate the Excel file in memory
