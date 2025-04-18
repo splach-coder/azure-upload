@@ -78,7 +78,7 @@ class TransmareEmailParser:
         prompt = f"""Understand the email well and Extract carefully the following information from the provided email:
 
             Vissel name: The vissel name as a string.
-            Exit office: The Exit office as a string (e.g., "FR123456") make sure the exit office is always twochars 6numbers.
+            Exit office: The Exit office as a string (e.g., "FR123456") make sure the exit office is always two chars 6 numbers always and check the validity if not leave it empty.
             Export kaai: The Export kaai as a string, but in one case if the kaii is begins with K and following by numbers (e.g., K1742) if it's a string don't extract it leave it empty.
             Container Number: The Container Number in the format of four letters followed by seven numbers (e.g., "MSDU7723003").
             Email: this email is forwarded so the body has an email next "From" strings Grab it 
