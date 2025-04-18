@@ -123,7 +123,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             # Get the ILS number
-            response = call_logic_app("CAPSUGELBE")
+            response = call_logic_app("ETERNIT")
 
             if response["success"]:
                 merged_result["ILS_NUMBER"] = response["doss_nr"]
