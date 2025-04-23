@@ -35,7 +35,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             valueObject = item.get("valueObject")
                             obj = {}
                             for keyObj, valueObj in valueObject.items():
-                                obj[keyObj] = valueObj["content"]
+                                obj[keyObj] = valueObj.get("content")    
                             result[key].append(obj)
                             
                     elif key == "Adress":
@@ -45,7 +45,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         valueObject = arr.get("valueObject")
                         obj = {}
                         for keyObj, valueObj in valueObject.items():
-                            obj[keyObj] = valueObj["content"]
+                            obj[keyObj] = valueObj.get("content")    
                         result[key].append(obj)
                     else :
                         result[key] = value.get("content")      
