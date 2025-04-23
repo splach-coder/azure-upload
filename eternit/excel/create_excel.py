@@ -89,7 +89,7 @@ def write_to_excel(json_string):
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
-                        mini_row.append(obj.get("Hs", ''))
+                        mini_row.append(obj.get("HS", ''))
                     elif ordered_key == "Invoice value":
                         mini_row.append(obj.get("Value", ""))
                     elif ordered_key == "Currency":

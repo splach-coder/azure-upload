@@ -127,11 +127,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 
             #clean and split the total value
             totals_collis = result.get("Totals_Collis", "")
-
+            
             if totals_collis:
                 collis = totals_collis[0].get("Pallets", "")
-                result["Pallets"] = safe_int_conversion(collis)
-
+                Pallets = safe_int_conversion(collis) 
+                if Pallets == 0 :
+                    Pallets = totals_collis[0].get("Units", "")
+                    Pallets = safe_int_conversion(Pallets)
+                result["Pallets"] = Pallets
+                
             #update the numbers in the items
             items = result.get("items_collis", "")
             tmp_data = transform_items_collis(items)
@@ -141,14 +145,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Collis"] = safe_int_conversion(item.get("Collis", 0))       
                 
             #update the numbers in the items
-            items = result.get("items", "") 
+            items = result.get("items", "")
+            
             # Get all keys that appear in any item
             all_keys = set(key for item in items for key in item.keys())
 
             # Clean the items
             cleaned_items = []
             data_fix_ai = transform_data(items)
-            logging.error(data_fix_ai)
             result_fix_ai = arrays_to_objects(data_fix_ai)
             result["items"] = result_fix_ai
             for item in result_fix_ai:
@@ -180,14 +184,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result = join_cmr_invoice_objects(inv, cmr)
         
         body = handle_body_request(email_body)
-
-        logging.error(json.dumps(body, indent=4))
         
         json_result = {**json_result, **body}
 
         json_result["Export office"] = json_result.get("Exit Port BE", "")
         json_result["Exit Port BE"] = ""
         json_result["Reference"] = extract_id_from_string(subject_body)
+        
+        for item in json_result["Items"]:
+            if item.get("Collis", "") == 0:
+                item["Collis"] = item.get("Pieces", 0)
         
         try:
             # Get the ILS number

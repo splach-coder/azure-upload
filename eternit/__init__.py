@@ -27,7 +27,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             for page in documents:
                 fields = page["fields"]
                 for key, value in fields.items():
-                    if key in ["Adress", "Items"]: 
+                    if key in ["Items", "Summary"]:
                         arr = value.get("valueArray")
                         result[key] = []
                         for item in arr:
@@ -35,12 +35,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             obj = {}
                             for keyObj, valueObj in valueObject.items():
                                 obj[keyObj] = valueObj["content"]
-                            result[key].append(obj)          
+                            result[key].append(obj)
+                            
+                    elif key == "Adress":
+                        result[key] = []
+                        valueObject = value.get("valueObject")
+                        arr = valueObject.get("ROW1")
+                        valueObject = arr.get("valueObject")
+                        obj = {}
+                        for keyObj, valueObj in valueObject.items():
+                            obj[keyObj] = valueObj["content"]
+                        result[key].append(obj)
                     else :
                         result[key] = value.get("content")      
 
-            '''------------------   Clean the JSON response   ------------------ '''
-            
+            '''------------------   Clean the JSON response   ------------------ ''' 
+            logging.error(json.dumps(result, indent=4))
+                      
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
             
@@ -98,8 +109,27 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Net = normalize_numbers(Net)
                 Net = safe_float_conversion(Net)
                 item["Net"] = Net
+                
+                #handle the country
+                Country = item.get("Origin", "")
+                if Country:
+                    Country = get_abbreviation_by_country(Country)
+                    item["Origin"] = Country
 
                 item["Inv Reference"] = result.get("Inv Reference", "")
+            
+            #Meerge the summary and items
+            # Convert summary to a dictionary for easier merging
+            summary_dict = {item['C.T']: item for item in result['Summary']}
+
+            # Merge items with summary based on C.T
+            # Add HS to each item based on C.T
+            for item in result['Items']:
+                ct = item['C.T']
+                if ct in summary_dict:
+                    item['HS'] = summary_dict[ct].get('HS', '')          
+            
+            logging.error(json.dumps(result, indent=4))
             
             resutls.append(result)
             
