@@ -39,11 +39,15 @@ def write_to_excel(json_string):
     Total = data.get('Total', 0.00)
     Freight = data.get('Freight', 0.00)
     
+    vat_number = data.get('Vat number', '')
+    if not vat_number:
+        vat_number = data.get('Eori number', '')
+    
     values1 = [
-        data.get('Vat Number', ''),
+        data.get('Vat number', ''),
         data.get('Principal', ''),
+        data.get('Inv Reference', ''),
         data.get('Bon de livraison', ''),
-        data.get('Other Ref', ''),
         Freight,
         data.get('Parking trailer', ''),
         data.get('Export office', ''),
@@ -83,15 +87,21 @@ def write_to_excel(json_string):
     
     for key, value in data.items():
         # Handle array values
-        if key == "Items":
+        if key == "Summary":
             for obj in value:
                 mini_row = []
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
                         mini_row.append(obj.get("HS", ''))
+                    elif ordered_key == "Gross":
+                        mini_row.append(obj.get("Gross Weight", ""))
+                    elif ordered_key == "Net":
+                        mini_row.append(obj.get("Net Weight", ""))
                     elif ordered_key == "Invoice value":
                         mini_row.append(obj.get("Value", ""))
+                    elif ordered_key == "Pieces":
+                        mini_row.append(obj.get("Qty", ""))
                     elif ordered_key == "Currency":
                         mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":
@@ -100,12 +110,12 @@ def write_to_excel(json_string):
                         # Convert string to date if possible
                         inv_date_str = data.get("Inv Date", '')
                         try:
-                            inv_date = datetime.strptime(inv_date_str, "%Y-%m-%d")  # Adjust format as needed
+                            inv_date = datetime.strptime(inv_date_str, "%d.%m.%Y").date()  # Adjust format as needed
                             mini_row.append(inv_date)
                         except ValueError:
                             mini_row.append(inv_date_str)  # If conversion fails, keep as string
                     elif ordered_key == "Rex/other":
-                        mini_row.append(obj.get("Customs Code", ''))
+                        mini_row.append(data.get("Customs Code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -131,9 +141,10 @@ def write_to_excel(json_string):
     ws.append([total_pallets])
     ws.append(row_empty)
 
-    ws.append(["Total Gross"])
+    ws.append(["Total Gross", "Total Net"])
     total_weight = data.get('Gross weight Total', 0)
-    ws.append([total_weight])
+    total_Netweight = data.get('Net weight Total', 0)
+    ws.append([total_weight, total_Netweight])
     ws.append(row_empty)
 
     # Add items

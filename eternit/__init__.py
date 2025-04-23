@@ -1,6 +1,7 @@
 import azure.functions as func
 import logging
 import json
+from collections import defaultdict
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from ILS_NUMBER.get_ils_number import call_logic_app
@@ -50,7 +51,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         result[key] = value.get("content")      
 
             '''------------------   Clean the JSON response   ------------------ ''' 
-            logging.error(json.dumps(result, indent=4))
                       
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
@@ -97,18 +97,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Price = normalize_numbers(Price)
                 Price = safe_float_conversion(Price)
                 item["Value"] = Price
-
-                #handle the value
-                Gross = item.get("Gross", "")
-                Gross = normalize_numbers(Gross)
-                Gross = safe_float_conversion(Gross)
-                item["Gross"] = Gross
-
-                #handle the value
-                Net = item.get("Net", "")
-                Net = normalize_numbers(Net)
-                Net = safe_float_conversion(Net)
-                item["Net"] = Net
+                
+                #handle the Qty
+                Qty = item.get("Qty", "")
+                Qty = normalize_numbers(Qty)
+                Qty = safe_int_conversion(Qty)
+                item["Qty"] = Qty
+                
+                #handle the Pcs
+                Pcs = item.get("Pcs", "")
+                Pcs = Pcs.replace(",", "")
+                Pcs = safe_int_conversion(Pcs)
+                item["Pcs"] = Pcs
                 
                 #handle the country
                 Country = item.get("Origin", "")
@@ -118,23 +118,80 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                 item["Inv Reference"] = result.get("Inv Reference", "")
             
-            #Meerge the summary and items
-            # Convert summary to a dictionary for easier merging
-            summary_dict = {item['C.T']: item for item in result['Summary']}
+            merged = defaultdict(lambda: {
+                "Qty": 0,
+                "Pcs": 0,
+                "Inv Reference": "",
+                "Origin": ""
+            })
 
-            # Merge items with summary based on C.T
-            # Add HS to each item based on C.T
-            for item in result['Items']:
+            for item in items:
                 ct = item['C.T']
-                if ct in summary_dict:
-                    item['HS'] = summary_dict[ct].get('HS', '')          
+                merged[ct]["Qty"] += item.get("Qty", 0)
+                merged[ct]["Pcs"] += item.get("Pcs", 0)
+                if not merged[ct]["Inv Reference"]:
+                    merged[ct]["Inv Reference"] = item.get("Inv Reference", "")
+                if not merged[ct]["Origin"]:
+                    merged[ct]["Origin"] = item.get("Origin", "")
+
+            # Final output
+            merged_list = [
+                {
+                    "C.T": ct,
+                    "Qty": values["Qty"],
+                    "Pcs": values["Pcs"],
+                    "Inv Reference": values["Inv Reference"],
+                    "Origin": values["Origin"]
+                }
+                for ct, values in merged.items()
+            ]
             
-            logging.error(json.dumps(result, indent=4))
+            result["Items"] = merged_list
             
+            # Convert items to a dict for quick access by C.T
+            items_dict = {item['C.T']: item for item in result['Items']}
+
+            # Merge 'Origin' into Summary based on C.T
+            for summary in result['Summary']:
+                ct = summary['C.T']
+                if ct in items_dict:
+                    summary['Origin'] = items_dict[ct].get('Origin', '')
+                    summary['Qty'] = items_dict[ct].get('Qty', '')
+                    summary['Pcs'] = items_dict[ct].get('Pcs', '')
+                    summary['Inv Reference'] = items_dict[ct].get('Inv Reference', '')
+            
+            del result['Items']
+            
+                        #update the numbers in the items
+            summaries = result.get("Summary", "")
+            TotalNetWeight = 0
+            for summary in summaries :
+                #handle the value
+                Price = summary.get("Value", "")
+                Price = normalize_numbers(Price)
+                Price = safe_float_conversion(Price)
+                summary["Value"] = Price
+                
+                #handle the value
+                GrossWeight = summary.get("Gross Weight", "")
+                GrossWeight = normalize_numbers(GrossWeight)
+                GrossWeight = safe_float_conversion(GrossWeight)
+                summary["Gross Weight"] = GrossWeight
+                
+                #handle the value
+                NetWeight = summary.get("Net Weight", "")
+                NetWeight = normalize_numbers(NetWeight)
+                NetWeight = safe_float_conversion(NetWeight)
+                TotalNetWeight += NetWeight
+                summary["Net Weight"] = NetWeight
+
+            result["Net weight Total"] = TotalNetWeight
             resutls.append(result)
             
         # Merge JSON objects
         merged_result = merge_json_objects(resutls)
+        
+        logging.error(json.dumps(merged_result, indent=4))     
         
         '''------------------   Extract data from the email   ------------------ '''    
         #Extract the body data
@@ -162,14 +219,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
     
         except Exception as e:
-            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")        
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")       
         
         try:
             # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             
-            reference = merged_result.get("Bon de livraison", "")
+            reference = merged_result.get("Inv Reference", "")
 
             # Set response headers for the Excel file download
             headers = {

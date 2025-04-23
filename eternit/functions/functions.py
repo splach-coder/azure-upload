@@ -20,6 +20,9 @@ def normalize_numbers(number_str : str) -> float:
     elif re.match(r"^\d{1,3}(,\d{3})*\.\d{1,2}$", number_str):
         # Replace commas (thousands separator) with nothing
         normalized = number_str.replace(',', '')
+    else: 
+        # If the format is not recognized, return 0.0
+        return number_str    
     
     return normalized
 
