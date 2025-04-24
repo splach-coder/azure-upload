@@ -160,6 +160,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     except Exception as e:
         logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
+        
+    if len(result.get("items")) > 1:
+        # Sort items by Customs Tariff Code
+        sorted_items = sorted(result.get("items"), key=lambda x: x.get("Customs Tariff Code", ""))
+        
+        # Replace the original list with the sorted one
+        result["items"] = sorted_items      
             
     # Proceed with data processing
     try:
@@ -189,4 +196,3 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=500,
             mimetype="application/json"
         )
-        
