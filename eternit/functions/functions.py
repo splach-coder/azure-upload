@@ -11,6 +11,8 @@ def normalize_numbers(number_str : str) -> float:
     :param number_str: A string representing a number (e.g., "3.158,6" or "28,158.23").
     :return: A float representing the normalized number.
     """
+    if number_str is None:
+        return 0.0
     normalized = ""
     # Handle comma as decimal separator
     if re.match(r"^\d{1,3}(\.\d{3})*,\d{1,2}$", number_str):
@@ -189,10 +191,10 @@ def merge_json_objects(json_objects):
                 merged_object["Gross weight Total"] = obj["Gross weight Total"]
 
         # Append HSandTotals items
-        if "Items" in obj and obj["Items"] is not None:
-            if "Items" not in merged_object or merged_object["Items"] is None:
-                merged_object["Items"] = []
-            merged_object["Items"].extend(obj["Items"])
+        if "Summary" in obj and obj["Summary"] is not None:
+            if "Summary" not in merged_object or merged_object["Summary"] is None:
+                merged_object["Summary"] = []
+            merged_object["Summary"].extend(obj["Summary"])
 
         # Copy values for Address, Incoterm, and Origin (ensure to not overwrite)
         for key in ["Incoterm", "Address"]:

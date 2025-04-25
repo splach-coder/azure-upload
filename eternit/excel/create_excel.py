@@ -46,8 +46,8 @@ def write_to_excel(json_string):
     values1 = [
         data.get('Vat number', ''),
         data.get('Principal', ''),
-        data.get('Inv Reference', ''),
-        data.get('Bon de livraison', ''),
+        data.get('Reference', ''),
+        data.get('Other Ref', ''),
         Freight,
         data.get('Parking trailer', ''),
         data.get('Export office', ''),

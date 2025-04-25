@@ -191,8 +191,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Merge JSON objects
         merged_result = merge_json_objects(resutls)
         
-        logging.error(json.dumps(merged_result, indent=4))     
-        
         '''------------------   Extract data from the email   ------------------ '''    
         #Extract the body data
         cleaned_email_body_html = extract_and_clean(email)
@@ -207,6 +205,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_result["Exit office"] = result.get("exit_office", "")
         merged_result["Total pallets"] = result.get("collis", 0)
         merged_result["Freight"] = result.get("freight_cost", 0.0)
+        
+        if len(merged_result.get("Summary")) > 1:
+            # Sort items by Customs Tariff Code
+            sorted_items = sorted(merged_result.get("Summary"), key=lambda x: x.get("HS", ""))
+
+            # Replace the original list with the sorted one
+            merged_result["Summary"] = sorted_items  
         
         try:
             # Get the ILS number
@@ -251,6 +256,3 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-        
-        
-  
