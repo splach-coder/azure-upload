@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.OpenAI.custom_call import CustomCall
 from ILS_NUMBER.get_ils_number import call_logic_app
 from global_db.countries.functions import get_abbreviation_by_country
 from eternit.functions.functions import add_pieces_to_hs_and_totals, clean_customs_code, clean_incoterm, clean_number_from_chars, extract_and_clean, extract_customs_code, extract_data, merge_json_objects, normalize_numbers, safe_float_conversion, safe_int_conversion
@@ -221,11 +222,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 merged_result["ILS_NUMBER"] = response["doss_nr"]
                 logging.info(f"ILS_NUMBER: {merged_result['ILS_NUMBER']}")
             else:
-                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+                logging.error(f"Failed to get ILS_NUMBER: {response['error']}")
     
         except Exception as e:
-            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")       
-        
+            logging.exception(f"Unexpected error while fetching ILS_NUMBER: {str(e)}")
+            
+            
+        #switch the address country to abbr
+        ExitOffice = merged_result.get("Exit office", "")
+        finder = CustomCall()
+        role = "You are a customs data assistant for EU countries only. Your job is to return only the official customs exit office code (EXT) for a given place, with no explanation or formatting. If not found, reply with 'Not Found'. The UK is not involved in this request."
+        message = f"Given the following location or customs-related place name: '{ExitOffice}', return only the exact customs **exit office code** (EXT) if it exists, with no explanation or formatting. If not found, return 'Not Found'."
+        parsed_result = finder.send_request(role, message)
+        merged_result["Exit office"] = parsed_result
+
         try:
             # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(merged_result)
