@@ -14,7 +14,7 @@ def write_to_excel(data_entry):
         "Freight", "Goods location", "Export office", 
         "Exit office", "Name", "Street + number", 
         "Postcode", "city", "Country", "Inco Term", 
-        "Place", "Container", "Truck", "Rex/Other"
+        "Place", "Container", "Truck", "Rex/Other", "ILS number"
     ]
 
     # Extract and process address details
@@ -36,7 +36,7 @@ def write_to_excel(data_entry):
         data_entry.get('Email', {}).get('Freight', ''),
         data_entry.get('Email', {}).get('GoodsLocation', ''),
         data_entry.get('Export office', ''),
-        data_entry.get('Email', {}).get('Exit Office', ''),
+        data_entry.get('Email', {}).get('exit_office', ''),
         name,
         street,
         code_postal,
@@ -46,7 +46,8 @@ def write_to_excel(data_entry):
         place,
         data_entry.get('Container', ''),
         data_entry.get('wagon', ''),
-        data_entry.get("Customs Code", '')
+        data_entry.get("Customs Code", ''),
+        data_entry.get("ILS_NUMBER", '')
     ]
 
     # Prepare items data

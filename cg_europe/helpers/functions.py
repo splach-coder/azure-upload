@@ -201,4 +201,30 @@ def extract_ref(text):
     inv_number = inv_number_match.group(0) if inv_number_match else None
 
     return inv_number
+
+def clean_number(input_value: str) -> str:
+    # Use a regular expression to keep only digits, periods, and commas
+    cleaned_value = re.sub(r'[^0-9.,]', '', input_value)
+    return cleaned_value
+
+def extract_clean_email_body(raw_email: str) -> str:
+    """Extracts and cleans the main body text from an HTML email."""
+    try:
+        soup = BeautifulSoup(raw_email, 'html.parser')
+
+        # Remove unnecessary elements like scripts, styles, and hidden elements
+        for tag in soup(['script', 'style', 'head', 'meta', 'link', 'title', '[hidden]']):
+            tag.decompose()
+
+        # Extract visible text only
+        body_text = soup.get_text(separator='\n', strip=True)
+
+        # Remove excessive whitespace and clean the text
+        cleaned_text = '\n'.join(line.strip() for line in body_text.splitlines() if line.strip())
+
+        return cleaned_text
+
+    except Exception as e:
+        print(f"Error while extracting email body: {e}")
+        return ""    
  

@@ -13,8 +13,10 @@ from azure.core.credentials import AzureKeyCredential
 from AI_agents.Gemeni.email_Parser import EmailParser
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.Gemeni.functions.functions import convert_to_list
+from AI_agents.OpenAI.custom_call import CustomCall
+from ILS_NUMBER.get_ils_number import call_logic_app
 from cg_europe.excel.createExcel import write_to_excel
-from cg_europe.helpers.functions import change_date_format, clean_vat_number, clean_customs_code, clean_incoterm, combine_invoices_by_address, extract_ref, extract_text_from_pdf, extract_totals_info,  normalize_number, safe_float_conversion, safe_int_conversion
+from cg_europe.helpers.functions import change_date_format, clean_number, extract_clean_email_body, clean_vat_number, clean_customs_code, clean_incoterm, combine_invoices_by_address, extract_ref, extract_text_from_pdf, extract_totals_info,  normalize_number, safe_float_conversion, safe_int_conversion
 from global_db.functions.numbers.functions import normalize_numbers
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -52,7 +54,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Retrieve the secret value
     try:
         api_key = client.get_secret(secret_name).value
-        logging.info(f"API Key retrieved: {api_key}")
     except Exception as e:
         logging.error(f"Failed to retrieve secret: {str(e)}")
         return func.HttpResponse(
@@ -124,7 +125,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not skip_file:
             # Analyze the document
             try: 
-                poller = client.begin_analyze_document("Gc-europe-model3", file_content)
+                poller = client.begin_analyze_document("Gc-europe-model4", file_content)
                 result = poller.result()
                 
                 document = result.documents
@@ -154,9 +155,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 )   
             
             
-           
-
             '''------------------   Clean the JSON response   ------------------ '''
+            
+            logging.info(f"Extracted data from '{filename}': {result_dict}")
             #clean and split the incoterm
             result_dict["Incoterm"] = clean_incoterm(result_dict.get("Incoterm", ""))
 
@@ -205,22 +206,37 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             inv["Total Net"] = sum(item.get("Net", 0) for item in inv.get("Items", []))
 
     
-    '''------------------Extract data from mail body-----------------------'''
-    if email:
-        parser = EmailParser()
-        parsed_result = parser.extract_email_body(email)
-        goodsLocation = parser.search_for_location(email)
-        parsed_result = parser.parse_address(email)
-        parsed_result = parsed_result.replace('json', '').replace('```', '').strip()
+    '''------------------Extract data from mail body-----------------------'''            
+    if email : 
+        # Extract data from the email body
+        parser = CustomCall()
+        email = extract_clean_email_body(email)
+        role = "You are a data extraction assistant. Your task is to read input text and extract specific fields as structured JSON. Always respond ONLY with a raw JSON object without any extra text or explanation. If a required field is missing, return it as null."
+        prompt_text = f""" Extract and return ONLY a JSON object with the following fields:
+
+            - reference: value starting with "CI" followed by numbers (example: "CI 1170592"). If not found, return null.
+            - pallets: the number of pallets or collis mentioned (example: "1 Pallets" or "1 colli") extract only the number in int format.
+            - weight: the weight mentioned in KG (example: "114,59 KG" or "0.86 KG").
+            - template_name: the location found after "Locatie" or "Locatie goederen" (example: ["Wijnegem", "Maasmechelen", "MM", "WY"]) Note : if it's an abbr MM or WY return the complete word (if it's MM then it's Maasmechelen and if it's WY the it's Wijnegem) .
+            - exit_office: the value after "Kantoor van Uitgang" that must be 2 letters followed by 6 digits (example: "DK003102"). If not matching this pattern, return null.
+
+            Email body:
+            ---
+                {email.lower()}
+            --- 
+            """
+        parsed_result = parser.send_request(role, prompt_text)
         parsed_result = convert_to_list(parsed_result)
-        parsed_result["GoodsLocation"] = goodsLocation
-        parsed_result["Collis"] = safe_int_conversion(parsed_result.get("Collis", ""))
-        parsed_result["Weight"] = safe_float_conversion(normalize_number(parsed_result.get("Weight", "")))
+        parsed_result["GoodsLocation"] = parsed_result.get("template_name", "")
+        parsed_result["Collis"] = safe_int_conversion(parsed_result.get("pallets", ""))
+        parsed_result["Weight"] = safe_float_conversion(normalize_number(clean_number(parsed_result.get("weight", ""))))
+        
         for item in results:
             item["Email"] = parsed_result
 
     # Extract the ref
-    reference = extract_ref(subject) or "no-ref"
+    temp_ref = results[0].get('Email', {}).get('reference', '')
+    reference = extract_ref(subject) or temp_ref
 
     for inv in results:  
         if inv.get("Inv Reference") is None:
@@ -232,11 +248,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             new_date = ""
         inv["Inv Date"] = new_date
         inv["Reference"] = reference
+        
+    try:
+        # Get the ILS number
+        response = call_logic_app("CORNEEL")
+        
+        if response["success"]:
+            results[0]["ILS_NUMBER"] = response["doss_nr"]
+            logging.info(f"ILS_NUMBER: {results[0]['ILS_NUMBER']}")
+        else:
+            logging.error(f"Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"Unexpected error while fetching ILS_NUMBER: {str(e)}")    
     
     # Proceed with data processing
     try:
         # Generate the ZIP file containing Excel files
-        logging.error(results)
         excel_file = write_to_excel(results)
         logging.info("Generated Excel file.")
 
