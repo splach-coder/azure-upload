@@ -211,14 +211,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Extract data from the email body
         parser = CustomCall()
         email = extract_clean_email_body(email)
-        role = "You are a data extraction assistant. Your task is to read input text and extract specific fields as structured JSON. Always respond ONLY with a raw JSON object without any extra text or explanation. If a required field is missing, return it as null."
+        role = "You are a data extraction assistant. Your task is to read input text and extract specific fields as structured JSON. Always respond ONLY with a raw JSON object without any extra text or explanation. If a required field is missing, return it as empty string."
         prompt_text = f""" Extract and return ONLY a JSON object with the following fields:
 
             - reference: value starting with "CI" followed by numbers (example: "CI 1170592"). If not found, return null.
             - pallets: the number of pallets or collis mentioned (example: "1 Pallets" or "1 colli") extract only the number in int format.
             - weight: the weight mentioned in KG (example: "114,59 KG" or "0.86 KG").
             - template_name: the location found after "Locatie" or "Locatie goederen" (example: ["Wijnegem", "Maasmechelen", "MM", "WY"]) Note : if it's an abbr MM or WY return the complete word (if it's MM then it's Maasmechelen and if it's WY the it's Wijnegem) .
-            - exit_office: the value after "Kantoor van Uitgang" that must be 2 letters followed by 6 digits (example: "DK003102"). If not matching this pattern, return null.
+            - exit_office: the value after "Kantoor van Uitgang" that must be 2 letters followed by 6 digits (example: "DK003102"). If not matching this pattern, return empty string.
 
             Email body:
             ---
@@ -226,7 +226,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             --- 
             """
         parsed_result = parser.send_request(role, prompt_text)
+        logging.info(f"Parsed email data: {prompt_text}")
         parsed_result = convert_to_list(parsed_result)
+        
         parsed_result["GoodsLocation"] = parsed_result.get("template_name", "")
         parsed_result["Collis"] = safe_int_conversion(parsed_result.get("pallets", ""))
         parsed_result["Weight"] = safe_float_conversion(normalize_number(clean_number(parsed_result.get("weight", ""))))
