@@ -1,4 +1,5 @@
 from io import BytesIO
+import logging
 import openpyxl
 
 def write_to_excel(json_string):
@@ -90,7 +91,6 @@ def write_to_excel(json_string):
         if key == "Items":
             for obj in value:
                 mini_row = []
-                
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":

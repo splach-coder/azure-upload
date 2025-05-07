@@ -101,9 +101,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 totalCollis += Pieces 
                             elif key == "Gross weight" :
                                 number_value = item.get(key, 0.0)
-                                logging.error(number_value)
                                 number_value = normalize_numbers_gross(number_value)
-                                logging.error(number_value)
                                 item[key] = safe_float_conversion(number_value)
                             else:    
                                 number_value = item.get(key, 0.0)
