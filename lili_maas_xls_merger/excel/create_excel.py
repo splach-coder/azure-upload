@@ -17,7 +17,7 @@ def write_to_excel(json_string):
         "Freight cost valuta",
         "",
         "USD"
-    ]
+    ] 
     
     header_values = [
         f"FID{data.get('Contract No', '')}",
@@ -26,7 +26,7 @@ def write_to_excel(json_string):
         "",
         data.get('InsuranceCurrency', ''),
         "",
-        "",
+        data.get('ExchangeCalc', ''),
     ]
 
     items_header = [

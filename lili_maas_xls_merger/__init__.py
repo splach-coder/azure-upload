@@ -8,7 +8,7 @@ import tempfile
 import zipfile
 import xlrd
 
-from lili_maas_xls_merger.helpers.functions import merge_items, transform_json
+from lili_maas_xls_merger.helpers.functions import fetch_exchange_rate, merge_items, transform_json
 from lili_maas_xls_merger.excel.create_excel import write_to_excel
 from AI_agents.OpenAI.CustomCallWithImage import CustomCallWithImage
 
@@ -16,7 +16,7 @@ def safe_float(val):
     try:
         return float(val)
     except:
-        return 0
+        return 0.0
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Lili Maas ZIP Merger - Started.')
@@ -92,20 +92,28 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             "Description": sheet1.cell_value(row, 0),
                             "Brand": sheet1.cell_value(row, 1),
                             "HS Code": sheet1.cell_value(row, 2),
-                            "CARTON": sheet1.cell_value(row, 3),
-                            "PCS": sheet1.cell_value(row, 4),
-                            "SET": sheet1.cell_value(row, 5),
-                            "Unit Price": sheet1.cell_value(row, 6),
-                            "Amount": sheet1.cell_value(row, 7),
+                            "CARTON": sheet1.cell_value(row, 3) or 0 if sheet1.cell_value(row, 3) else sheet1.cell_value(row - 1, 3),
+                            "PCS": sheet1.cell_value(row, 4) or 0 if sheet1.cell_value(row, 4) else sheet1.cell_value(row - 1, 4),
+                            "SET": sheet1.cell_value(row, 5) or 0 if sheet1.cell_value(row, 5) else sheet1.cell_value(row - 1, 5),
+                            "Unit Price": sheet1.cell_value(row, 6) or 0,
+                            "Amount": sheet1.cell_value(row, 7) or 0,
                             "InsuranceFee": data.get("InsuranceFee", 0),
                             "InsuranceCurrency": data.get("InsuranceCurrency", ''),
                             "VALUTA": data.get("VALUTA", '') 
                         }
                         items.append(item)
                         row += 1
-                        sets_sum += item["SET"]
+                        if type(item["SET"]) == float or type(item["SET"]) == int:
+                            sets_sum += item["SET"]
+                            
                         for item in items:
-                            item["InsuranceAmount"] = round(item.get("InsuranceFee", 0) / sets_sum * item.get("SET", 0), 2)
+                            try:
+                                insurance_fee = float(item.get("InsuranceFee", 0) or 0)
+                                item_set = float(item.get("SET", 0) or 0)
+                                item["InsuranceAmount"] = round((insurance_fee / sets_sum) * item_set, 2) if sets_sum else 0
+                            except Exception as e:
+                                logging.error(f"Error calculating InsuranceAmount: {e}")
+                                item["InsuranceAmount"] = 0
 
                     data["Sheet1_Items"] = items
 
@@ -128,10 +136,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             "Brand": sheet3.cell_value(row, 3),
                             "HS Code": sheet3.cell_value(row, 4),
                             "PCS": sheet3.cell_value(row, 5),
-                            "SET": sheet3.cell_value(row, 6),
-                            "CARTON": sheet3.cell_value(row, 7),
-                            "Gross Weight": safe_float(sheet3.cell_value(row, 8)),
-                            "Net Weight": safe_float(sheet3.cell_value(row, 9))
+                            "SET": sheet3.cell_value(row, 6) if sheet3.cell_value(row, 6) else sheet3.cell_value(row - 1, 6),
+                            "CARTON": sheet3.cell_value(row, 7) if sheet3.cell_value(row, 7) else sheet3.cell_value(row - 1, 7),
+                            "Gross Weight": safe_float(sheet3.cell_value(row, 8)) if sheet3.cell_value(row, 8) else sheet3.cell_value(row - 1, 8),
+                            "Net Weight": safe_float(sheet3.cell_value(row, 9)) if sheet3.cell_value(row, 9) else sheet3.cell_value(row - 1, 9),
                         }
                         logistics.append(logistic_item)
                         row += 1
@@ -154,19 +162,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     with open(full_path, "rb") as image_file:
                         encoded_image = base64.b64encode(image_file.read()).decode()
                         custom_call = CustomCallWithImage()
-                        prompt = "From the image, find the 'Freight Charge' row, and return only the value under 'Settlement Amount'. No text, no formatting, just the number."
+                        prompt = "From the image, find the 'Freight Charge' row, and return only the value under 'Settlement Amount'. No text, no formatting, just the number without currency."
                         freight_from_image = custom_call.send_image_prompt(encoded_image, prompt)
-                        logging.error(f"Freight from image: {freight_from_image}")
+                        logging.error(f"Extracted freight from image: {freight_from_image}")
                         if freight_from_image:
                             freight_from_image = freight_from_image.replace(",", "")
                             freight_from_image = safe_float(freight_from_image)
 
-                        
                 final_version = merge_items(merged_data)
                 final_version["Freight"] = freight_from_image if freight_from_image else 0.00
                 final_version["Contract No"] = filename.split(" ")[0]
                 final_version["InsuranceCurrency"] = InsuranceCurrency
-                        
+                exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))
+                try : 
+                    final_version["ExchangeCalc"] = 1 / exchange_rate
+                except ZeroDivisionError:
+                    final_version["ExchangeCalc"] = 0.0
+                             
             os.remove(zip_path)
 
         except Exception as e:

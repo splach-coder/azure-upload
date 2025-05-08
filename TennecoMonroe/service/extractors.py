@@ -66,7 +66,8 @@ def find_page_in_invoice(pdf_path, keywords=["Packaging", "No.units", "Weight (K
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
-def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
+
+"""def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
     pdf_document = fitz.open(pdf_path)
     extracted_text = []
     
@@ -108,7 +109,69 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
         else:
             stopLoop = True 
 
-    return json.dumps(extracted_text, indent=2)
+    return json.dumps(extracted_text, indent=2)"""
+def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
+    def try_extraction(y_start, y_end, skip_first=False):
+        current_y = y_start
+        extracted = []
+        first_row = True
+        invalid_count = 0
+        max_invalid = 3  # how many invalid/empty rows allowed before stopping
+
+        while current_y <= y_end:
+            row_data = []
+            for x in x_coords:
+                rect = fitz.Rect(x[0], current_y, x[1], current_y + row_height)
+                text = page_obj.get_text("text", clip=rect).strip()
+                row_data.append(text)
+                
+            logging.error(f"Row {row_data}")
+
+            if skip_first and first_row:
+                first_row = False
+                current_y += row_height + gap
+                continue
+
+            # Check if row is valid
+            if (
+                len(row_data[0]) > 4 and
+                is_valid_number(row_data[0]) and
+                len(row_data) >= 4 and
+                all(is_valid_number(val) for val in row_data[2:])
+            ):
+                if len(row_data) != len(key_map):
+                    raise ValueError("Extracted data and key map length mismatch.")
+
+                data_dict = dict(zip(key_map, row_data))
+                extracted.append(data_dict)
+                invalid_count = 0  # reset invalid row counter
+            else:
+                invalid_count += 1
+                if invalid_count >= max_invalid:
+                    break
+
+            current_y += row_height + gap
+            first_row = False
+
+        return extracted
+
+    pdf_document = fitz.open(pdf_path)
+    page_obj = pdf_document[page[0] - 1]
+    y_start, y_end = y_range
+
+    # 1. Try normal extraction
+    result = try_extraction(y_start, y_end, skip_first=False)
+    if result:
+        return json.dumps(result, indent=2)
+
+    # 2. Try skipping first row
+    result = try_extraction(y_start, y_end, skip_first=True)
+    if result:
+        return json.dumps(result, indent=2)
+
+    # 3. Try shifting start to catch missed data
+    result = try_extraction(y_start - 6, y_end, skip_first=False)
+    return json.dumps(result, indent=2)
 
 def find_customs_authorisation_coords(pdf_path, page_number):
     pdf_document = fitz.open(pdf_path)
