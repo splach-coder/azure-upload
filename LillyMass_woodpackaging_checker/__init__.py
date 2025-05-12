@@ -23,15 +23,8 @@ BLOB_NAME = "declarations-checker/LillyMass-woodpackaging-checker/LILLY_MASS_woo
 def load_csv_from_blob():
     blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
     blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
-    
-    try:
-        stream = blob_client.download_blob().readall()
-        df = pd.read_csv(io.StringIO(stream.decode("utf-8")))
-    except Exception:
-        # If file doesn't exist or is empty, create new DataFrame
-        df = pd.DataFrame(columns=["declaration_ID"])
-    
-    return df, blob_client
+    stream = blob_client.download_blob().readall()
+    return pd.read_csv(io.StringIO(stream.decode("utf-8"))), blob_client
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing DECLARATION ID check.')
