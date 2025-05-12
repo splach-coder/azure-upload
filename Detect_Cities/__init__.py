@@ -39,6 +39,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             'Content-Disposition': 'attachment; filename="' + res + '.xlsx"',
             'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         }
+        
+        excel_file = ""
 
         # Return the Excel file as an HTTP response
         return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
