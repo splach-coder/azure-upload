@@ -110,7 +110,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             try:
                                 insurance_fee = float(item.get("InsuranceFee", 0) or 0)
                                 item_set = float(item.get("SET", 0) or 0)
-                                item["InsuranceAmount"] = round((insurance_fee / sets_sum) * item_set, 2) if sets_sum else 0
+                                item["InsuranceAmount"] = round((insurance_fee / sets_sum) * item_set, 4) if sets_sum else 0
                             except Exception as e:
                                 logging.error(f"Error calculating InsuranceAmount: {e}")
                                 item["InsuranceAmount"] = 0

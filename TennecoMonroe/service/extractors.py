@@ -67,7 +67,7 @@ def find_page_in_invoice(pdf_path, keywords=["Packaging", "No.units", "Weight (K
         return f"An error occurred: {str(e)}"
 
 
-"""def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
+def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
     pdf_document = fitz.open(pdf_path)
     extracted_text = []
     
@@ -109,8 +109,9 @@ def find_page_in_invoice(pdf_path, keywords=["Packaging", "No.units", "Weight (K
         else:
             stopLoop = True 
 
-    return json.dumps(extracted_text, indent=2)"""
-def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
+    return json.dumps(extracted_text, indent=2)
+
+"""def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, row_height=9, gap=1.1):
     def try_extraction(y_start, y_end, skip_first=False):
         current_y = y_start
         extracted = []
@@ -172,6 +173,7 @@ def extract_dynamic_text_from_pdf(pdf_path, x_coords, y_range, key_map, page, ro
     # 3. Try shifting start to catch missed data
     result = try_extraction(y_start - 6, y_end, skip_first=False)
     return json.dumps(result, indent=2)
+"""
 
 def find_customs_authorisation_coords(pdf_path, page_number):
     pdf_document = fitz.open(pdf_path)
