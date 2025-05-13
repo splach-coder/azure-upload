@@ -24,18 +24,20 @@ class MistralDocumentQA:
             raise
 
     def upload_base64_pdf(self, base64_pdf: str, filename="uploaded_file.pdf"):
-        """Upload a base64-encoded PDF and return the signed URL."""
         pdf_bytes = base64.b64decode(base64_pdf)
         with open(filename, "wb") as f:
             f.write(pdf_bytes)
-        uploaded_pdf = self.client.files.upload(
-            file={
-                "file_name": filename,
-                "content": open(filename, "rb"),
-            },
-            purpose="ocr"
-        )
-        signed_url = self.client.files.get_signed_url(file_id=uploaded_pdf.id)
+        try:
+            uploaded_pdf = self.client.files.upload(
+                file={
+                    "file_name": filename,
+                    "content": open(filename, "rb"),
+                },
+                purpose="ocr"
+            )
+            signed_url = self.client.files.get_signed_url(file_id=uploaded_pdf.id)
+        finally:
+            os.remove(filename) 
         return signed_url.url
 
     def ask_document(self, base64_pdf: str, prompt: str, filename="uploaded_file.pdf"):
