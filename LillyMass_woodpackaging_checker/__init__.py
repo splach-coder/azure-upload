@@ -67,7 +67,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Append new ID and upload updated file
     try:
-        updated_data = existing_data.append({"declaration_ID": declaration_id}, ignore_index=True)
+        updated_data = pd.concat([existing_data, pd.DataFrame([{"declaration_ID": declaration_id}])], ignore_index=True)
         output = io.StringIO()
         updated_data.to_csv(output, index=False)
         blob_client.upload_blob(output.getvalue(), overwrite=True)
