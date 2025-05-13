@@ -1,12 +1,9 @@
-import uuid
+import ast
 import azure.functions as func
 import logging
 import json
-import os
-import base64
-import tempfile
 
-from AI_agents.OpenAI.CustomCallWithImage import CustomCallWithImage
+from AI_agents.Mistral.MistralDocumentQA import MistralDocumentQA
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Lili Maas ZIP Merger - Started.')
@@ -26,25 +23,33 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         logging.error(f"Processing file: {filename}")
 
-        if not filename.endswith('.zip') or not file_data:
-            logging.error(f"Skipping file: {filename} (not a zip or missing data)")
+        if (not filename.endswith('.PDF') and not filename.endswith('.pdf')) or not file_data:
+            logging.error(f"Skipping file: {filename} (not a pdf or missing data)")
             continue
-
+        
+        #detection if the file is a cities certificate
+        prompt = (
+        "You are an expert in document classification and compliance. "
+        "Read the full content of this PDF file and tell me if it contains or references a CITES certificate "
+        "(Convention on International Trade in Endangered Species of Wild Fauna and Flora). "
+        "Your answer must be: - 'True' if the document contains or mentions a CITES certificate, even partially. "
+        "- 'False' if there is no mention or indication of a CITES certificate."
+        "Note: The answer must be in JSON format, like this: {'hasCities': True}. No additional text, No text formatting or styling, Just like this {'hasCities': True} bare json."
+        )
+    
+        qa = MistralDocumentQA()  
+        answer = qa.ask_document(file_data, prompt, filename=filename)
+        answer = answer.replace("```", "")
+        answer = answer.replace("json", "")
+        answer = ast.literal_eval(answer.strip())
     try:
         
-        res = "res from ai"
-
-        # Set response headers for the Excel file download
-        headers = {
-            'Content-Disposition': 'attachment; filename="' + res + '.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-        
-        excel_file = ""
-
-        # Return the Excel file as an HTTP response
-        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    
+       return func.HttpResponse(
+            json.dumps(answer),
+            status_code=200,
+            mimetype="application/json"
+        )
+           
     except Exception as e:
         logging.error(f"Error: {e}")
         return func.HttpResponse(
