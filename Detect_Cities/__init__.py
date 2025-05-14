@@ -17,6 +17,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not base64_files:
         return func.HttpResponse(json.dumps({"error": "No files provided"}), status_code=400)
 
+    # Declare the cities certificate variable
+    cities_certificate = False
+
     for file in base64_files:
         filename = file.get('filename')
         file_data = file.get('file')
@@ -42,10 +45,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         answer = answer.replace("```", "")
         answer = answer.replace("json", "")
         answer = ast.literal_eval(answer.strip())
+        
+        if answer.get('hasCities', False):
+            cities_certificate = True
     try:
         
        return func.HttpResponse(
-            json.dumps(answer),
+            json.dumps({'cities_certificate': cities_certificate}),
             status_code=200,
             mimetype="application/json"
         )
