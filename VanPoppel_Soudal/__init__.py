@@ -205,9 +205,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.") 
         
-
         reference = reference.replace('Invoice no.', '').replace('\n', '')
-
 
         # Set response headers for the Excel file download
         headers = {
