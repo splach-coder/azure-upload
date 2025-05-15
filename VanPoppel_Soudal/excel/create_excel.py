@@ -29,25 +29,18 @@ def write_to_excel(json_string):
         "Truck",
         "Rex/Other",
         "Vissel",
-        "Email",
-        "ILS number"
     ]
 
     address = data.get('Address', [])
-    name, street, city, code_postal, country = address#.get('Company name', ''), address.get('Street', ''), address.get('City', ''), address.get('Postal Code', ''),  address.get('Country', '') 
-
+    name, street, city, code_postal, country = address
     term, place = data.get('Incoterm', ['', ''])
     
-    Total = data.get('Total', '')
-    
-    freight =  data.get('Freight', '')
-    
     values1 = [
-        data.get('Vat Number', ''),
+        data.get('VAT', ''),
         data.get('Principal', ''),
-        data.get('Inv Reference', ''),
+        data.get('Reference', ''),
+        data.get('Inv Number', ''),
         data.get('Other Ref', ''),
-        freight,
         data.get('kaai', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
@@ -59,11 +52,9 @@ def write_to_excel(json_string):
         term if 'term' in locals() else '',
         place if 'place' in locals() else '',
         data.get('Container'),
-        data.get('Truck', ''),
-        data.get("Customs Code", ''),
-        data.get("Vissel", ''),
-        data.get("Email"),
-        data.get('ILS_NUMBER', '')
+        data.get('Truck Nbr', ''),
+        data.get("Rex Number", ''),
+        data.get("Seal", ''),
     ]
 
     header2 = [
@@ -94,27 +85,23 @@ def write_to_excel(json_string):
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
-                        mini_row.append(obj.get("HS code", ''))
-                    elif ordered_key == "Article":
-                        mini_row.append(obj.get("Article nbr", ''))
-                    elif ordered_key == "Collis":
-                        mini_row.append(obj.get("Pieces", ''))
-                    elif ordered_key == "Pieces":
-                        mini_row.append("")
+                        mini_row.append(obj.get("HS Code", ''))
                     elif ordered_key == "Gross":
-                        mini_row.append(obj.get("Gross weight", ''))
+                        mini_row.append(obj.get("Gross Weight", ''))
                     elif ordered_key == "Net":
-                        mini_row.append(obj.get("Net weight", ''))
+                        mini_row.append(obj.get("Net Weight", ''))
+                    elif ordered_key == "Origin":
+                        mini_row.append(obj.get("COO", ''))
                     elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("Price", ""))
+                        mini_row.append(obj.get("Value", ""))
                     elif ordered_key == "Currency":
                         mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":
-                        mini_row.append(obj.get("Inv Reference", ''))
+                        mini_row.append(data.get("Inv Number", ''))
                     elif ordered_key == "Invoice date":
                         mini_row.append(data.get("Inv Date", ''))
                     elif ordered_key == "Rex/other":
-                        mini_row.append(obj.get("Customs Code", ''))
+                        mini_row.append(obj.get("Rex Number", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -132,17 +119,17 @@ def write_to_excel(json_string):
     ws.append(row_empty)
 
     ws.append(["Total invoices"])
-    ws.append([Total])
+    ws.append([data.get("Total Value", 0)])
     ws.append(row_empty)
 
     ws.append(["Total Collis"])
-    total_pallets = data.get('Total pallets', 0)
+    total_pallets = data.get('Total Pallets', 0)
     ws.append([total_pallets])
     ws.append(row_empty)
 
     ws.append(["Total Gross", "Total Net"])
-    total_weight = data.get('Gross weight Total', 0)
-    total_net = data.get('Total net', 0)
+    total_weight = data.get('Total Gross', 0)
+    total_net = data.get('Total Net', 0)
     ws.append([total_weight, total_net])
     ws.append(row_empty)
 

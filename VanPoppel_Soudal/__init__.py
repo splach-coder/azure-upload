@@ -1,4 +1,5 @@
 import datetime
+import re
 import azure.functions as func
 import logging
 import json
@@ -21,6 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         files = req_body.get('files', [])
+        subject = req_body.get('subject', '')
     except ValueError:
         logging.error("Invalid JSON in request body.")
         return func.HttpResponse(
@@ -198,14 +200,27 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Value"] = 0.00
                 
         result = result_dict  
+        
+        #determine weather the invoice is export or import
+        subject = subject.strip()
+        doc_type = "export" if "uitvoer" in subject.lower() else "import" if "invoer" in subject.lower() else "unknown"
+        
+        # Extract number right after "Uitvoer:" or "Invoer:"
+        match = re.search(r'(uitvoer|invoer):\s*(\d+)', subject, re.IGNORECASE)
+        reference = match.group(2) if match else None
 
+        result["File Type"] = doc_type    
+        result["Reference"] = reference    
+        
+        logging.error(result)
+        
     # Proceed with data processing
     try:
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.") 
         
-        reference = reference.replace('Invoice no.', '').replace('\n', '')
+        reference = result["Reference"]
 
         # Set response headers for the Excel file download
         headers = {
