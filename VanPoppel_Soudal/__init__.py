@@ -108,6 +108,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
             continue
         
+        # Validate the file type
+        if 'factuur' not in filename.lower():
+            logging.error(f"File '{filename}' is not an invoice. Skipping analysis.")
+            continue
+        
         # Analyze the document
         try: 
             poller = client.begin_analyze_document("vp-soudal-model", file_content)
@@ -190,14 +195,31 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
         #update the numbers in the items
         items = result_dict.get("Items", "")
-        for item in items :
-            item["COO"] = item.get("COO", "")[2:].replace(" ", "").replace(")", "").replace("(", "")
-            item["Gross Weight"] = safe_float_conversion(normalize_number(item.get("Gross Weight", 0.0)))
-            item["Net Weight"] = safe_float_conversion(normalize_number(item.get("Net Weight", 0.0)))
+        cleaned_items = []
+
+        for item in items:
+            coo = item.get("COO", "")
+            gross = safe_float_conversion(normalize_number(item.get("Gross Weight", 0.0)))
+            net = safe_float_conversion(normalize_number(item.get("Net Weight", 0.0)))
+
+            # Skip if COO is empty/None and both weights are 0
+            if not coo or (gross == 0 and net == 0):
+                continue
+            
+            # Process the item
+            item["COO"] = coo[2:].replace(" ", "").replace(")", "").replace("(", "")
+            item["Gross Weight"] = gross
+            item["Net Weight"] = net
+
             if item.get("Value", 0.0) is not None:
                 item["Value"] = safe_float_conversion(normalize_number(item.get("Value", 0.0)))
             else:
                 item["Value"] = 0.00
+
+            cleaned_items.append(item)
+
+        # Replace original items with cleaned list
+        result_dict["Items"] = cleaned_items
                 
         result = result_dict  
         
@@ -212,7 +234,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result["File Type"] = doc_type    
         result["Reference"] = reference    
         
-        logging.error(result)
         
     # Proceed with data processing
     try:
@@ -220,12 +241,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.") 
         
-        reference = result["Reference"]
+        reference = result.get("Reference")
+        fileType = result.get("File Type")
 
         # Set response headers for the Excel file download
         headers = {
             'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'x-file-type': fileType
         }
 
         # Return the Excel file as an HTTP response
