@@ -39,8 +39,8 @@ def write_to_excel(json_string):
         data.get('VAT', ''),
         data.get('Principal', ''),
         data.get('Reference', ''),
-        data.get('Inv Number', ''),
         data.get('Other Ref', ''),
+        data.get('Freight', ''),
         data.get('kaai', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
@@ -53,7 +53,7 @@ def write_to_excel(json_string):
         place if 'place' in locals() else '',
         data.get('Container'),
         data.get('Truck Nbr', ''),
-        data.get("Rex Number", ''),
+        data.get("Customs Code", ''),
         data.get("Seal", ''),
     ]
 
@@ -101,7 +101,7 @@ def write_to_excel(json_string):
                     elif ordered_key == "Invoice date":
                         mini_row.append(data.get("Inv Date", ''))
                     elif ordered_key == "Rex/other":
-                        mini_row.append(obj.get("Rex Number", ''))
+                        mini_row.append(data.get("Customs Code", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)

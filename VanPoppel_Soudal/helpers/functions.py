@@ -14,7 +14,7 @@ def clean_incoterm(incoterm):
     return incoterm_parts
 
 def clean_customs_code(value : str) -> str:
-    return value.replace(')', '').replace(' ', '')
+    return value.replace(')', '').replace(' ', '').replace(",", "")
 
 def detect_pdf_type(pdf_path):
     try:
