@@ -26,24 +26,30 @@ class MistralDocumentQA:
 
     def upload_base64_pdf(self, base64_pdf: str, filename="uploaded_file.pdf"):
         pdf_bytes = base64.b64decode(base64_pdf)
-
-        with open(filename, "wb") as f:
+    
+        # ✅ Use /tmp on Azure Functions Linux
+        temp_dir = os.getenv("TEMP", "/tmp")
+        file_path = os.path.join(temp_dir, filename)
+    
+        # Write file safely
+        with open(file_path, "wb") as f:
             f.write(pdf_bytes)
-
+    
         try:
-            with open(filename, "rb") as file_stream:
+            # Mistral expects an actual file on disk
+            with open(file_path, "rb") as file_obj:
                 uploaded_pdf = self.client.files.upload(
                     file={
                         "file_name": filename,
-                        "content": file_stream,
+                        "content": file_obj,
                     },
                     purpose="ocr"
                 )
-
             signed_url = self.client.files.get_signed_url(file_id=uploaded_pdf.id)
         finally:
-            os.remove(filename)
-
+            # ✅ Clean up
+            os.remove(file_path)
+    
         return signed_url.url
 
     def ask_document(self, base64_pdf: str, prompt: str, filename="uploaded_file.pdf"):
