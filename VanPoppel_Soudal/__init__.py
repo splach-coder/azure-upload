@@ -70,49 +70,53 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     extra_file_excel = None
     
     for file_info in files:
+        
         file_content_base64 = file_info.get('file')
         filename = file_info.get('filename', 'temp.pdf')
-
-        if not file_content_base64:
-            logging.warning(f"File '{filename}' has no content. Skipping.")
-            continue
-        
-        # Decode the base64-encoded content
-        try:
-            file_content = base64.b64decode(file_content_base64)
-            logging.info(f"Decoded content length for file '{filename}': {len(file_content)}")
-        except Exception as e:
-            logging.error(f"Failed to decode base64 content for file '{filename}': {e}")
-            return func.HttpResponse(
-                body=json.dumps({"error": "Failed to decode base64 content", "details": str(e)}),
-                status_code=400,
-                mimetype="application/json"
-            )
-        
-        # Save the uploaded file temporarily
-        temp_dir = os.getenv('TEMP', '/tmp')
-        uploaded_file_path = os.path.join(temp_dir, filename)
-        
-        # Write the file to the temporary path
-        try:
-            with open(uploaded_file_path, 'wb') as temp_file:
-                temp_file.write(file_content)
-            logging.info(f"Saved file '{filename}' to '{uploaded_file_path}'.")
-        except Exception as e:
-            logging.error(f"Failed to write file '{filename}' to disk: {e}")
-            return func.HttpResponse(
-                body=json.dumps({"error": "Failed to write file to disk", "details": str(e)}),
-                status_code=500,
-                mimetype="application/json"
-            )
-            
-        # Validate the file format (optional)
-        if not filename.lower().endswith('.pdf') and not filename.lower().endswith('.PDF'):
-            logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
-            continue
-        
         # Extract the factuur file
-        if 'factuur' not in filename.lower():
+        if 'factuur' in filename.lower():
+
+            if not file_content_base64:
+                logging.warning(f"File '{filename}' has no content. Skipping.")
+                continue
+            
+            # Decode the base64-encoded content
+            try:
+                file_content = base64.b64decode(file_content_base64)
+                logging.info(f"Decoded content length for file '{filename}': {len(file_content)}")
+            except Exception as e:
+                logging.error(f"Failed to decode base64 content for file '{filename}': {e}")
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Failed to decode base64 content", "details": str(e)}),
+                    status_code=400,
+                    mimetype="application/json"
+                )
+
+            # Save the uploaded file temporarily
+            temp_dir = os.getenv('TEMP', '/tmp')
+            uploaded_file_path = os.path.join(temp_dir, filename)
+
+            # Write the file to the temporary path
+            try:
+                with open(uploaded_file_path, 'wb') as temp_file:
+                    temp_file.write(file_content)
+                logging.info(f"Saved file '{filename}' to '{uploaded_file_path}'.")
+            except Exception as e:
+                logging.error(f"Failed to write file '{filename}' to disk: {e}")
+                return func.HttpResponse(
+                    body=json.dumps({"error": "Failed to write file to disk", "details": str(e)}),
+                    status_code=500,
+                    mimetype="application/json"
+                )
+
+            # Validate the file format (optional)
+            if not filename.lower().endswith('.pdf') and not filename.lower().endswith('.PDF'):
+                logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
+                continue
+            
+            
+
+            logging.error(f"File '{filename}' is processing.")
             # Analyze the document
             try: 
                 poller = client.begin_analyze_document("vp-soudal-model", file_content)
@@ -234,7 +238,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result["File Type"] = doc_type    
             result["Reference"] = reference    
         elif 'extra' in filename.lower():
-            extra_file_excel = extract_clean_excel_from_pdf(file_content)
+            extra_file_excel = extract_clean_excel_from_pdf(file_content_base64, filename)
         
     # Proceed with data processing
     try:

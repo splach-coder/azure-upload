@@ -1,3 +1,4 @@
+from io import BufferedReader
 import os
 import base64
 import logging
@@ -25,19 +26,24 @@ class MistralDocumentQA:
 
     def upload_base64_pdf(self, base64_pdf: str, filename="uploaded_file.pdf"):
         pdf_bytes = base64.b64decode(base64_pdf)
+
         with open(filename, "wb") as f:
             f.write(pdf_bytes)
+
         try:
-            uploaded_pdf = self.client.files.upload(
-                file={
-                    "file_name": filename,
-                    "content": open(filename, "rb"),
-                },
-                purpose="ocr"
-            )
+            with open(filename, "rb") as file_stream:
+                uploaded_pdf = self.client.files.upload(
+                    file={
+                        "file_name": filename,
+                        "content": file_stream,
+                    },
+                    purpose="ocr"
+                )
+
             signed_url = self.client.files.get_signed_url(file_id=uploaded_pdf.id)
         finally:
-            os.remove(filename) 
+            os.remove(filename)
+
         return signed_url.url
 
     def ask_document(self, base64_pdf: str, prompt: str, filename="uploaded_file.pdf"):
