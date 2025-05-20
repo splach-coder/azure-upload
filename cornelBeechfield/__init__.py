@@ -131,14 +131,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         extracted_data_from_pdfs.append(result)            
 
     email_data = extract_email_data(email)
-    
-    logging.error(email_data)
 
     result_data = {**extracted_data_from_pdfs[0], **email_data,"Items" : extracted_data_from_excels[0]}
     
     result_data = process_data(result_data)
-    
-    logging.error(json.dumps(result_data, indent=4))
 
     try:
         # Call writeExcel to generate the Excel file in memory

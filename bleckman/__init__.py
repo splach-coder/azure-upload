@@ -52,7 +52,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Retrieve the secret value
     try:
         api_key = client.get_secret(secret_name).value
-        logging.info(f"API Key retrieved: {api_key}")
     except Exception as e:
         logging.error(f"---------------Failed to retrieve secret: {str(e)}")
         return func.HttpResponse(
@@ -181,7 +180,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             with open(pdf_path, "rb") as f:
                                 document = f.read()
 
-                            poller = client.begin_analyze_document("bleckman-model", document)
+                            poller = client.begin_analyze_document("bleckman-modelV1", document)
                             result = poller.result()
 
                             document = result.documents
