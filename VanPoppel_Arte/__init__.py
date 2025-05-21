@@ -7,8 +7,9 @@ import base64
 import fitz
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.OpenAI.custom_call import CustomCall
 from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm
-from VanPoppel_Arte.helpers.functions import clean_invoice_items, merge_invoice_outputs, safe_int_conversion
+from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_body, merge_invoice_outputs, safe_int_conversion
 from VanPoppel_Arte.excel.create_excel import write_to_excel
 
 
@@ -20,7 +21,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         files = req_body.get('files', [])
-        body = req_body.get('body', {})
+        email = req_body.get('email', {})
 
     except ValueError:
         logging.error("Invalid JSON in request body.")
@@ -126,16 +127,39 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Replace the original list with the sorted one
         combined_result["items"] = sorted_items      
     
+    call = CustomCall()
+    email = extract_email_body(email)
+    role = "You are a data extraction agent. Your task is to extract specific logistics fields from the body of an email and return them in flat JSON format. The fields include truck, exit_office, colli, and gross_weight. If a field is missing, return its value as null. All numeric values must be returned as numbers without units like KG or P."
+    prompt = f"""
+        Extract the following fields from the email body and return the result as pure JSON only. Do not include any explanation or formatting.
+
+        Fields to extract:
+        - truck (e.g. 'DUTCHQARGO')
+        - exit_office (e.g. 'NL000432')
+        - colli (as number, e.g. 2)
+        - gross_weight (as number, no KG)
+
+        Email body:
+        \"\"\"
+        {email}
+        \"\"\"
+        """
+    
+    
+    email_data = call.send_request(role, prompt)
+    
+    email_data = json.loads(email_data)
+    
     combined_result, TotalNetWeight, TotalSurface, TotalQuantity = clean_invoice_items(combined_result)
     combined_result["Totals"] = {
         "TotalNetWeight": round(TotalNetWeight, 3),
         "TotalSurface": round(TotalSurface, 3),
         "TotalQuantity": round(TotalQuantity, 3)
     }
+    combined_result["email_data"] = email_data
     
     # Proceed with data processing
     try:
-        logging.error("we reach here")
         excel_file= write_to_excel(combined_result)
         reference = combined_result.get("header").get("document_number")
 
