@@ -1,3 +1,4 @@
+import json
 import re
 import logging
 
@@ -17,6 +18,7 @@ def extract_products_from_text(text):
 
     if current_block:
         products.append(current_block)
+    
 
     results = []
     for block in products:
@@ -31,10 +33,15 @@ def extract_products_from_text(text):
             for line in block[1:]:
                 if any(line.startswith(prefix) for prefix in expected_prefixes):
                     cleaned_block.append(line)
-                elif re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", line):  # quantity/unit line
+                elif re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", line):  # quantity/unit
                     cleaned_block.append(line)
-                elif re.match(r"^[\d.,]+\s*EUR$", line):  # unit price or amount
+                elif re.match(r"^[\d.,]+\s*EUR$", line):  # full amount
                     cleaned_block.append(line)
+                elif re.match(r"^[\d.,]+$", line):  # only the amount (split line)
+                    cleaned_block.append(line)
+                elif line.strip() == "EUR":  # only currency
+                    cleaned_block.append(line)
+
 
             # 🩹 Fix broken 'Your reference'
             fixed_block = []
