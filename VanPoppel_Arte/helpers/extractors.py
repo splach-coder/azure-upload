@@ -1,7 +1,5 @@
-import json
-import logging
-import fitz
 import re
+import logging
 
 def extract_products_from_text(text):
     lines = text.strip().splitlines()
@@ -9,12 +7,13 @@ def extract_products_from_text(text):
     current_block = []
 
     for line in lines:
-        if re.match(r"^\d{7}$", line.strip()):  # new product starts
+        line = line.strip()
+        if re.match(r"^\d{7}$", line):  # product code
             if current_block:
                 products.append(current_block)
-            current_block = [line.strip()]
+            current_block = [line]
         elif current_block:
-            current_block.append(line.strip())
+            current_block.append(line)
 
     if current_block:
         products.append(current_block)
@@ -22,38 +21,63 @@ def extract_products_from_text(text):
     results = []
     for block in products:
         try:
-            # 🩹 Fix broken "Your reference" line
+            # 🧼 CLEAN unexpected lines (like 'CONSOL')
+            expected_prefixes = [
+                "• (", "• Order number:", "• Your reference:", "• Customs Tariff:",
+                "• Net:", "• Surface:", "• Country of origin:"
+            ]
+            cleaned_block = [block[0]]  # keep product code
+
+            for line in block[1:]:
+                if any(line.startswith(prefix) for prefix in expected_prefixes):
+                    cleaned_block.append(line)
+                elif re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", line):  # quantity/unit line
+                    cleaned_block.append(line)
+                elif re.match(r"^[\d.,]+\s*EUR$", line):  # unit price or amount
+                    cleaned_block.append(line)
+
+            # 🩹 Fix broken 'Your reference'
             fixed_block = []
             i = 0
-            while i < len(block):
-                line = block[i]
-                if line.startswith("• Your reference:") and i + 1 < len(block) and not block[i + 1].startswith("•"):
-                    line += " " + block[i + 1]
-                    i += 1  # skip next line
+            while i < len(cleaned_block):
+                line = cleaned_block[i]
+                if line.startswith("• Your reference:") and i + 1 < len(cleaned_block) and not cleaned_block[i + 1].startswith("•"):
+                    line += " " + cleaned_block[i + 1]
+                    i += 1
                 fixed_block.append(line)
                 i += 1
 
             block = fixed_block
 
+            # Validate length
+            if len(block) < 11:
+                raise ValueError("Block too short after cleaning")
+
             product_code = block[0]
-            product_name = re.search(r"\• \((.*?)\) (.*)", block[1]).group(2)
-            order_number = block[2].split(":")[1].strip()
-            reference = block[3].split(":")[1].strip()
-            tariff = block[4].split(":")[1].strip()
-            net_weight = block[5].split(":")[1].strip()
-            surface = block[6].split(":")[1].strip()
-            origin = block[7].split(":")[1].strip()
+            product_name = re.search(r"\((.*?)\)\s*(.*)", block[1]).group(2).strip()
+            order_number = block[2].split(":", 1)[1].strip()
+            reference = block[3].split(":", 1)[1].strip()
+            customs_tariff = block[4].split(":", 1)[1].strip()
+            net_weight = block[5].split(":", 1)[1].strip()
+            surface = block[6].split(":", 1)[1].strip()
+            origin = block[7].split(":", 1)[1].strip()
 
             quantity, unit = block[8].split(" ")
             unit_price = block[9].strip()
-            amount = block[10].replace(",", "").strip()
+            # Handle amount split over two lines (e.g., "2089.34", "EUR")
+            amount = None
+            if len(block) > 10:
+                if re.match(r"^[\d,.]+$", block[10]) and len(block) > 11 and "EUR" in block[11]:
+                    amount = block[10].replace(",", "").strip()
+                elif "EUR" in block[10]:
+                    amount = block[10].replace(",", "").replace("EUR", "").strip()
 
             results.append({
                 "product_code": product_code,
                 "product_name": product_name,
                 "order_number": order_number,
                 "reference": reference,
-                "customs_tariff": tariff,
+                "customs_tariff": customs_tariff,
                 "net_weight": net_weight,
                 "surface": surface,
                 "origin": origin,
@@ -64,9 +88,11 @@ def extract_products_from_text(text):
             })
 
         except Exception as e:
+            logging.error(f"Error processing block: {block}. Error: {e}")
             continue
 
     return results
+
 
 def extract_invoice_meta_and_shipping(text):
     meta = {}
@@ -135,3 +161,31 @@ def extract_customs_authorization_no(text):
     if match:
         return match.group(1).strip()
     return None
+
+def find_page_in_invoice(doc, keywords=["Total incl.VAT:", "Total excl. VAT:", "VAT", "Incoterms:"]):
+    try:
+        # Open the PDF file
+        pdf_document = doc
+        
+        # Ensure the PDF has at least 1 page
+        if len(pdf_document) < 1:
+            return "The PDF is empty or has no pages."
+
+        # Search for pages containing all the keywords
+        pages_with_data = []
+        for page_number in range(len(pdf_document)):
+            page = pdf_document[page_number]
+            page_text = page.get_text("text")
+
+            # Check if all keywords are found on this page
+            if all(keyword in page_text for keyword in keywords):
+                pages_with_data.append(page_number + 1)  # Page numbers are 1-based
+            
+        if pages_with_data:
+            return pages_with_data
+        else:
+            return "No relevant data found in this document."
+
+    except Exception as e:
+        return f"An error occurred: {str(e)}"
+

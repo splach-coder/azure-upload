@@ -38,10 +38,11 @@ def write_to_excel(json_string):
     
     name, street, city, code_postal, country = headerdata.get('shipping_address')
 
-    if len(footerdata.get('incoterm', ['', ''])) > 1:
-        term, place = footerdata.get('incoterm', ['', '']).split(' ')
-    else:
-        term, place =['', '']
+    if footerdata.get('incoterm', ['', '']) is not None:
+        if len(footerdata.get('incoterm', ['', ''])) > 1:
+            term, place = footerdata.get('incoterm', ['', '']).split(' ')
+        else:
+            term, place =['', '']
 
     values1 = [
         data.get('Vat', ''),

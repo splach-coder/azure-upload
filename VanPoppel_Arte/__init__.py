@@ -8,7 +8,7 @@ import fitz
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.OpenAI.custom_call import CustomCall
-from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm
+from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm, find_page_in_invoice
 from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_body, merge_invoice_outputs, safe_int_conversion
 from VanPoppel_Arte.excel.create_excel import write_to_excel
 
@@ -102,7 +102,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # ----------------------------------------
         # 🔹 Extract header info from last page
         # ----------------------------------------
-        last_page_text = doc[-1].get_text()
+        page = find_page_in_invoice(doc)
+        last_page_text = doc[page[0]-1].get_text()
         footer_inv_data = extract_totals_and_incoterm(last_page_text)
         customs_no = extract_customs_authorization_no(last_page_text)
         
@@ -118,6 +119,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         combined_data.append(invoice_output)
 
     # Combine all invoices into one
+    for doc in combined_data:
+        for item in doc.get("items"):
+            item["document_number"] = doc.get("header").get("document_number")
+            
+    
+         
     combined_result = merge_invoice_outputs(combined_data)
     
     if len(combined_result.get("items")) > 1:
@@ -145,12 +152,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         \"\"\"
         """
     
-    
     email_data = call.send_request(role, prompt)
     
     email_data = json.loads(email_data)
     
     combined_result, TotalNetWeight, TotalSurface, TotalQuantity = clean_invoice_items(combined_result)
+    
     combined_result["Totals"] = {
         "TotalNetWeight": round(TotalNetWeight, 3),
         "TotalSurface": round(TotalSurface, 3),

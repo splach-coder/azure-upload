@@ -69,7 +69,6 @@ def clean_invoice_items(combined_result):
     TotalQuantity = 0
     
     headerdata = combined_result.get("header", [])
-    document_number = headerdata.get("document_number", [])
     date = headerdata.get("date", [])
     
     # change the invoice date to date format
@@ -105,7 +104,7 @@ def clean_invoice_items(combined_result):
                 "unit_price": safe_float_conversion(item.get("unit_price", "0").replace("EUR", "").strip()),
                 "amount": safe_float_conversion(item.get("amount", "0").replace("EUR", "").replace(",", "").strip()),
                 
-                "document_number": document_number,
+                "document_number": item.get("document_number", "").strip(),
                 "date": date,
             }
 
