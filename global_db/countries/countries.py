@@ -1033,7 +1033,7 @@ countries = [
         "abbreviation": "GB"
     },
     {
-        "country": "United States",
+        "country": "USA",
         "abbreviation": "US"
     },
     {
