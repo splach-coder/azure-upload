@@ -35,12 +35,13 @@ def write_to_excel(json_string):
     name, street, city, code_postal, country = address.get('company_name', ''), address.get('street', ''), address.get('city', ''), address.get('postal_code', ''), address.get('country_code', '') 
 
     
-    Incoterm = data.get('Incoterm', ['', '']).split(' ')
-    if len(Incoterm) > 1 :
-        term, place = Incoterm
-    else :
-        term = Incoterm[0]
-        place = ""
+    Incoterm = data.get('Incoterm', ['', ''])
+    if Incoterm:
+        if len(Incoterm) > 1 :
+            term, place = Incoterm.split(' ')
+        else :
+            term = Incoterm[0]
+            place = ""
         
     FreightValue =  data.get('FreightCost', {}).get('value', 0)    
 
