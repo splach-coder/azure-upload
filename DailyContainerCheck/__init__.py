@@ -86,6 +86,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if float(declaration_id) not in existing_data["ID"].astype(float).values:
             for container in containers:
                 container_number_length = len(container)
+                if container == "...(320)":
+                    # Skip this container
+                    continue
                 # If container length is valid, check further
                 if container_number_length != 0:
                     if container_number_length == 11 or container_number_length == 17 or container_number_length == 16:
