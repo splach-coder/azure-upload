@@ -60,11 +60,10 @@ Build azure-upload from the source and install dependencies:
    pip install -r requirements.txt
 
 
-### Usage
+ Usage
 
 #### Run the project with:
    ```sh
    func start {entrypoint}
 
-[⬆ Return to top](#AZURE-UPLOAD)
-
+### [⬆ Return to top](#AZURE-UPLOAD)
