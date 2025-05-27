@@ -68,6 +68,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(api_key))
         
     result = {}
+    extra_file_excel_data = None
     extra_file_excel = None
     
     for file_info in files:
@@ -253,11 +254,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.")
         
-        extra_result = result.copy()
-        extra_result["Items"] = extra_file_excel_data.get("rows", [])
         
-        extra_file_excel = write_to_extra_excel(extra_result)
-        logging.info("Generated Excel file2.")
+        if extra_file_excel_data is not None:
+            extra_result = result.copy()
+            extra_result["Items"] = extra_file_excel_data.get("rows", [])
+            extra_file_excel = write_to_extra_excel(extra_result)
+            logging.info("Generated Excel file2.")
         
         reference = result.get("Reference")
         fileType = result.get("File Type")
