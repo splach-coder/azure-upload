@@ -1,55 +1,34 @@
-import json
+from datetime import datetime
+import requests
+import xml.etree.ElementTree as ET
 
 
-extra_file_excel_data = {
-    "rows": [
-        {
-            "Customs code": "BEIPOH00035",
-            "Bill. Doc.": "97213739",
-            "Comm. Code": "32141010",
-            "Gross": 15702.336,
-            "Net weight": 11978.928,
-            "Net Value": 31168.8,
-            "Currency": "GBP",
-            "# Collies": 0
-        },
-        {
-            "Customs code": "BEIPOH00035",
-            "Bill. Doc.": "97213739",
-            "Comm. Code": "",
-            "Gross": 15702.336,
-            "Net weight": 11978.928,
-            "Net Value": 31168.8,
-            "Currency": "GBP",
-            "# Collies": 0
-        },
-        {
-            "Customs code": "BEIPOH00035",
-            "Bill. Doc.": "",
-            "Comm. Code": "",
-            "Gross": 15702.336,
-            "Net weight": 11978.928,
-            "Net Value": 31168.8,
-            "Currency": "GBP",
-            "SubTotal": True,
-            "# Collies": 26
-        },
-        {
-            "Customs code": "",
-            "Bill. Doc.": "",
-            "Comm. Code": "",
-            "Gross": 15702.336,
-            "Net weight": 11978.928,
-            "Net Value": 31168.8,
-            "Currency": "GBP",
-            "GrandTotal": True
-        }
-    ]
-}
+def fetch_exchange_rate(currency_code):
+    # Get the current year and month in "YYYYMM" format
+    current_date = datetime.now().strftime("%Y%m")
 
-extra_file_excel_data["rows"] = [
-    row for row in extra_file_excel_data.get("rows", [])
-    if not (('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True))
-]
+    # Insert the dynamic part into the URL
+    url = f"https://www.belastingdienst.nl/data/douane_wisselkoersen/wks.douane.wisselkoersen.dd{current_date}.xml"
+    print(f"Fetching exchange rate from URL: {url}")
+    
+    # Fetch XML content from the URL
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        # Parse XML content
+        root = ET.fromstring(response.content)
+        
+        # Find the currency block that matches the currency code
+        for rate in root.findall("douaneMaandwisselkoers"):
+            code = rate.find("muntCode").text
+            if code == currency_code:
+                foreign_rate = rate.find("tariefInVreemdeValuta").text
+                return foreign_rate
+    
+    return 0.0  # Return None if the currency was not found or request failed
 
-print(json.dumps(extra_file_excel_data, indent=4, ensure_ascii=False))
+# Example usage
+if __name__ == "__main__":
+    currency = "EUR"  # Example currency code
+    exchange_rate = fetch_exchange_rate(currency)
+    print(f"Exchange rate for {currency}: {exchange_rate}")

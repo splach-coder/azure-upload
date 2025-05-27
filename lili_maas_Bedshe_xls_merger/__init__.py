@@ -9,8 +9,8 @@ import xlrd
 import gc
 import time
 
-from lili_maas_xls_merger.helpers.functions import fetch_exchange_rate, merge_items, transform_json
-from lili_maas_xls_merger.excel.create_excel import write_to_excel
+from lili_maas_Bedshe_xls_merger.helpers.functions import fetch_exchange_rate
+from lili_maas_Bedshe_xls_merger.excel.create_excel import write_to_excel
 from AI_agents.OpenAI.CustomCallWithImage import CustomCallWithImage
 
 def safe_float(val):
@@ -48,7 +48,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         ext = os.path.splitext(filename)[1].lower()
 
         try:
-            if ext == ".xls" and "Combined".lower() in filename.lower():
+            if ext == ".xlsx" and "combined" in filename.lower():
                 logging.info(f"Processing Excel file: {filename}")
                 file_bytes = base64.b64decode(file_data)
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".xls") as tmp_file:
@@ -152,16 +152,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         # Assuming you want to merge and transform the JSON data
         final_version = merged_data[0]
+        InsuranceCurrency = final_version.get("items", [{}])[0].get("VALUTA", "")
+        
+        
 
         # If you want to add freight_from_image info to final_version
         if freight_from_image is not None:
             final_version["FreightFromImage"] = freight_from_image
 
         try:
-            final_version["ExchangeCalc"] = fetch_exchange_rate(final_version)
+            final_version["ExchangeCalc"] = fetch_exchange_rate(InsuranceCurrency)
+            logging.error(final_version.get("ExchangeCalc"))
         except ZeroDivisionError:
             final_version["ExchangeCalc"] = 0.0
-
+               
         excel_file = write_to_excel(final_version)
         logging.info("Generated Excel file.")
         

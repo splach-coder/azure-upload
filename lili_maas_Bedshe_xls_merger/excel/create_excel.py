@@ -20,9 +20,9 @@ def write_to_excel(json_string):
     ] 
     
     header_values = [
-        f"FID{data.get('Contract No', '')}",
+        f"{data.get('INVOICENUMBER', '')}",
         "",
-        data.get('Freight', ''), 
+        data.get('FreightFromImage', ''), 
         "",
         data.get('InsuranceCurrency', ''),
         "",
@@ -56,38 +56,11 @@ def write_to_excel(json_string):
             for obj in value:
                 mini_row = []
                 
-                for ordered_key in items_header:
-                    # Append the value in the desired order, or an empty string if the key is missing
-                    if ordered_key == "INVOICENUMBER":
-                        mini_row.append(obj.get("Contract No", ''))
-                    elif ordered_key == "INVOICEDATE":
-                        mini_row.append(obj.get("Contract Date", ''))
-                    elif ordered_key == "DESCRIPTION OF GOODS":
-                        mini_row.append(obj.get("Description", ''))
-                    elif ordered_key == "HS CODE":
-                        mini_row.append(obj.get("HS Code", ''))
-                    elif ordered_key == "QUANTITY-SET":
-                        mini_row.append(obj.get("SET", ''))
-                    elif ordered_key == "UNIT PRICE":
-                        mini_row.append(obj.get("Unit Price", ""))
-                    elif ordered_key == "TOTAL VALUE":
-                        mini_row.append(obj.get("Amount", ''))
-                    elif ordered_key == "GROSS":
-                        mini_row.append(obj.get("Gross Weight", ''))
-                    elif ordered_key == "NET":
-                        mini_row.append(obj.get("Net Weight", ''))
-                    elif ordered_key == "INSURANCE":
-                        mini_row.append(obj.get("InsuranceAmount", ''))
-                    elif ordered_key == "VATNO":
-                        mini_row.append(obj.get("VAT No", ''))
-                    elif ordered_key == "EORI":
-                        mini_row.append(obj.get("EORI No", ''))
-                    else:    
-                        mini_row.append(obj.get(ordered_key, ''))
+                for ordered_key in items_header:   
+                    mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
         else:
             row_empty.append("")
-
     # Add keys (headers) to the first row
     ws.append(header)
 
