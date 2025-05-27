@@ -4,7 +4,7 @@ import os
 import fitz  # PyMuPDF
 import os
 
-from sofidel.utils.number_handlers import filter_numeric_strings, normalize_number_format, remove_non_numeric_chars, remove_spaces_from_numeric_strings, safe_float_conversion, safe_int_conversion
+from sofidelV2.utils.number_handlers import filter_numeric_strings, normalize_number_format, remove_non_numeric_chars, remove_spaces_from_numeric_strings, safe_float_conversion, safe_int_conversion
 
 def detect_pdf_type(pdf_path):
     try:

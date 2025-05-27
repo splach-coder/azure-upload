@@ -241,10 +241,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
-            for row in extra_file_excel_data.get("rows", []):
-                if ('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True):
-                    # If the row is a GrandTotal or SubTotal, we need to remove it
-                    extra_file_excel_data["rows"].remove(row)
+
+            extra_file_excel_data["rows"] = [
+            row for row in extra_file_excel_data.get("rows", [])
+            if not (('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True))
+            ]
                  
     # Proceed with data processing
     try:

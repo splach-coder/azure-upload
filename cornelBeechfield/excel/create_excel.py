@@ -1,8 +1,6 @@
 from io import BytesIO
 import openpyxl
 
-from sofidelV2.utils.number_handlers import safe_float_conversion
-
 def write_to_excel(json_string):
     # Create a new workbook and select the active sheet
     wb = openpyxl.Workbook()

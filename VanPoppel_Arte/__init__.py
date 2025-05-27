@@ -13,7 +13,6 @@ from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_
 from VanPoppel_Arte.excel.create_excel import write_to_excel
 
 
-
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
 
@@ -111,11 +110,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # 🔹 Extract Customs Code info from last page
         # ----------------------------------------
         page = find_page_in_invoice(doc, ["customs authorisation Nº"])
+        customs_no = None
         try:
             customs_page_text = doc[page[0]-1].get_text()
             customs_no = extract_customs_authorization_no(customs_page_text)
-            logging.error(customs_page_text)
-            logging.error(f"customs_no: {customs_no}")
         except:
             logging.error("Customs authorization number not found or page extraction failed.")
             

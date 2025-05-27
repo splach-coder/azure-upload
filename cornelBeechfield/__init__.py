@@ -5,8 +5,6 @@ import os
 import openpyxl
 import base64
 
-from bbl.helpers.functions import process_container_data, safe_float_conversion
-from bbl.helpers.sentEmail import json_to_xml
 from cornelBeechfield.excel.create_excel import write_to_excel
 from cornelBeechfield.functions.functions import extract_email_data, process_data
 
