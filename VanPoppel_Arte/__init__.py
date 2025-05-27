@@ -100,14 +100,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             all_items.extend(page_items)
         
         # ----------------------------------------
-        # 🔹 Extract header info from last page
+        # 🔹 Extract Footer info from last page
         # ----------------------------------------
         page = find_page_in_invoice(doc)
         last_page_text = doc[page[0]-1].get_text()
         footer_inv_data = extract_totals_and_incoterm(last_page_text)
-        customs_no = extract_customs_authorization_no(last_page_text)
         
-
+        
+        # ----------------------------------------
+        # 🔹 Extract Customs Code info from last page
+        # ----------------------------------------
+        page = find_page_in_invoice(doc, ["customs authorisation Nº"])
+        try:
+            customs_page_text = doc[page[0]-1].get_text()
+            customs_no = extract_customs_authorization_no(customs_page_text)
+            logging.error(customs_page_text)
+            logging.error(f"customs_no: {customs_no}")
+        except:
+            logging.error("Customs authorization number not found or page extraction failed.")
+            
+            
         # Combine and append result
         invoice_output = {
             "header": header_inv_data,

@@ -164,7 +164,7 @@ def extract_totals_and_incoterm(text):
     return data
 
 def extract_customs_authorization_no(text):
-    match = re.search(r"customs authorization No ([^)]+)\)", text, re.IGNORECASE)
+    match = re.search(r"customs authori[sz]ation (?:No|Nº)\s*([A-Z0-9]+)", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
     return None

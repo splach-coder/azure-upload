@@ -12,6 +12,7 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
 from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, normalize_number, safe_float_conversion
 from VanPoppel_Soudal.excel.create_excel import write_to_excel
@@ -236,15 +237,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             reference = match.group(2) if match else None
 
             result["File Type"] = doc_type    
-            result["Reference"] = reference    
+            result["Reference"] = reference   
+             
         elif 'extra' in filename.lower():
-            extra_file_excel = extract_clean_excel_from_pdf(file_content_base64, filename)
-        
+            extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
+            for row in extra_file_excel_data.get("rows", []):
+                if ('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True):
+                    # If the row is a GrandTotal or SubTotal, we need to remove it
+                    extra_file_excel_data["rows"].remove(row)
+                 
     # Proceed with data processing
     try:
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(result)
-        logging.info("Generated Excel file.") 
+        logging.info("Generated Excel file.")
+        
+        extra_result = result.copy()
+        extra_result["Items"] = extra_file_excel_data.get("rows", [])
+        
+        extra_file_excel = write_to_extra_excel(extra_result)
+        logging.info("Generated Excel file2.")
         
         reference = result.get("Reference")
         fileType = result.get("File Type")
