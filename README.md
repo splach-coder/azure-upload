@@ -64,6 +64,4 @@ Build azure-upload from the source and install dependencies:
 
 #### Run the project with:
    ```sh
-   func start {entrypoint}
-
-### [⬆ Return to top](#AZURE-UPLOAD)
+   func start
