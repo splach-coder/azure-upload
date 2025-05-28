@@ -1,0 +1,2296 @@
+{
+    "INVOICENUMBER": "",
+    "INVOICEDATE": "",
+    "VATNO": "",
+    "EORI": "",
+    "invoice_items": [
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 240.0,
+            "UNIT PRICE": 3.4,
+            "TOTAL VALUE": 816.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 160.0,
+            "UNIT PRICE": 13.6,
+            "TOTAL VALUE": 2176.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 12.72,
+            "TOTAL VALUE": 508.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 12.72,
+            "TOTAL VALUE": 508.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 11.08,
+            "TOTAL VALUE": 886.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 300.0,
+            "UNIT PRICE": 2.39,
+            "TOTAL VALUE": 717.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 24.0,
+            "UNIT PRICE": 54.78,
+            "TOTAL VALUE": 1314.72,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 8.0,
+            "UNIT PRICE": 54.78,
+            "TOTAL VALUE": 438.24,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 54.78,
+            "TOTAL VALUE": 2191.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 3.4,
+            "TOTAL VALUE": 408.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 11.08,
+            "TOTAL VALUE": 886.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8543709099 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 135.0,
+            "UNIT PRICE": 2.82,
+            "TOTAL VALUE": 380.7,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 3.4,
+            "TOTAL VALUE": 408.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 320.0,
+            "UNIT PRICE": 31.88,
+            "TOTAL VALUE": 10201.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 2500.0,
+            "UNIT PRICE": 11.46,
+            "TOTAL VALUE": 28650.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1300.0,
+            "UNIT PRICE": 11.46,
+            "TOTAL VALUE": 14898.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1100.0,
+            "UNIT PRICE": 11.48,
+            "TOTAL VALUE": 12628.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1000.0,
+            "UNIT PRICE": 11.48,
+            "TOTAL VALUE": 11480.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 640.0,
+            "UNIT PRICE": 8.24,
+            "TOTAL VALUE": 5273.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 270.0,
+            "UNIT PRICE": 4.16,
+            "TOTAL VALUE": 1123.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 405.0,
+            "UNIT PRICE": 4.16,
+            "TOTAL VALUE": 1684.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 84.0,
+            "UNIT PRICE": 26.56,
+            "TOTAL VALUE": 2231.04,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 64.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 371.84,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 29.28,
+            "TOTAL VALUE": 5270.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 100.0,
+            "UNIT PRICE": 12.1,
+            "TOTAL VALUE": 1210.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 200.0,
+            "UNIT PRICE": 7.43,
+            "TOTAL VALUE": 1486.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 70.0,
+            "UNIT PRICE": 11.48,
+            "TOTAL VALUE": 803.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 320.0,
+            "UNIT PRICE": 8.24,
+            "TOTAL VALUE": 2636.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 220.0,
+            "UNIT PRICE": 32.07,
+            "TOTAL VALUE": 7055.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 20.31,
+            "TOTAL VALUE": 1624.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 9.3,
+            "TOTAL VALUE": 372.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 225.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 4707.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 300.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 6276.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 20.31,
+            "TOTAL VALUE": 1624.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 280.0,
+            "UNIT PRICE": 8.28,
+            "TOTAL VALUE": 2318.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 390.0,
+            "UNIT PRICE": 21.47,
+            "TOTAL VALUE": 8373.3,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 195.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 4079.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 60.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 1255.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 200.0,
+            "UNIT PRICE": 11.31,
+            "TOTAL VALUE": 2262.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 64.0,
+            "UNIT PRICE": 8.35,
+            "TOTAL VALUE": 534.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 92.96,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 92.96,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 10.17,
+            "TOTAL VALUE": 1830.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 144.0,
+            "UNIT PRICE": 21.75,
+            "TOTAL VALUE": 3132.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 64.0,
+            "UNIT PRICE": 8.35,
+            "TOTAL VALUE": 534.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 92.96,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 92.96,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 48.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 278.88,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 92.96,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 160.0,
+            "UNIT PRICE": 7.43,
+            "TOTAL VALUE": 1188.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 200.0,
+            "UNIT PRICE": 12.26,
+            "TOTAL VALUE": 2452.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 41.25,
+            "TOTAL VALUE": 7425.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 612.0,
+            "UNIT PRICE": 8.73,
+            "TOTAL VALUE": 5342.76,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 296.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518220090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 12.0,
+            "UNIT PRICE": 53.5,
+            "TOTAL VALUE": 642.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518100090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 20.0,
+            "UNIT PRICE": 89.92,
+            "TOTAL VALUE": 1798.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8517691000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 32.0,
+            "UNIT PRICE": 25.8,
+            "TOTAL VALUE": 825.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8517691000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 32.0,
+            "UNIT PRICE": 25.12,
+            "TOTAL VALUE": 803.84,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 72.0,
+            "UNIT PRICE": 16.88,
+            "TOTAL VALUE": 1215.36,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 320.0,
+            "UNIT PRICE": 4.81,
+            "TOTAL VALUE": 1539.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 450.0,
+            "UNIT PRICE": 2.98,
+            "TOTAL VALUE": 1341.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 320.0,
+            "UNIT PRICE": 4.81,
+            "TOTAL VALUE": 1539.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8543709099 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 21.0,
+            "UNIT PRICE": 24.63,
+            "TOTAL VALUE": 517.23,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 480.0,
+            "UNIT PRICE": 3.4,
+            "TOTAL VALUE": 1632.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1280.0,
+            "UNIT PRICE": 1.38,
+            "TOTAL VALUE": 1766.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 280.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 2072.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 3000.0,
+            "UNIT PRICE": 4.75,
+            "TOTAL VALUE": 14250.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 2400.0,
+            "UNIT PRICE": 1.38,
+            "TOTAL VALUE": 3312.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 3200.0,
+            "UNIT PRICE": 1.38,
+            "TOTAL VALUE": 4416.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "4202929190 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 4.0,
+            "UNIT PRICE": 14.86,
+            "TOTAL VALUE": 59.44,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "4202929190 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 2.91,
+            "TOTAL VALUE": 232.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8517620000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 9.9,
+            "TOTAL VALUE": 1188.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1512.0,
+            "UNIT PRICE": 8.73,
+            "TOTAL VALUE": 13199.76,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 192.0,
+            "UNIT PRICE": 5.81,
+            "TOTAL VALUE": 1115.52,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 144.0,
+            "UNIT PRICE": 8.73,
+            "TOTAL VALUE": 1257.12,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 4.86,
+            "TOTAL VALUE": 583.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 760.0,
+            "UNIT PRICE": 4.86,
+            "TOTAL VALUE": 3693.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 480.0,
+            "UNIT PRICE": 4.86,
+            "TOTAL VALUE": 2332.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1480.0,
+            "UNIT PRICE": 4.75,
+            "TOTAL VALUE": 7030.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 40.0,
+            "UNIT PRICE": 4.75,
+            "TOTAL VALUE": 190.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 151.0,
+            "UNIT PRICE": 2.26,
+            "TOTAL VALUE": 341.26,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1.0,
+            "UNIT PRICE": 2.26,
+            "TOTAL VALUE": 2.26,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 48.0,
+            "UNIT PRICE": 2.26,
+            "TOTAL VALUE": 108.48,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 13.6,
+            "TOTAL VALUE": 1088.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 160.0,
+            "UNIT PRICE": 13.6,
+            "TOTAL VALUE": 2176.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 20.37,
+            "TOTAL VALUE": 3666.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 20.37,
+            "TOTAL VALUE": 3666.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 21.47,
+            "TOTAL VALUE": 2576.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 60.0,
+            "UNIT PRICE": 21.47,
+            "TOTAL VALUE": 1288.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 112.0,
+            "UNIT PRICE": 63.16,
+            "TOTAL VALUE": 7073.92,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 16.0,
+            "UNIT PRICE": 63.16,
+            "TOTAL VALUE": 1010.56,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 336.0,
+            "UNIT PRICE": 21.75,
+            "TOTAL VALUE": 7308.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 204.0,
+            "UNIT PRICE": 21.75,
+            "TOTAL VALUE": 4437.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 200.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 1480.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 640.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 4736.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 180.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 3765.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 105.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 2196.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 105.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 2196.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 105.0,
+            "UNIT PRICE": 20.92,
+            "TOTAL VALUE": 2196.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 560.0,
+            "UNIT PRICE": 11.31,
+            "TOTAL VALUE": 6333.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 960.0,
+            "UNIT PRICE": 11.31,
+            "TOTAL VALUE": 10857.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 480.0,
+            "UNIT PRICE": 11.31,
+            "TOTAL VALUE": 5428.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 80.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 592.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 840.0,
+            "UNIT PRICE": 7.4,
+            "TOTAL VALUE": 6216.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 903.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 60.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 451.8,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 480.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 3614.4,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 540.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 4066.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 240.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 1807.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 160.0,
+            "UNIT PRICE": 60.86,
+            "TOTAL VALUE": 9737.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 270.0,
+            "UNIT PRICE": 4.16,
+            "TOTAL VALUE": 1123.2,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 36.0,
+            "UNIT PRICE": 8.73,
+            "TOTAL VALUE": 314.28,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 36.0,
+            "UNIT PRICE": 8.73,
+            "TOTAL VALUE": 314.28,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 1350.0,
+            "UNIT PRICE": 5.56,
+            "TOTAL VALUE": 7506.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 750.0,
+            "UNIT PRICE": 2.94,
+            "TOTAL VALUE": 2205.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 3.0,
+            "TOTAL VALUE": 360.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 48.0,
+            "UNIT PRICE": 3.0,
+            "TOTAL VALUE": 144.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 24.0,
+            "UNIT PRICE": 3.0,
+            "TOTAL VALUE": 72.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8423109000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 530.0,
+            "UNIT PRICE": 5.17,
+            "TOTAL VALUE": 2740.1,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8423109000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 100.0,
+            "UNIT PRICE": 5.17,
+            "TOTAL VALUE": 517.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 120.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 903.6,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 3.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 22.59,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 57.0,
+            "UNIT PRICE": 7.53,
+            "TOTAL VALUE": 429.21,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 24.0,
+            "UNIT PRICE": 7.42,
+            "TOTAL VALUE": 178.08,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 56.0,
+            "UNIT PRICE": 7.42,
+            "TOTAL VALUE": 415.52,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 150.0,
+            "UNIT PRICE": 60.86,
+            "TOTAL VALUE": 9129.0,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "",
+            "QUANTITY-SET": 26.0,
+            "UNIT PRICE": 60.86,
+            "TOTAL VALUE": 1582.36,
+            "VALUTA": "EUR",
+            "INVOICENUMBER": "",
+            "INVOICEDATE": "",
+            "VATNO": "",
+            "EORI": ""
+        }
+    ],
+    "packinglist_items": [
+        {
+            "CARTON": 11.8,
+            "QUANTITY-SET": 240.0,
+            "GROSS": 0.0,
+            "NET": 9.44
+        },
+        {
+            "CARTON": 26.2,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 20.96
+        },
+        {
+            "CARTON": 9.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 7.36
+        },
+        {
+            "CARTON": 9.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 7.36
+        },
+        {
+            "CARTON": 8.74,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 6.99
+        },
+        {
+            "CARTON": 7.0,
+            "QUANTITY-SET": 300.0,
+            "GROSS": 0.0,
+            "NET": 5.6
+        },
+        {
+            "CARTON": 31.92,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 25.54
+        },
+        {
+            "CARTON": 10.64,
+            "QUANTITY-SET": 8.0,
+            "GROSS": 0.0,
+            "NET": 8.51
+        },
+        {
+            "CARTON": 53.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 42.56
+        },
+        {
+            "CARTON": 5.9,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 4.72
+        },
+        {
+            "CARTON": 8.74,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 6.99
+        },
+        {
+            "CARTON": 8.6,
+            "QUANTITY-SET": 135.0,
+            "GROSS": 0.0,
+            "NET": 6.88
+        },
+        {
+            "CARTON": 5.9,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 4.72
+        },
+        {
+            "CARTON": 77.76,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 73.6
+        },
+        {
+            "CARTON": 1175.0,
+            "QUANTITY-SET": 2500.0,
+            "GROSS": 0.0,
+            "NET": 940.0
+        },
+        {
+            "CARTON": 611.0,
+            "QUANTITY-SET": 1300.0,
+            "GROSS": 0.0,
+            "NET": 488.8
+        },
+        {
+            "CARTON": 517.0,
+            "QUANTITY-SET": 1100.0,
+            "GROSS": 0.0,
+            "NET": 413.6
+        },
+        {
+            "CARTON": 470.0,
+            "QUANTITY-SET": 1000.0,
+            "GROSS": 0.0,
+            "NET": 376.0
+        },
+        {
+            "CARTON": 262.4,
+            "QUANTITY-SET": 640.0,
+            "GROSS": 0.0,
+            "NET": 209.92
+        },
+        {
+            "CARTON": 21.94,
+            "QUANTITY-SET": 270.0,
+            "GROSS": 0.0,
+            "NET": 17.55
+        },
+        {
+            "CARTON": 32.91,
+            "QUANTITY-SET": 405.0,
+            "GROSS": 0.0,
+            "NET": 26.33
+        },
+        {
+            "CARTON": 56.7,
+            "QUANTITY-SET": 84.0,
+            "GROSS": 0.0,
+            "NET": 45.36
+        },
+        {
+            "CARTON": 11.96,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.57
+        },
+        {
+            "CARTON": 129.45,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 120.6
+        },
+        {
+            "CARTON": 28.75,
+            "QUANTITY-SET": 100.0,
+            "GROSS": 0.0,
+            "NET": 23.0
+        },
+        {
+            "CARTON": 33.5,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 32.0
+        },
+        {
+            "CARTON": 32.9,
+            "QUANTITY-SET": 70.0,
+            "GROSS": 0.0,
+            "NET": 26.32
+        },
+        {
+            "CARTON": 131.2,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 104.96
+        },
+        {
+            "CARTON": 53.46,
+            "QUANTITY-SET": 220.0,
+            "GROSS": 0.0,
+            "NET": 50.6
+        },
+        {
+            "CARTON": 19.16,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 15.33
+        },
+        {
+            "CARTON": 18.8,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 15.04
+        },
+        {
+            "CARTON": 195.0,
+            "QUANTITY-SET": 225.0,
+            "GROSS": 0.0,
+            "NET": 156.0
+        },
+        {
+            "CARTON": 260.0,
+            "QUANTITY-SET": 300.0,
+            "GROSS": 0.0,
+            "NET": 208.0
+        },
+        {
+            "CARTON": 19.16,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 15.33
+        },
+        {
+            "CARTON": 34.79,
+            "QUANTITY-SET": 280.0,
+            "GROSS": 0.0,
+            "NET": 27.83
+        },
+        {
+            "CARTON": 207.74,
+            "QUANTITY-SET": 390.0,
+            "GROSS": 0.0,
+            "NET": 166.19
+        },
+        {
+            "CARTON": 169.0,
+            "QUANTITY-SET": 195.0,
+            "GROSS": 0.0,
+            "NET": 135.2
+        },
+        {
+            "CARTON": 52.0,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 41.6
+        },
+        {
+            "CARTON": 94.0,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 75.2
+        },
+        {
+            "CARTON": 10.1,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.6
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 54.45,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 43.56
+        },
+        {
+            "CARTON": 117.48,
+            "QUANTITY-SET": 144.0,
+            "GROSS": 0.0,
+            "NET": 93.98
+        },
+        {
+            "CARTON": 10.1,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.6
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 8.97,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 7.18
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 26.8,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 25.6
+        },
+        {
+            "CARTON": 90.5,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 72.4
+        },
+        {
+            "CARTON": 291.0,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 232.8
+        },
+        {
+            "CARTON": 183.94,
+            "QUANTITY-SET": 612.0,
+            "GROSS": 0.0,
+            "NET": 147.15
+        },
+        {
+            "CARTON": 6.62,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 6.4
+        },
+        {
+            "CARTON": 34.47,
+            "QUANTITY-SET": 12.0,
+            "GROSS": 0.0,
+            "NET": 27.58
+        },
+        {
+            "CARTON": 11.8,
+            "QUANTITY-SET": 20.0,
+            "GROSS": 0.0,
+            "NET": 9.44
+        },
+        {
+            "CARTON": 18.12,
+            "QUANTITY-SET": 32.0,
+            "GROSS": 0.0,
+            "NET": 14.4
+        },
+        {
+            "CARTON": 18.12,
+            "QUANTITY-SET": 32.0,
+            "GROSS": 0.0,
+            "NET": 14.4
+        },
+        {
+            "CARTON": 44.58,
+            "QUANTITY-SET": 72.0,
+            "GROSS": 0.0,
+            "NET": 33.12
+        },
+        {
+            "CARTON": 83.52,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 66.82
+        },
+        {
+            "CARTON": 22.95,
+            "QUANTITY-SET": 450.0,
+            "GROSS": 0.0,
+            "NET": 18.36
+        },
+        {
+            "CARTON": 83.52,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 66.82
+        },
+        {
+            "CARTON": 10.35,
+            "QUANTITY-SET": 21.0,
+            "GROSS": 0.0,
+            "NET": 9.45
+        },
+        {
+            "CARTON": 23.6,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 18.88
+        },
+        {
+            "CARTON": 92.48,
+            "QUANTITY-SET": 1280.0,
+            "GROSS": 0.0,
+            "NET": 73.98
+        },
+        {
+            "CARTON": 46.34,
+            "QUANTITY-SET": 280.0,
+            "GROSS": 0.0,
+            "NET": 44.8
+        },
+        {
+            "CARTON": 786.0,
+            "QUANTITY-SET": 3000.0,
+            "GROSS": 0.0,
+            "NET": 628.8
+        },
+        {
+            "CARTON": 173.4,
+            "QUANTITY-SET": 2400.0,
+            "GROSS": 0.0,
+            "NET": 138.72
+        },
+        {
+            "CARTON": 231.2,
+            "QUANTITY-SET": 3200.0,
+            "GROSS": 0.0,
+            "NET": 184.96
+        },
+        {
+            "CARTON": 8.56,
+            "QUANTITY-SET": 4.0,
+            "GROSS": 0.0,
+            "NET": 6.85
+        },
+        {
+            "CARTON": 5.8,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 4.64
+        },
+        {
+            "CARTON": 27.36,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 21.89
+        },
+        {
+            "CARTON": 454.44,
+            "QUANTITY-SET": 1512.0,
+            "GROSS": 0.0,
+            "NET": 363.55
+        },
+        {
+            "CARTON": 35.88,
+            "QUANTITY-SET": 192.0,
+            "GROSS": 0.0,
+            "NET": 28.7
+        },
+        {
+            "CARTON": 43.28,
+            "QUANTITY-SET": 144.0,
+            "GROSS": 0.0,
+            "NET": 34.62
+        },
+        {
+            "CARTON": 20.1,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 16.08
+        },
+        {
+            "CARTON": 127.3,
+            "QUANTITY-SET": 760.0,
+            "GROSS": 0.0,
+            "NET": 101.84
+        },
+        {
+            "CARTON": 80.4,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 64.32
+        },
+        {
+            "CARTON": 387.76,
+            "QUANTITY-SET": 1480.0,
+            "GROSS": 0.0,
+            "NET": 310.21
+        },
+        {
+            "CARTON": 10.48,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 8.38
+        },
+        {
+            "CARTON": 11.62,
+            "QUANTITY-SET": 151.0,
+            "GROSS": 0.0,
+            "NET": 9.3
+        },
+        {
+            "CARTON": 0.08,
+            "QUANTITY-SET": 1.0,
+            "GROSS": 0.0,
+            "NET": 0.06
+        },
+        {
+            "CARTON": 3.4,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 2.72
+        },
+        {
+            "CARTON": 13.1,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 10.48
+        },
+        {
+            "CARTON": 26.2,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 20.96
+        },
+        {
+            "CARTON": 28.5,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 22.8
+        },
+        {
+            "CARTON": 28.5,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 22.8
+        },
+        {
+            "CARTON": 63.92,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 51.14
+        },
+        {
+            "CARTON": 31.96,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 25.57
+        },
+        {
+            "CARTON": 163.24,
+            "QUANTITY-SET": 112.0,
+            "GROSS": 0.0,
+            "NET": 130.59
+        },
+        {
+            "CARTON": 23.32,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 18.66
+        },
+        {
+            "CARTON": 274.12,
+            "QUANTITY-SET": 336.0,
+            "GROSS": 0.0,
+            "NET": 219.3
+        },
+        {
+            "CARTON": 166.43,
+            "QUANTITY-SET": 204.0,
+            "GROSS": 0.0,
+            "NET": 133.14
+        },
+        {
+            "CARTON": 33.1,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 32.0
+        },
+        {
+            "CARTON": 105.92,
+            "QUANTITY-SET": 640.0,
+            "GROSS": 0.0,
+            "NET": 102.4
+        },
+        {
+            "CARTON": 156.0,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 124.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 263.2,
+            "QUANTITY-SET": 560.0,
+            "GROSS": 0.0,
+            "NET": 210.56
+        },
+        {
+            "CARTON": 451.2,
+            "QUANTITY-SET": 960.0,
+            "GROSS": 0.0,
+            "NET": 360.96
+        },
+        {
+            "CARTON": 225.6,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 180.48
+        },
+        {
+            "CARTON": 13.24,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 12.8
+        },
+        {
+            "CARTON": 139.02,
+            "QUANTITY-SET": 840.0,
+            "GROSS": 0.0,
+            "NET": 134.4
+        },
+        {
+            "CARTON": 22.94,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 18.35
+        },
+        {
+            "CARTON": 11.47,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 9.18
+        },
+        {
+            "CARTON": 91.76,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 73.41
+        },
+        {
+            "CARTON": 103.23,
+            "QUANTITY-SET": 540.0,
+            "GROSS": 0.0,
+            "NET": 82.58
+        },
+        {
+            "CARTON": 45.88,
+            "QUANTITY-SET": 240.0,
+            "GROSS": 0.0,
+            "NET": 36.7
+        },
+        {
+            "CARTON": 251.6,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 201.28
+        },
+        {
+            "CARTON": 21.94,
+            "QUANTITY-SET": 270.0,
+            "GROSS": 0.0,
+            "NET": 17.55
+        },
+        {
+            "CARTON": 10.82,
+            "QUANTITY-SET": 36.0,
+            "GROSS": 0.0,
+            "NET": 8.66
+        },
+        {
+            "CARTON": 10.82,
+            "QUANTITY-SET": 36.0,
+            "GROSS": 0.0,
+            "NET": 8.66
+        },
+        {
+            "CARTON": 172.5,
+            "QUANTITY-SET": 1350.0,
+            "GROSS": 0.0,
+            "NET": 138.0
+        },
+        {
+            "CARTON": 49.2,
+            "QUANTITY-SET": 750.0,
+            "GROSS": 0.0,
+            "NET": 39.36
+        },
+        {
+            "CARTON": 26.4,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 21.12
+        },
+        {
+            "CARTON": 10.56,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 8.45
+        },
+        {
+            "CARTON": 5.35,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 4.28
+        },
+        {
+            "CARTON": 816.2,
+            "QUANTITY-SET": 530.0,
+            "GROSS": 0.0,
+            "NET": 652.96
+        },
+        {
+            "CARTON": 154.0,
+            "QUANTITY-SET": 100.0,
+            "GROSS": 0.0,
+            "NET": 123.2
+        },
+        {
+            "CARTON": 22.94,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 18.35
+        },
+        {
+            "CARTON": 0.58,
+            "QUANTITY-SET": 3.0,
+            "GROSS": 0.0,
+            "NET": 0.46
+        },
+        {
+            "CARTON": 10.9,
+            "QUANTITY-SET": 57.0,
+            "GROSS": 0.0,
+            "NET": 8.72
+        },
+        {
+            "CARTON": 7.01,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 5.61
+        },
+        {
+            "CARTON": 16.34,
+            "QUANTITY-SET": 56.0,
+            "GROSS": 0.0,
+            "NET": 13.07
+        },
+        {
+            "CARTON": 235.88,
+            "QUANTITY-SET": 150.0,
+            "GROSS": 0.0,
+            "NET": 188.7
+        },
+        {
+            "CARTON": 40.89,
+            "QUANTITY-SET": 26.0,
+            "GROSS": 0.0,
+            "NET": 32.71
+        }
+    ]
+}

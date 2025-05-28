@@ -1,0 +1,2296 @@
+{
+    "INVOICENUMBER": "WC0001DE20250429013416-0S",
+    "INVOICEDATE": "WC0001DE20250429013416-0S",
+    "VATNO": "DE 329617989",
+    "EORI": "MT26966813",
+    "invoice_items": [
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Interface converter brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 240.0,
+            "TOTAL VALUE": 3.4,
+            "VALUTA": 816.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 160.0,
+            "TOTAL VALUE": 13.6,
+            "VALUTA": 2176.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Docking Station brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 12.72,
+            "VALUTA": 508.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Docking Station brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 12.72,
+            "VALUTA": 508.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 11.08,
+            "VALUTA": 886.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Interface converter brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 300.0,
+            "TOTAL VALUE": 2.39,
+            "VALUTA": 717.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Docking Station brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 24.0,
+            "TOTAL VALUE": 54.78,
+            "VALUTA": 1314.72,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Docking Station brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 8.0,
+            "TOTAL VALUE": 54.78,
+            "VALUTA": 438.24,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Docking Station brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 54.78,
+            "VALUTA": 2191.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Interface converter brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 3.4,
+            "VALUTA": 408.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 11.08,
+            "VALUTA": 886.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8543709099 ",
+            "DESCRIPTION OF GOODS": "KVM Switch brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 135.0,
+            "TOTAL VALUE": 2.82,
+            "VALUTA": 380.7,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Interface converter brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 3.4,
+            "VALUTA": 408.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Earphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 320.0,
+            "TOTAL VALUE": 31.88,
+            "VALUTA": 10201.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 2500.0,
+            "TOTAL VALUE": 11.46,
+            "VALUTA": 28650.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1300.0,
+            "TOTAL VALUE": 11.46,
+            "VALUTA": 14898.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1100.0,
+            "TOTAL VALUE": 11.48,
+            "VALUTA": 12628.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1000.0,
+            "TOTAL VALUE": 11.48,
+            "VALUTA": 11480.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 640.0,
+            "TOTAL VALUE": 8.24,
+            "VALUTA": 5273.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for mobile phone charging brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 270.0,
+            "TOTAL VALUE": 4.16,
+            "VALUTA": 1123.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for mobile phone charging brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 405.0,
+            "TOTAL VALUE": 4.16,
+            "VALUTA": 1684.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "wireless charger, brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 84.0,
+            "TOTAL VALUE": 26.56,
+            "VALUTA": 2231.04,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 64.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 371.84,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 20000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 29.28,
+            "VALUTA": 5270.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 10000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 100.0,
+            "TOTAL VALUE": 12.1,
+            "VALUTA": 1210.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 200.0,
+            "TOTAL VALUE": 7.43,
+            "VALUTA": 1486.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 70.0,
+            "TOTAL VALUE": 11.48,
+            "VALUTA": 803.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 320.0,
+            "TOTAL VALUE": 8.24,
+            "VALUTA": 2636.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Earphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 220.0,
+            "TOTAL VALUE": 32.07,
+            "VALUTA": 7055.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Earphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 20.31,
+            "VALUTA": 1624.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 9.3,
+            "VALUTA": 372.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 225.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 4707.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 300.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 6276.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Earphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 20.31,
+            "VALUTA": 1624.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Earphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 280.0,
+            "TOTAL VALUE": 8.28,
+            "VALUTA": 2318.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Solar solocam brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 390.0,
+            "TOTAL VALUE": 21.47,
+            "VALUTA": 8373.3,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 195.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 4079.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 60.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 1255.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 200.0,
+            "TOTAL VALUE": 11.31,
+            "VALUTA": 2262.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 64.0,
+            "TOTAL VALUE": 8.35,
+            "VALUTA": 534.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 92.96,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 92.96,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 10.17,
+            "VALUTA": 1830.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 144.0,
+            "TOTAL VALUE": 21.75,
+            "VALUTA": 3132.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 64.0,
+            "TOTAL VALUE": 8.35,
+            "VALUTA": 534.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 92.96,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 92.96,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 48.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 278.88,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 92.96,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 160.0,
+            "TOTAL VALUE": 7.43,
+            "VALUTA": 1188.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Wireless charger for mobile phone brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 200.0,
+            "TOTAL VALUE": 12.26,
+            "VALUTA": 2452.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Wall light camera brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 41.25,
+            "VALUTA": 7425.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 612.0,
+            "TOTAL VALUE": 8.73,
+            "VALUTA": 5342.76,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 296.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518220090 ",
+            "DESCRIPTION OF GOODS": "Multi horn wireless speaker brand:Soundcore",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 12.0,
+            "TOTAL VALUE": 53.5,
+            "VALUTA": 642.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518100090 ",
+            "DESCRIPTION OF GOODS": "wireless microphone Brand:Ankerwork",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 20.0,
+            "TOTAL VALUE": 89.92,
+            "VALUTA": 1798.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8517691000 ",
+            "DESCRIPTION OF GOODS": "Video Doorbell brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 32.0,
+            "TOTAL VALUE": 25.8,
+            "VALUTA": 825.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8517691000 ",
+            "DESCRIPTION OF GOODS": "Video Doorbell brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 32.0,
+            "TOTAL VALUE": 25.12,
+            "VALUTA": 803.84,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 72.0,
+            "TOTAL VALUE": 16.88,
+            "VALUTA": 1215.36,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 320.0,
+            "TOTAL VALUE": 4.81,
+            "VALUTA": 1539.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for mobile phone charging brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 450.0,
+            "TOTAL VALUE": 2.98,
+            "VALUTA": 1341.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 320.0,
+            "TOTAL VALUE": 4.81,
+            "VALUTA": 1539.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8543709099 ",
+            "DESCRIPTION OF GOODS": "KVM Switch brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 21.0,
+            "TOTAL VALUE": 24.63,
+            "VALUTA": 517.23,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "Interface converter brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 480.0,
+            "TOTAL VALUE": 3.4,
+            "VALUTA": 1632.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1280.0,
+            "TOTAL VALUE": 1.38,
+            "VALUTA": 1766.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 280.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 2072.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 3000.0,
+            "TOTAL VALUE": 4.75,
+            "VALUTA": 14250.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 2400.0,
+            "TOTAL VALUE": 1.38,
+            "VALUTA": 3312.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 3200.0,
+            "TOTAL VALUE": 1.38,
+            "VALUTA": 4416.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "4202929190 ",
+            "DESCRIPTION OF GOODS": "Nebula Cosmos Laser Carry Case brand:Nebula",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 4.0,
+            "TOTAL VALUE": 14.86,
+            "VALUTA": 59.44,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "4202929190 ",
+            "DESCRIPTION OF GOODS": "Travel Case brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 2.91,
+            "VALUTA": 232.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8517620000 ",
+            "DESCRIPTION OF GOODS": "WiFi Bridge Brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 9.9,
+            "VALUTA": 1188.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1512.0,
+            "TOTAL VALUE": 8.73,
+            "VALUTA": 13199.76,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion  Battery pack",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 192.0,
+            "TOTAL VALUE": 5.81,
+            "VALUTA": 1115.52,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 144.0,
+            "TOTAL VALUE": 8.73,
+            "VALUTA": 1257.12,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "Mouse for PC brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 4.86,
+            "VALUTA": 583.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "Mouse for PC brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 760.0,
+            "TOTAL VALUE": 4.86,
+            "VALUTA": 3693.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471607000 ",
+            "DESCRIPTION OF GOODS": "Mouse for PC brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 480.0,
+            "TOTAL VALUE": 4.86,
+            "VALUTA": 2332.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1480.0,
+            "TOTAL VALUE": 4.75,
+            "VALUTA": 7030.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 40.0,
+            "TOTAL VALUE": 4.75,
+            "VALUTA": 190.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 151.0,
+            "TOTAL VALUE": 2.26,
+            "VALUTA": 341.26,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1.0,
+            "TOTAL VALUE": 2.26,
+            "VALUTA": 2.26,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 48.0,
+            "TOTAL VALUE": 2.26,
+            "VALUTA": 108.48,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 13.6,
+            "VALUTA": 1088.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 160.0,
+            "TOTAL VALUE": 13.6,
+            "VALUTA": 2176.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 20.37,
+            "VALUTA": 3666.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8471800000 ",
+            "DESCRIPTION OF GOODS": "USB HUB brand\uff1aAnker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 20.37,
+            "VALUTA": 3666.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Solar solocam brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 21.47,
+            "VALUTA": 2576.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Solar solocam brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 60.0,
+            "TOTAL VALUE": 21.47,
+            "VALUTA": 1288.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 27650mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 112.0,
+            "TOTAL VALUE": 63.16,
+            "VALUTA": 7073.92,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 27650mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 16.0,
+            "TOTAL VALUE": 63.16,
+            "VALUTA": 1010.56,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 336.0,
+            "TOTAL VALUE": 21.75,
+            "VALUTA": 7308.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 204.0,
+            "TOTAL VALUE": 21.75,
+            "VALUTA": 4437.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 200.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 1480.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 640.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 4736.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 180.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 3765.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 105.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 2196.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 105.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 2196.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 105.0,
+            "TOTAL VALUE": 20.92,
+            "VALUTA": 2196.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 560.0,
+            "TOTAL VALUE": 11.31,
+            "VALUTA": 6333.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 960.0,
+            "TOTAL VALUE": 11.31,
+            "VALUTA": 10857.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8518300090 ",
+            "DESCRIPTION OF GOODS": "Wireless Headphones",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 480.0,
+            "TOTAL VALUE": 11.31,
+            "VALUTA": 5428.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 80.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 592.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 840.0,
+            "TOTAL VALUE": 7.4,
+            "VALUTA": 6216.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 903.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 60.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 451.8,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 480.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 3614.4,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 540.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 4066.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 240.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 1807.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Monitor camera suit brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 160.0,
+            "TOTAL VALUE": 60.86,
+            "VALUTA": 9737.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for mobile phone charging brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 270.0,
+            "TOTAL VALUE": 4.16,
+            "VALUTA": 1123.2,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 36.0,
+            "TOTAL VALUE": 8.73,
+            "VALUTA": 314.28,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 36.0,
+            "TOTAL VALUE": 8.73,
+            "VALUTA": 314.28,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 1350.0,
+            "TOTAL VALUE": 5.56,
+            "VALUTA": 7506.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8504409590 ",
+            "DESCRIPTION OF GOODS": "Charger for mobile phone.brand:Anker",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 750.0,
+            "TOTAL VALUE": 2.94,
+            "VALUTA": 2205.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for solar panel charging",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 3.0,
+            "VALUTA": 360.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for solar panel charging",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 48.0,
+            "TOTAL VALUE": 3.0,
+            "VALUTA": 144.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8544429090 ",
+            "DESCRIPTION OF GOODS": "cable for solar panel charging",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 24.0,
+            "TOTAL VALUE": 3.0,
+            "VALUTA": 72.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8423109000 ",
+            "DESCRIPTION OF GOODS": "Electronic weight meter brand:eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 530.0,
+            "TOTAL VALUE": 5.17,
+            "VALUTA": 2740.1,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8423109000 ",
+            "DESCRIPTION OF GOODS": "Electronic weight meter brand:eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 100.0,
+            "TOTAL VALUE": 5.17,
+            "VALUTA": 517.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 120.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 903.6,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 3.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 22.59,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 57.0,
+            "TOTAL VALUE": 7.53,
+            "VALUTA": 429.21,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 24.0,
+            "TOTAL VALUE": 7.42,
+            "VALUTA": 178.08,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8507600090 ",
+            "DESCRIPTION OF GOODS": "Lithium-ion External Battery brand:Anker 5000mAh",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 56.0,
+            "TOTAL VALUE": 7.42,
+            "VALUTA": 415.52,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Monitor camera suit brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 150.0,
+            "TOTAL VALUE": 60.86,
+            "VALUTA": 9129.0,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        },
+        {
+            "HS CODE": "8525890000 ",
+            "DESCRIPTION OF GOODS": "Monitor camera suit brand:Eufy",
+            "QUANTITY-SET": "",
+            "UNIT PRICE": 26.0,
+            "TOTAL VALUE": 60.86,
+            "VALUTA": 1582.36,
+            "INVOICENUMBER": "WC0001DE20250429013416-0S",
+            "INVOICEDATE": "WC0001DE20250429013416-0S",
+            "VATNO": "DE 329617989",
+            "EORI": "MT26966813"
+        }
+    ],
+    "packinglist_items": [
+        {
+            "CARTON": 11.8,
+            "QUANTITY-SET": 240.0,
+            "GROSS": 0.0,
+            "NET": 9.44
+        },
+        {
+            "CARTON": 26.2,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 20.96
+        },
+        {
+            "CARTON": 9.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 7.36
+        },
+        {
+            "CARTON": 9.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 7.36
+        },
+        {
+            "CARTON": 8.74,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 6.99
+        },
+        {
+            "CARTON": 7.0,
+            "QUANTITY-SET": 300.0,
+            "GROSS": 0.0,
+            "NET": 5.6
+        },
+        {
+            "CARTON": 31.92,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 25.54
+        },
+        {
+            "CARTON": 10.64,
+            "QUANTITY-SET": 8.0,
+            "GROSS": 0.0,
+            "NET": 8.51
+        },
+        {
+            "CARTON": 53.2,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 42.56
+        },
+        {
+            "CARTON": 5.9,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 4.72
+        },
+        {
+            "CARTON": 8.74,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 6.99
+        },
+        {
+            "CARTON": 8.6,
+            "QUANTITY-SET": 135.0,
+            "GROSS": 0.0,
+            "NET": 6.88
+        },
+        {
+            "CARTON": 5.9,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 4.72
+        },
+        {
+            "CARTON": 77.76,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 73.6
+        },
+        {
+            "CARTON": 1175.0,
+            "QUANTITY-SET": 2500.0,
+            "GROSS": 0.0,
+            "NET": 940.0
+        },
+        {
+            "CARTON": 611.0,
+            "QUANTITY-SET": 1300.0,
+            "GROSS": 0.0,
+            "NET": 488.8
+        },
+        {
+            "CARTON": 517.0,
+            "QUANTITY-SET": 1100.0,
+            "GROSS": 0.0,
+            "NET": 413.6
+        },
+        {
+            "CARTON": 470.0,
+            "QUANTITY-SET": 1000.0,
+            "GROSS": 0.0,
+            "NET": 376.0
+        },
+        {
+            "CARTON": 262.4,
+            "QUANTITY-SET": 640.0,
+            "GROSS": 0.0,
+            "NET": 209.92
+        },
+        {
+            "CARTON": 21.94,
+            "QUANTITY-SET": 270.0,
+            "GROSS": 0.0,
+            "NET": 17.55
+        },
+        {
+            "CARTON": 32.91,
+            "QUANTITY-SET": 405.0,
+            "GROSS": 0.0,
+            "NET": 26.33
+        },
+        {
+            "CARTON": 56.7,
+            "QUANTITY-SET": 84.0,
+            "GROSS": 0.0,
+            "NET": 45.36
+        },
+        {
+            "CARTON": 11.96,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.57
+        },
+        {
+            "CARTON": 129.45,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 120.6
+        },
+        {
+            "CARTON": 28.75,
+            "QUANTITY-SET": 100.0,
+            "GROSS": 0.0,
+            "NET": 23.0
+        },
+        {
+            "CARTON": 33.5,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 32.0
+        },
+        {
+            "CARTON": 32.9,
+            "QUANTITY-SET": 70.0,
+            "GROSS": 0.0,
+            "NET": 26.32
+        },
+        {
+            "CARTON": 131.2,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 104.96
+        },
+        {
+            "CARTON": 53.46,
+            "QUANTITY-SET": 220.0,
+            "GROSS": 0.0,
+            "NET": 50.6
+        },
+        {
+            "CARTON": 19.16,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 15.33
+        },
+        {
+            "CARTON": 18.8,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 15.04
+        },
+        {
+            "CARTON": 195.0,
+            "QUANTITY-SET": 225.0,
+            "GROSS": 0.0,
+            "NET": 156.0
+        },
+        {
+            "CARTON": 260.0,
+            "QUANTITY-SET": 300.0,
+            "GROSS": 0.0,
+            "NET": 208.0
+        },
+        {
+            "CARTON": 19.16,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 15.33
+        },
+        {
+            "CARTON": 34.79,
+            "QUANTITY-SET": 280.0,
+            "GROSS": 0.0,
+            "NET": 27.83
+        },
+        {
+            "CARTON": 207.74,
+            "QUANTITY-SET": 390.0,
+            "GROSS": 0.0,
+            "NET": 166.19
+        },
+        {
+            "CARTON": 169.0,
+            "QUANTITY-SET": 195.0,
+            "GROSS": 0.0,
+            "NET": 135.2
+        },
+        {
+            "CARTON": 52.0,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 41.6
+        },
+        {
+            "CARTON": 94.0,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 75.2
+        },
+        {
+            "CARTON": 10.1,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.6
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 54.45,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 43.56
+        },
+        {
+            "CARTON": 117.48,
+            "QUANTITY-SET": 144.0,
+            "GROSS": 0.0,
+            "NET": 93.98
+        },
+        {
+            "CARTON": 10.1,
+            "QUANTITY-SET": 64.0,
+            "GROSS": 0.0,
+            "NET": 9.6
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 8.97,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 7.18
+        },
+        {
+            "CARTON": 2.99,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 2.39
+        },
+        {
+            "CARTON": 26.8,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 25.6
+        },
+        {
+            "CARTON": 90.5,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 72.4
+        },
+        {
+            "CARTON": 291.0,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 232.8
+        },
+        {
+            "CARTON": 183.94,
+            "QUANTITY-SET": 612.0,
+            "GROSS": 0.0,
+            "NET": 147.15
+        },
+        {
+            "CARTON": 6.62,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 6.4
+        },
+        {
+            "CARTON": 34.47,
+            "QUANTITY-SET": 12.0,
+            "GROSS": 0.0,
+            "NET": 27.58
+        },
+        {
+            "CARTON": 11.8,
+            "QUANTITY-SET": 20.0,
+            "GROSS": 0.0,
+            "NET": 9.44
+        },
+        {
+            "CARTON": 18.12,
+            "QUANTITY-SET": 32.0,
+            "GROSS": 0.0,
+            "NET": 14.4
+        },
+        {
+            "CARTON": 18.12,
+            "QUANTITY-SET": 32.0,
+            "GROSS": 0.0,
+            "NET": 14.4
+        },
+        {
+            "CARTON": 44.58,
+            "QUANTITY-SET": 72.0,
+            "GROSS": 0.0,
+            "NET": 33.12
+        },
+        {
+            "CARTON": 83.52,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 66.82
+        },
+        {
+            "CARTON": 22.95,
+            "QUANTITY-SET": 450.0,
+            "GROSS": 0.0,
+            "NET": 18.36
+        },
+        {
+            "CARTON": 83.52,
+            "QUANTITY-SET": 320.0,
+            "GROSS": 0.0,
+            "NET": 66.82
+        },
+        {
+            "CARTON": 10.35,
+            "QUANTITY-SET": 21.0,
+            "GROSS": 0.0,
+            "NET": 9.45
+        },
+        {
+            "CARTON": 23.6,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 18.88
+        },
+        {
+            "CARTON": 92.48,
+            "QUANTITY-SET": 1280.0,
+            "GROSS": 0.0,
+            "NET": 73.98
+        },
+        {
+            "CARTON": 46.34,
+            "QUANTITY-SET": 280.0,
+            "GROSS": 0.0,
+            "NET": 44.8
+        },
+        {
+            "CARTON": 786.0,
+            "QUANTITY-SET": 3000.0,
+            "GROSS": 0.0,
+            "NET": 628.8
+        },
+        {
+            "CARTON": 173.4,
+            "QUANTITY-SET": 2400.0,
+            "GROSS": 0.0,
+            "NET": 138.72
+        },
+        {
+            "CARTON": 231.2,
+            "QUANTITY-SET": 3200.0,
+            "GROSS": 0.0,
+            "NET": 184.96
+        },
+        {
+            "CARTON": 8.56,
+            "QUANTITY-SET": 4.0,
+            "GROSS": 0.0,
+            "NET": 6.85
+        },
+        {
+            "CARTON": 5.8,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 4.64
+        },
+        {
+            "CARTON": 27.36,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 21.89
+        },
+        {
+            "CARTON": 454.44,
+            "QUANTITY-SET": 1512.0,
+            "GROSS": 0.0,
+            "NET": 363.55
+        },
+        {
+            "CARTON": 35.88,
+            "QUANTITY-SET": 192.0,
+            "GROSS": 0.0,
+            "NET": 28.7
+        },
+        {
+            "CARTON": 43.28,
+            "QUANTITY-SET": 144.0,
+            "GROSS": 0.0,
+            "NET": 34.62
+        },
+        {
+            "CARTON": 20.1,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 16.08
+        },
+        {
+            "CARTON": 127.3,
+            "QUANTITY-SET": 760.0,
+            "GROSS": 0.0,
+            "NET": 101.84
+        },
+        {
+            "CARTON": 80.4,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 64.32
+        },
+        {
+            "CARTON": 387.76,
+            "QUANTITY-SET": 1480.0,
+            "GROSS": 0.0,
+            "NET": 310.21
+        },
+        {
+            "CARTON": 10.48,
+            "QUANTITY-SET": 40.0,
+            "GROSS": 0.0,
+            "NET": 8.38
+        },
+        {
+            "CARTON": 11.62,
+            "QUANTITY-SET": 151.0,
+            "GROSS": 0.0,
+            "NET": 9.3
+        },
+        {
+            "CARTON": 0.08,
+            "QUANTITY-SET": 1.0,
+            "GROSS": 0.0,
+            "NET": 0.06
+        },
+        {
+            "CARTON": 3.4,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 2.72
+        },
+        {
+            "CARTON": 13.1,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 10.48
+        },
+        {
+            "CARTON": 26.2,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 20.96
+        },
+        {
+            "CARTON": 28.5,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 22.8
+        },
+        {
+            "CARTON": 28.5,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 22.8
+        },
+        {
+            "CARTON": 63.92,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 51.14
+        },
+        {
+            "CARTON": 31.96,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 25.57
+        },
+        {
+            "CARTON": 163.24,
+            "QUANTITY-SET": 112.0,
+            "GROSS": 0.0,
+            "NET": 130.59
+        },
+        {
+            "CARTON": 23.32,
+            "QUANTITY-SET": 16.0,
+            "GROSS": 0.0,
+            "NET": 18.66
+        },
+        {
+            "CARTON": 274.12,
+            "QUANTITY-SET": 336.0,
+            "GROSS": 0.0,
+            "NET": 219.3
+        },
+        {
+            "CARTON": 166.43,
+            "QUANTITY-SET": 204.0,
+            "GROSS": 0.0,
+            "NET": 133.14
+        },
+        {
+            "CARTON": 33.1,
+            "QUANTITY-SET": 200.0,
+            "GROSS": 0.0,
+            "NET": 32.0
+        },
+        {
+            "CARTON": 105.92,
+            "QUANTITY-SET": 640.0,
+            "GROSS": 0.0,
+            "NET": 102.4
+        },
+        {
+            "CARTON": 156.0,
+            "QUANTITY-SET": 180.0,
+            "GROSS": 0.0,
+            "NET": 124.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 91.0,
+            "QUANTITY-SET": 105.0,
+            "GROSS": 0.0,
+            "NET": 72.8
+        },
+        {
+            "CARTON": 263.2,
+            "QUANTITY-SET": 560.0,
+            "GROSS": 0.0,
+            "NET": 210.56
+        },
+        {
+            "CARTON": 451.2,
+            "QUANTITY-SET": 960.0,
+            "GROSS": 0.0,
+            "NET": 360.96
+        },
+        {
+            "CARTON": 225.6,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 180.48
+        },
+        {
+            "CARTON": 13.24,
+            "QUANTITY-SET": 80.0,
+            "GROSS": 0.0,
+            "NET": 12.8
+        },
+        {
+            "CARTON": 139.02,
+            "QUANTITY-SET": 840.0,
+            "GROSS": 0.0,
+            "NET": 134.4
+        },
+        {
+            "CARTON": 22.94,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 18.35
+        },
+        {
+            "CARTON": 11.47,
+            "QUANTITY-SET": 60.0,
+            "GROSS": 0.0,
+            "NET": 9.18
+        },
+        {
+            "CARTON": 91.76,
+            "QUANTITY-SET": 480.0,
+            "GROSS": 0.0,
+            "NET": 73.41
+        },
+        {
+            "CARTON": 103.23,
+            "QUANTITY-SET": 540.0,
+            "GROSS": 0.0,
+            "NET": 82.58
+        },
+        {
+            "CARTON": 45.88,
+            "QUANTITY-SET": 240.0,
+            "GROSS": 0.0,
+            "NET": 36.7
+        },
+        {
+            "CARTON": 251.6,
+            "QUANTITY-SET": 160.0,
+            "GROSS": 0.0,
+            "NET": 201.28
+        },
+        {
+            "CARTON": 21.94,
+            "QUANTITY-SET": 270.0,
+            "GROSS": 0.0,
+            "NET": 17.55
+        },
+        {
+            "CARTON": 10.82,
+            "QUANTITY-SET": 36.0,
+            "GROSS": 0.0,
+            "NET": 8.66
+        },
+        {
+            "CARTON": 10.82,
+            "QUANTITY-SET": 36.0,
+            "GROSS": 0.0,
+            "NET": 8.66
+        },
+        {
+            "CARTON": 172.5,
+            "QUANTITY-SET": 1350.0,
+            "GROSS": 0.0,
+            "NET": 138.0
+        },
+        {
+            "CARTON": 49.2,
+            "QUANTITY-SET": 750.0,
+            "GROSS": 0.0,
+            "NET": 39.36
+        },
+        {
+            "CARTON": 26.4,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 21.12
+        },
+        {
+            "CARTON": 10.56,
+            "QUANTITY-SET": 48.0,
+            "GROSS": 0.0,
+            "NET": 8.45
+        },
+        {
+            "CARTON": 5.35,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 4.28
+        },
+        {
+            "CARTON": 816.2,
+            "QUANTITY-SET": 530.0,
+            "GROSS": 0.0,
+            "NET": 652.96
+        },
+        {
+            "CARTON": 154.0,
+            "QUANTITY-SET": 100.0,
+            "GROSS": 0.0,
+            "NET": 123.2
+        },
+        {
+            "CARTON": 22.94,
+            "QUANTITY-SET": 120.0,
+            "GROSS": 0.0,
+            "NET": 18.35
+        },
+        {
+            "CARTON": 0.58,
+            "QUANTITY-SET": 3.0,
+            "GROSS": 0.0,
+            "NET": 0.46
+        },
+        {
+            "CARTON": 10.9,
+            "QUANTITY-SET": 57.0,
+            "GROSS": 0.0,
+            "NET": 8.72
+        },
+        {
+            "CARTON": 7.01,
+            "QUANTITY-SET": 24.0,
+            "GROSS": 0.0,
+            "NET": 5.61
+        },
+        {
+            "CARTON": 16.34,
+            "QUANTITY-SET": 56.0,
+            "GROSS": 0.0,
+            "NET": 13.07
+        },
+        {
+            "CARTON": 235.88,
+            "QUANTITY-SET": 150.0,
+            "GROSS": 0.0,
+            "NET": 188.7
+        },
+        {
+            "CARTON": 40.89,
+            "QUANTITY-SET": 26.0,
+            "GROSS": 0.0,
+            "NET": 32.71
+        }
+    ]
+}
