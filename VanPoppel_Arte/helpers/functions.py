@@ -82,7 +82,6 @@ def clean_invoice_items(combined_result):
 
     for item in combined_result.get("items", []):
         try:
-            
             TotalNetWeight += safe_float_conversion(item.get("net_weight", "0").replace("KG", "").strip())
             TotalSurface += safe_float_conversion(item.get("surface", "0").replace("M2", "").strip())   
             TotalQuantity += safe_int_conversion(safe_float_conversion(item.get("quantity", "0").strip()))
@@ -111,7 +110,7 @@ def clean_invoice_items(combined_result):
             cleaned_items.append(cleaned_item)
 
         except Exception as e:
-            continue
+            logging.error(f"Error processing item {item}: {e}")
 
     # Replace items with cleaned version
     combined_result["items"] = cleaned_items

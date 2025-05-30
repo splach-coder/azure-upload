@@ -8,8 +8,8 @@ import fitz
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.OpenAI.custom_call import CustomCall
-from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm, find_page_in_invoice
-from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_body, merge_invoice_outputs, safe_int_conversion
+from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_customs_code, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm, find_page_in_invoice
+from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_body, merge_invoice_outputs, safe_float_conversion, safe_int_conversion
 from VanPoppel_Arte.excel.create_excel import write_to_excel
 
 
@@ -108,11 +108,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # ----------------------------------------
         # 🔹 Extract Customs Code info from last page
         # ----------------------------------------
-        page = find_page_in_invoice(doc, ["customs authori"])
+        page = find_page_in_invoice(doc, ["customs", "The exporter of the products"])
         customs_no = None
         try:
             customs_page_text = doc[page[0]-1].get_text()
-            customs_no = extract_customs_authorization_no(customs_page_text)
+            customs_no = extract_customs_code(customs_page_text)
         except:
             logging.error("Customs authorization number not found or page extraction failed.")
                
@@ -130,9 +130,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     for doc in combined_data:
         for item in doc.get("items"):
             item["document_number"] = doc.get("header").get("document_number")
-            
     
-         
     combined_result = merge_invoice_outputs(combined_data)
     
     if len(combined_result.get("items")) > 1:
@@ -174,7 +172,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     combined_result["email_data"] = email_data
     
     # Proceed with data processing
-    try:
+    try: 
         excel_file= write_to_excel(combined_result)
         reference = combined_result.get("header").get("document_number")
 

@@ -2,6 +2,8 @@ import json
 import re
 import logging
 
+from AI_agents.OpenAI.custom_call import CustomCall
+
 def extract_products_from_text(text):
     lines = text.strip().splitlines()
     products = []
@@ -100,7 +102,6 @@ def extract_products_from_text(text):
 
     return results
 
-
 def extract_invoice_meta_and_shipping(text):
     meta = {}
 
@@ -164,7 +165,7 @@ def extract_totals_and_incoterm(text):
     return data
 
 def extract_customs_authorization_no(text):
-    match = re.search(r"customs authori[sz]ation (?:No|Nº)\s*([A-Z0-9]+)", text, re.IGNORECASE)
+    match = re.search(r"customs \s*([A-Z0-9]+)", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
     return None
@@ -196,3 +197,22 @@ def find_page_in_invoice(doc, keywords=["Total incl.VAT:", "Total excl. VAT:", "
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
+def extract_customs_code(text_content):
+    """Extract customs authorization code from text"""
+    custom_call = CustomCall()
+    
+    # System role for precise extraction
+    system_role = """You are a precise data extractor. Extract ONLY the customs authorization code from the text. 
+    Return ONLY the code value - no explanations, no labels, no additional text. 
+    If no customs authorization code is found, return 'NOT_FOUND'."""
+    
+    # User prompt
+    user_prompt = f"Extract the customs authorization code from this text: {text_content}"
+    
+    # Send request
+    result = custom_call.send_request(system_role, user_prompt)
+    
+    if result:
+        return result.strip()
+    else:
+        return "EXTRACTION_FAILED"

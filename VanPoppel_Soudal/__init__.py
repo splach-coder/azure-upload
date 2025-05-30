@@ -250,6 +250,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                  
     # Proceed with data processing
     try:
+        
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.")

@@ -80,7 +80,7 @@ def write_to_excel(json_string):
         "Invoicenumber",
         "Invoice date",
         "Rex/other",
-        "Batch"
+        "Surface"
     ]
     
     rows_data = []  # To store the processed rows for "items"
@@ -116,6 +116,8 @@ def write_to_excel(json_string):
                         mini_row.append(obj.get("date", ''))
                     elif ordered_key == "Rex/other":
                         mini_row.append(data.get("customs_no", ''))
+                    elif ordered_key == "Surface":
+                        mini_row.append(obj.get("surface", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
@@ -142,7 +144,7 @@ def write_to_excel(json_string):
     ws.append([total_pallets])
     ws.append(row_empty)
 
-    ws.append(["Total Gross"])
+    ws.append(["Total Gross", "Total Net"])
     total_Grossweight = email_data.get('gross_weight', 0)
     total_Netweight = totalsdata.get('TotalNetWeight', 0)
     ws.append([total_Grossweight, total_Netweight])

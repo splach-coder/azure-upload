@@ -12,7 +12,6 @@ import time
 
 from lili_maas_Anker_xls_merger.helpers.functions import fetch_exchange_rate
 from lili_maas_Anker_xls_merger.excel.create_excel import write_to_excel
-from AI_agents.OpenAI.CustomCallWithImage import CustomCallWithImage
 
 def safe_float(val):
     try:
