@@ -11,22 +11,23 @@ def write_to_excel(json_string):
 
     header = [
         "FIDNO",
-        "",
         "FREIGHT COST",
-        "",
         "Freight cost valuta",
-        "",
-        "USD"
+        "Exchange",
+        "Insurance Cost",
+        "Insurance Valuta",
+        "Exchange",
+        "EXTRA Fee Cost",
+        "Fee Valuta",
+        "Exchange",
     ] 
     
     header_values = [
         f"{data.get('INVOICENUMBER', '')}",
-        "",
         data.get('FreightFromImage', ''), 
-        "",
         data.get('InsuranceCurrency', ''),
-        "",
         data.get('ExchangeCalc', ''),
+        data.get('InsuranceFee', ''),
     ]
 
     items_header = [

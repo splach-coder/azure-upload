@@ -178,6 +178,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(json.dumps({"error": f"Error processing {filename}: {str(e)}"}), status_code=500)
 
     data = merge_json_items(data)
+    data["InsuranceCurrency"] = "EUR"
+    exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))
+    try : 
+        data["ExchangeCalc"] = 1 / exchange_rate
+    except ZeroDivisionError:
+        data["ExchangeCalc"] = 0.0
         
     try:       
         excel_file = write_to_excel(data)
