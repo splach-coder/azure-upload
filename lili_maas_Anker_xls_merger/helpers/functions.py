@@ -3,57 +3,53 @@ import copy
 import xml.etree.ElementTree as ET
 import requests
 
-def transform_json(json_data):
+def merge_json_items(json_obj):
     """
-    Function to transform JSON data by merging Sheet1_Items with Sheet3_Logistics
-    using multiple fields as matching criteria to handle duplicates
+    Merges invoice_items and packinglist_items arrays into a single 'items' array
+    based on matching QUANTITY-SET values.
     
     Args:
-        json_data (dict): The input JSON data
+        json_obj (dict): JSON object containing invoice_items and packinglist_items
         
     Returns:
-        dict: The transformed JSON with merged data
+        dict: Modified JSON object with merged items array
     """
-    # Create a deep copy of the input data
-    result = copy.deepcopy(json_data)
+    # Create a copy to avoid modifying the original
+    result = json_obj.copy()
     
-    # Rename Sheet1_Items to items
-    result['items'] = result['Sheet1_Items']
-    del result['Sheet1_Items']
+    # Initialize empty items array
+    result['items'] = []
     
-    # Create a more specific lookup by including all matching fields
-    logistics_map = {}
-    for item in json_data['Sheet3_Logistics']:
-        # Create a unique key using multiple fields to avoid duplicate matches
-        key = f"{item['Description']}_{item['Brand']}_{item['HS Code']}_{item['PCS']}_{item['SET']}_{item['CARTON']}"
-        logistics_map[key] = item
+    # Get the arrays
+    invoice_items = json_obj.get('invoice_items', [])
+    packinglist_items = json_obj.get('packinglist_items', [])
     
-    # Merge data from Sheet3_Logistics into items
-    for i, item in enumerate(result['items']):
-        # Use the same detailed key for matching
-        key = f"{item['Description']}_{item['Brand']}_{item['HS Code']}_{item['PCS']}_{item['SET']}_{item['CARTON']}"
-        
-        # If we have matching logistics data, add the Gross Weight and Net Weight
-        if key in logistics_map:
-            result['items'][i]['Gross Weight'] = logistics_map[key]['Gross Weight']
-            result['items'][i]['Net Weight'] = logistics_map[key]['Net Weight']
+    # Check if lengths are equal
+    if len(invoice_items) != len(packinglist_items):
+        raise ValueError(f"Array lengths don't match: invoice_items({len(invoice_items)}) != packinglist_items({len(packinglist_items)})")
     
-    # Remove Sheet3_Logistics from the result
-    del result['Sheet3_Logistics']
+    # Create dictionaries for quick lookup by QUANTITY-SET
+    invoice_dict = {item.get('QUANTITY-SET'): item for item in invoice_items}
+    packinglist_dict = {item.get('QUANTITY-SET'): item for item in packinglist_items}
+    
+    # Merge items based on QUANTITY-SET
+    for quantity_set in invoice_dict.keys():
+        if quantity_set in packinglist_dict:
+            # Merge the two objects
+            merged_item = {}
+            merged_item.update(invoice_dict[quantity_set])
+            merged_item.update(packinglist_dict[quantity_set])
+            result['items'].append(merged_item)
+        else:
+            raise ValueError(f"QUANTITY-SET '{quantity_set}' not found in packinglist_items")
+    
+    # Remove the original arrays
+    if 'invoice_items' in result:
+        del result['invoice_items']
+    if 'packinglist_items' in result:
+        del result['packinglist_items']
     
     return result
-
-def merge_items(data):
-    # Initialize an empty list to hold all items
-    merged_items = []
-    
-    # Iterate through each contract in the data
-    for contract in data:
-        # Extend the merged_items list with the items from the current contract
-        merged_items.extend(contract['items'])
-    
-    # Return the merged items as a dictionary
-    return {"items": merged_items}
 
 def fetch_exchange_rate(currency_code):
     # Get the current year and month in "YYYYMM" format
@@ -77,3 +73,26 @@ def fetch_exchange_rate(currency_code):
                 return foreign_rate
     
     return 0.0  # Return None if the currency was not found or request failed
+
+def find_shipping_fee_from_sheet(sheet, value):
+    """
+    Alternative function that works with an already opened sheet object.
+    
+    Args:
+        sheet: xlrd sheet object
+        
+    Returns:
+        The value from column F if "Shipping Fee:" is found, None otherwise
+    """
+    # Search through column A (index 0)
+    for row in range(sheet.nrows):
+        cell_value = sheet.cell_value(row, 0)  # Column A
+        
+        # Check if the cell contains "Shipping Fee:"
+        if isinstance(cell_value, str) and value in cell_value:
+            # Get the corresponding value from column F (index 5)
+            shipping_fee_value = sheet.cell_value(row, 5)  # Column F
+            return shipping_fee_value
+    
+    # Return None if "Shipping Fee:" was not found
+    return None

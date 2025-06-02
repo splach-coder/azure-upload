@@ -10,7 +10,7 @@ import xlrd
 import gc
 import time
 
-from lili_maas_Anker_xls_merger.helpers.functions import fetch_exchange_rate
+from lili_maas_Anker_xls_merger.helpers.functions import fetch_exchange_rate, find_shipping_fee_from_sheet, merge_json_items
 from lili_maas_Anker_xls_merger.excel.create_excel import write_to_excel
 
 def safe_float(val):
@@ -66,7 +66,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         data["INVOICENUMBER"] = ""
                         
                     try:
-                        data["INVOICEDATE"] = sheet.cell_value(7, 12)
+                        data["INVOICEDATE"] = sheet.cell_value(8, 12)
                     except:
                         data["INVOICEDATE"] = ""
                         
@@ -80,6 +80,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     except:
                         data["EORI"] = ""
                         
+                    shipping_fee = find_shipping_fee_from_sheet(sheet, "Shipping Fee:")
+                    Insurance = find_shipping_fee_from_sheet(sheet, "Insurance:")
+
+                    if shipping_fee is not None:
+                        data["FreightFromImage"] = safe_float(shipping_fee)
+                        
                         
                     items = []
                     row = 23
@@ -91,7 +97,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             item = {
                                 "HS CODE": HSCODE,
                                 "DESCRIPTION OF GOODS": sheet.cell_value(row, 1),
-                                "QUANTITY-SET": sheet.cell_value(row, 2),
+                                "QUANTITY-SET": sheet.cell_value(row, 3),
                                 "UNIT PRICE": sheet.cell_value(row, 3),
                                 "TOTAL VALUE": sheet.cell_value(row, 4),
                                 "VALUTA": sheet.cell_value(row, 5),
@@ -140,7 +146,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             item = {
                                 "CARTON": safe_float(sheet.cell_value(row, 9)),
                                 "QUANTITY-SET": safe_float(sheet.cell_value(row, 6)),
-                                "GROSS": safe_float(sheet.cell_value(row, 8)),
+                                "GROSS": safe_float(sheet.cell_value(row, 9)),
                                 "NET": safe_float(sheet.cell_value(row, 7)),
                             }
                             items.append(item)
@@ -168,8 +174,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f"Exception while processing file {filename}: {str(e)}")
             return func.HttpResponse(json.dumps({"error": f"Error processing {filename}: {str(e)}"}), status_code=500)
 
-    with open(os.path.join("data_dump.json" ), "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=4)
+    data = merge_json_items(data)
+    
+    for item in items:
+        try:
+            insurance_fee = float(item.get("InsuranceFee", 0) or 0)
+            item_set = float(item.get("SET", 0) or 0)
+            item["InsuranceAmount"] = round((insurance_fee / sets_sum) * item_set, 4) if sets_sum else 0
+        except Exception as e:
+            logging.error(f"Error calculating InsuranceAmount: {e}")
+            item["InsuranceAmount"] = 0
         
     try:       
         excel_file = write_to_excel(data)
