@@ -51,7 +51,6 @@ def write_to_excel(json_string):
     row_empty = []   # To store empty values for non-"items" keys
     
     for key, value in data.items():
-        logging.error(f"Processing key: {key}")
         # Handle array values
         if key == "items":
             for obj in value:

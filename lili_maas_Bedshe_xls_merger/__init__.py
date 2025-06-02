@@ -154,17 +154,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         final_version = merged_data[0]
         InsuranceCurrency = final_version.get("items", [{}])[0].get("VALUTA", "")
         
-        
-
         # If you want to add freight_from_image info to final_version
         if freight_from_image is not None:
             final_version["FreightFromImage"] = freight_from_image
 
-        try:
-            final_version["ExchangeCalc"] = fetch_exchange_rate(InsuranceCurrency)
-            logging.error(final_version.get("ExchangeCalc"))
+        data["InsuranceCurrency"] = InsuranceCurrency
+        
+        try :
+            if InsuranceCurrency == "EUR": 
+                data["ExchangeCalc"] = 1
+            else:
+                exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))    
+                data["ExchangeCalc"] = exchange_rate
         except ZeroDivisionError:
-            final_version["ExchangeCalc"] = 0.0
+            data["ExchangeCalc"] = 0.0
                
         excel_file = write_to_excel(final_version)
         logging.info("Generated Excel file.")

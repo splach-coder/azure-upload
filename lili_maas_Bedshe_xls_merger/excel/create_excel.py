@@ -11,21 +11,21 @@ def write_to_excel(json_string):
 
     header = [
         "FIDNO",
-        "",
         "FREIGHT COST",
-        "",
         "Freight cost valuta",
-        "",
-        "USD"
-    ] 
+        "Exchange",
+        "Insurance Cost",
+        "Insurance Valuta",
+        "Exchange",
+        "EXTRA Fee Cost",
+        "Fee Valuta",
+        "Exchange",
+    ]
     
     header_values = [
         f"{data.get('INVOICENUMBER', '')}",
-        "",
         data.get('FreightFromImage', ''), 
-        "",
         data.get('InsuranceCurrency', ''),
-        "",
         data.get('ExchangeCalc', ''),
     ]
 
@@ -50,7 +50,6 @@ def write_to_excel(json_string):
     row_empty = []   # To store empty values for non-"items" keys
     
     for key, value in data.items():
-        logging.error(f"Processing key: {key}")
         # Handle array values
         if key == "items":
             for obj in value:

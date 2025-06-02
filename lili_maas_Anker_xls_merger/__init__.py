@@ -101,9 +101,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 "HS CODE": HSCODE,
                                 "DESCRIPTION OF GOODS": sheet.cell_value(row, 1),
                                 "QUANTITY-SET": sheet.cell_value(row, 3),
-                                "UNIT PRICE": sheet.cell_value(row, 3),
-                                "TOTAL VALUE": sheet.cell_value(row, 4),
-                                "VALUTA": sheet.cell_value(row, 5),
+                                "UNIT PRICE": sheet.cell_value(row, 4),
+                                "TOTAL VALUE": sheet.cell_value(row, 5),
+                                "VALUTA": sheet.cell_value(row, 6),
                                 "INVOICENUMBER": data.get("INVOICENUMBER", ""),
                                 "INVOICEDATE": data.get("INVOICEDATE", ""),
                                 "VATNO": data.get("VATNO", ""),
@@ -178,10 +178,17 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(json.dumps({"error": f"Error processing {filename}: {str(e)}"}), status_code=500)
 
     data = merge_json_items(data)
-    data["InsuranceCurrency"] = "EUR"
-    exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))
-    try : 
-        data["ExchangeCalc"] = 1 / exchange_rate
+
+    InsuranceCurrency = data.get("items", [{}])[0].get("VALUTA", "")
+    logging.error(f"***********InsuranceCurrency: {InsuranceCurrency}")
+    data["InsuranceCurrency"] = InsuranceCurrency
+    
+    try :
+        if InsuranceCurrency == "EUR": 
+            data["ExchangeCalc"] = 1
+        else:
+            exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))    
+            data["ExchangeCalc"] = exchange_rate
     except ZeroDivisionError:
         data["ExchangeCalc"] = 0.0
         
