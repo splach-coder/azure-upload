@@ -86,6 +86,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     if shipping_fee is not None:
                         data["FreightFromImage"] = safe_float(shipping_fee)
                         
+                    if Insurance is not None:
+                        data["InsuranceFee"] = safe_float(Insurance)
+                        
                         
                     items = []
                     row = 23
@@ -175,15 +178,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return func.HttpResponse(json.dumps({"error": f"Error processing {filename}: {str(e)}"}), status_code=500)
 
     data = merge_json_items(data)
-    
-    for item in items:
-        try:
-            insurance_fee = float(item.get("InsuranceFee", 0) or 0)
-            item_set = float(item.get("SET", 0) or 0)
-            item["InsuranceAmount"] = round((insurance_fee / sets_sum) * item_set, 4) if sets_sum else 0
-        except Exception as e:
-            logging.error(f"Error calculating InsuranceAmount: {e}")
-            item["InsuranceAmount"] = 0
         
     try:       
         excel_file = write_to_excel(data)

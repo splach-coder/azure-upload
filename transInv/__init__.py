@@ -67,8 +67,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         pdf_text = extract_text_from_pdf(uploaded_file_path)
 
 
-        isTransInv = True if "Proforma Invoice".lower() in pdf_text.lower() or "Proforma Facture".lower() in pdf_text.lower() or "Confirmation de commande".lower() in pdf_text.lower() else False
-
+        isTransInv = any(term.lower() in pdf_text.lower() 
+                for term in [
+                    "Proforma Invoice", 
+                    "Proforma Facture", 
+                    "Confirmation de commande",
+                    "Facture proforma",
+                ])
         try:
             # Prepare the JSON response
             response = {
