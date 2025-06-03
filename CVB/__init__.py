@@ -2,7 +2,8 @@ import logging
 import azure.functions as func
 import json
 
-from CVB.functions.functions import extract_info_from_email, extract_info_from_proforma, extract_text_from_pdf 
+from CVB.functions.functions import build_items, detect_sender_flow, extract_email_body, extract_info_from_email, extract_info_from_proforma, extract_text_from_pdf
+from CVB.excel.create_excel import write_to_excel 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('CVB Import Flow Parser - Started')
@@ -10,7 +11,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_json()
         base64_files = body.get('files', [])
-        email_body = body.get('body', '')
+        email_body = body.get('email', '')
     except Exception:
         return func.HttpResponse(json.dumps({"error": "Invalid request format"}), status_code=400)
 
@@ -24,7 +25,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         filename = file_obj.get("filename", "").lower()
         content = file_obj.get("file", "")
 
-        if "proforma" in filename:
+        if "proforma" in filename and "invoice" in filename:
             text = extract_text_from_pdf(content)
             try:
                 proforma_info = extract_info_from_proforma(text)
@@ -39,6 +40,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         elif "annex" in filename:
             result["AnnexAvailability"] = True
+    
+    #clean the email body from any HTML tags
+    email_body = extract_email_body(email_body)    
+            
+    # detect the company based on the filename  
+    company = detect_sender_flow(email_body)
+    result["Company"] = company
 
     # Handle email body parsing
     try:
@@ -51,7 +59,29 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result.update(email_data)     
     except Exception as e:
         logging.error(f"Failed to extract from email body: {e}")
+        
+    # build the items list 
+    result = build_items(result)
 
+    # Proceed with data processing
+    try:
+        # Call writeExcel to generate the Excel file in memory
+        excel_file = write_to_excel(result)
+        logging.info("Generated Excel file.")
+        
+        reference = result.get("InvoiceRef", "")
+
+        # Set response headers for the Excel file download
+        headers = {
+            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+
+        # Return the Excel file as an HTTP response
+        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     
-    excel_file = write_to_excel(result)
-    return func.HttpResponse(json.dumps(result, indent=4), mimetype="application/json")
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error processing request: {e}", status_code=500
+        )

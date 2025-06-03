@@ -7,6 +7,10 @@ def write_to_excel(json_string):
     ws = wb.active
 
     data = json_string
+    
+    adress = data.get('ToAddress', {})
+    if adress:
+        company, street, postcode, city, country = adress
 
     header1 = [
         "VAT exporter",
@@ -25,39 +29,29 @@ def write_to_excel(json_string):
         "Country",
         "Inco Term",
         "Place",
-        "Truck",
-        "Entrepot",
-        "License",
-        "Vak 24",
-        "Vak 37",
-        "Vak 44",
-        "ILS number",
+        "Vissel",
+        "ETA",
     ]
 
     values1 = [
-        data.get('vat_importer', ''),
-        data.get('eori_importer', '').replace('.', ''),
+        '',
         '',
         data.get('commercial_reference', ''),
+        data.get('Company', ''),
         '',
         '',
         '',
         '',
         '',
-        '',
-        '',
-        '',
-        '',
-        '',
+        company,
+        street, 
+        postcode, 
+        city, 
+        country,
         data.get('incoterm', ''),
         data.get('place', ''),
-        '',
-        data.get('entrepot', ''),
-        data.get('License', ''),
-        data.get('Vak 24', ''),
-        data.get('Vak 37', ''),
-        data.get('Vak 44', ''),
-        data.get('ILS_NUMBER', ''),
+        data.get('Trailer', ''),
+        data.get('TransportDetails', '').get('ETA'),
     ]
 
     header2 = [
@@ -88,19 +82,17 @@ def write_to_excel(json_string):
     
     for key, value in data.items():
         # Handle array values
-        if key == "Items":
+        if key == "items":
             for obj in value:
                 mini_row = []
                 for ordered_key in header2:
                     # Append the value in the desired order, or an empty string if the key is missing
                     if ordered_key == "Commodity":
-                        mini_row.append(obj.get("commodity", ''))
-                    elif ordered_key == "Description":
-                        mini_row.append(obj.get("description", ''))
+                        mini_row.append(obj.get("HSCode", ''))
                     elif ordered_key == "Collis":
-                        mini_row.append(obj.get("packages", ''))
+                        mini_row.append(obj.get("NoOfPackages", ''))
                     elif ordered_key == "Gross":
-                        mini_row.append(obj.get("gross_weight", ''))
+                        mini_row.append(obj.get("GrossWeightKG", ''))
                     elif ordered_key == "Net":
                         mini_row.append(obj.get("net_weight", ''))
                     elif ordered_key == "Origin":

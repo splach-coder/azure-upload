@@ -115,8 +115,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             if not filename.lower().endswith('.pdf') and not filename.lower().endswith('.PDF'):
                 logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
                 continue
-            
-            
 
             logging.error(f"File '{filename}' is processing.")
             # Analyze the document

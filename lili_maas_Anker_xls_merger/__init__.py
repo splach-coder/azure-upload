@@ -180,7 +180,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     data = merge_json_items(data)
 
     InsuranceCurrency = data.get("items", [{}])[0].get("VALUTA", "")
-    logging.error(f"***********InsuranceCurrency: {InsuranceCurrency}")
     data["InsuranceCurrency"] = InsuranceCurrency
     
     try :
