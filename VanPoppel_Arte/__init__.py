@@ -172,7 +172,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     combined_result["email_data"] = email_data
     
     # Proceed with data processing
-    try: 
+    try:
         excel_file= write_to_excel(combined_result)
         reference = combined_result.get("header").get("document_number")
 

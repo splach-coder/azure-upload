@@ -17,11 +17,13 @@ def merge_invoice_outputs(invoice_outputs):
         "footer": {
             "incoterm": None,
             "currency": None,
-            "total": 0.0
+            "total": 0.0,
+            "transport": 0.0
         }
     }
 
     total_sum = 0.0
+    transport_sum = 0.0
     currency_set = set()
 
     for i, invoice in enumerate(invoice_outputs):
@@ -31,6 +33,7 @@ def merge_invoice_outputs(invoice_outputs):
         # Get footer info
         footer = invoice.get("footer", {})
         total = footer.get("total", 0)
+        transport = footer.get("transport", 0)
         currency = footer.get("currency")
 
         if i == 0:
@@ -42,11 +45,18 @@ def merge_invoice_outputs(invoice_outputs):
                 total_sum += float(total)
             except:
                 pass
+            
+        if transport:
+            try:
+                transport_sum += float(transport)
+            except:
+                pass
 
         if currency:
             currency_set.add(currency)
 
     merged_output["footer"]["total"] = round(total_sum, 2)
+    merged_output["footer"]["transport"] = round(transport_sum, 2)
 
     return merged_output
 

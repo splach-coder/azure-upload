@@ -138,7 +138,6 @@ def extract_invoice_meta_and_shipping(text):
 
     meta["shipping_address"] = shipping_address.strip()
     return meta
-
 def extract_totals_and_incoterm(text):
     data = {}
     lines = text.splitlines()
@@ -161,6 +160,38 @@ def extract_totals_and_incoterm(text):
         total_str, currency = total_match.groups()
         data["total"] = float(total_str.replace(",", ""))
         data["currency"] = currency
+
+    # Extract Transport value
+    transport_pattern = r"Transport\s+([\d,.]+)"
+    transport_match = re.search(transport_pattern, text)
+    if transport_match:
+        transport_str = transport_match.group(1)
+        transport_value = float(transport_str.replace(",", ""))
+        
+        # If transport value is 0.00, check the next line for actual value
+        if transport_value == 0.00:
+            # Find the position after the matched transport line
+            match_end = transport_match.end()
+            remaining_text = text[match_end:]
+            
+            # Look for the next number (potentially with currency)
+            next_value_match = re.search(r"\s+([\d,.]+)(?:\s+[A-Z]{3})?", remaining_text)
+            if next_value_match:
+                next_value_str = next_value_match.group(1)
+                try:
+                    next_value = float(next_value_str.replace(",", ""))
+                    # Only use this value if it's a valid float and not 0
+                    if next_value > 0:
+                        data["transport"] = next_value
+                    else:
+                        data["transport"] = transport_value
+                except ValueError:
+                    # If can't convert to float, use original value
+                    data["transport"] = transport_value
+            else:
+                data["transport"] = transport_value
+        else:
+            data["transport"] = transport_value
 
     return data
 
