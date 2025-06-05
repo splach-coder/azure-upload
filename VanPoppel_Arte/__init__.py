@@ -88,7 +88,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         parser = AddressParser()
         parsed_result = parser.parse_address(address)
         header_inv_data["shipping_address"] = parsed_result
-
+        
+        address2 = header_inv_data.get("billing_address", "")
+        parsed_result2 = parser.parse_address(address2)
+        header_inv_data["billing_address"] = parsed_result2
+        
         # ----------------------------------------
         # 🔸 Extract item lines from all pages
         # ----------------------------------------
@@ -115,7 +119,51 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             customs_no = extract_customs_code(customs_page_text)
         except:
             logging.error("Customs authorization number not found or page extraction failed.")
-               
+            
+            
+        # ----------------------------------------
+        # 🔹 Address handle
+        # ----------------------------------------
+        #call chatgpt class
+        call = CustomCall()
+        
+        finalDestination_page = find_page_in_invoice(doc, ["FINAL DESTINATION"])
+        
+        if type(finalDestination_page) is not str:
+
+            finalDestination_text = doc[finalDestination_page[0]-1].get_text()
+            
+            role_forCountryDestination = "You are a data extraction agent. Your task is to extract the FINAL DESTINATION county from this text"
+            prompt_forCountryDestination = f"""
+            Extract the FINAL DESTINATION county as 2 letters abbreviation if country panama return pa from the following text and return it as a single string without any additional text or formatting.
+
+            Text :
+            \"\"\"
+            {finalDestination_text}
+            \"\"\"
+            """
+            country = call.send_request(role_forCountryDestination, prompt_forCountryDestination)
+            country = country.strip().upper()
+            
+            if country.lower() == header_inv_data["billing_address"][-1].lower():
+                header_inv_data["address"] = header_inv_data["billing_address"] 
+            else :
+                header_inv_data["address"] = header_inv_data["shipping_address"] 
+        
+        shipping_address_country = header_inv_data.get("shipping_address", [])[-1]
+        #ask if the shipping address is in the EU countries
+        role_forEuCountries = "You are a factual AI that only responds with True or False based on whether a given country is a member of the European Union (EU). Your responses must be strictly Python boolean values: True if the country is an EU member, False if not. No explanations, no extra text — just True or False"
+        prompt_forEuCountries = f"Is \"{shipping_address_country}\" a member of the European Union? Respond only with True or False as a Python boolean"
+        memberOfEU = call.send_request(role_forEuCountries, prompt_forEuCountries)
+        
+        #cast to bool
+        memberOfEU_bool = str(memberOfEU).strip() == "True"
+    
+        if memberOfEU_bool:
+            header_inv_data["address"] = header_inv_data["billing_address"] 
+        else :
+            header_inv_data["address"] = header_inv_data["shipping_address"]    
+                       
         # Combine and append result
         invoice_output = {
             "header": header_inv_data,
@@ -140,7 +188,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # Replace the original list with the sorted one
         combined_result["items"] = sorted_items      
     
-    call = CustomCall()
     email = extract_email_body(email)
     role = "You are a data extraction agent. Your task is to extract specific logistics fields from the body of an email and return them in flat JSON format. The fields include truck, exit_office, colli, and gross_weight. If a field is missing, return its value as null. All numeric values must be returned as numbers without units like KG or P."
     prompt = f"""

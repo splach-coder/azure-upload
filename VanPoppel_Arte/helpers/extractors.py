@@ -120,24 +120,44 @@ def extract_invoice_meta_and_shipping(text):
     if date_match:
         meta["date"] = date_match.group(1)
 
+    lines = text.splitlines()
+
+    # Billing Address
+    billing_address = ""
+    billing_start_idx = None
+
+    for i, line in enumerate(lines):
+        if "Billing address:" in line:
+            billing_start_idx = i + 1
+            break
+
+    if billing_start_idx is not None:
+        for line in lines[billing_start_idx:]:
+            if "Account Number" in line:  # Stop when Account Number is found
+                break
+            billing_address += line.strip() + "\n"
+
+    meta["billing_address"] = billing_address.strip()
+
     # Shipping Address
     shipping_address = ""
-    lines = text.splitlines()
-    start_idx = None
+    shipping_start_idx = None
 
     for i, line in enumerate(lines):
         if "Shipping Address" in line:
-            start_idx = i + 1
+            shipping_start_idx = i + 1
             break
 
-    if start_idx is not None:
-        for line in lines[start_idx:]:
+    if shipping_start_idx is not None:
+        for line in lines[shipping_start_idx:]:
             if re.match(r"^\d{7}$", line.strip()):  # product code starts
                 break
             shipping_address += line.strip() + "\n"
 
     meta["shipping_address"] = shipping_address.strip()
     return meta
+
+
 def extract_totals_and_incoterm(text):
     data = {}
     lines = text.splitlines()

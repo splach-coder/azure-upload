@@ -36,7 +36,7 @@ def write_to_excel(json_string):
     totalsdata = data.get('Totals', {} )
     email_data = data.get('email_data', {} )
     
-    name, street, city, code_postal, country = headerdata.get('shipping_address')
+    name, street, city, code_postal, country = headerdata.get('address')
 
     if footerdata.get('incoterm', ['', '']) is not None:
         if len(footerdata.get('incoterm', ['', ''])) > 1:
