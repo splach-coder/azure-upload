@@ -14,7 +14,7 @@ from azure.core.credentials import AzureKeyCredential
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
-from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, normalize_number, safe_float_conversion
+from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, normalize_number, safe_float_conversion
 from VanPoppel_Soudal.excel.create_excel import write_to_excel
 from VanPoppel_Soudal.zip.create_zip import zip_excels 
 
@@ -67,7 +67,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     endpoint = "https://document-intelligence-python.cognitiveservices.azure.com/"
     client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(api_key))
         
-    result = {}
+    factuur_results = []  # Array to store all factuur results
     extra_file_excel_data = None
     extra_file_excel = None
     
@@ -75,7 +75,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         file_content_base64 = file_info.get('file')
         filename = file_info.get('filename', 'temp.pdf')
-        # Extract the factuur file
+        
+        # Extract the factuur files (multiple files possible)
         if 'factuur' in filename.lower():
 
             if not file_content_base64:
@@ -116,7 +117,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.error(f"File '{filename}' is not a PDF. Skipping analysis.")
                 continue
 
-            logging.error(f"File '{filename}' is processing.")
+            logging.info(f"File '{filename}' is processing.")
             # Analyze the document
             try: 
                 poller = client.begin_analyze_document("vp-soudal-model", file_content)
@@ -194,8 +195,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     for date_format in formats:
                         try:
                             result_dict["Inv Date"] = datetime.datetime.strptime(invoice_date, date_format).date()
+                            break  # Exit loop once successful conversion
                         except ValueError:
-                            logging.error(f"Invalid date format: {invoice_date}")
+                            continue  # Try next format
+                    else:
+                        logging.error(f"Invalid date format: {invoice_date}")
 
             #update the numbers in the items
             items = result_dict.get("Items", "")
@@ -219,13 +223,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     item["Value"] = safe_float_conversion(normalize_number(item.get("Value", 0.0)))
                 else:
                     item["Value"] = 0.00
+                    
+                item["Inv Number"] = result_dict.get("Inv Number", "")   
+                item["Customs Code"] = result_dict.get("Customs Code", "")   
+                item["Currency"] = result_dict.get("Currency", "")     
 
                 cleaned_items.append(item)
 
             # Replace original items with cleaned list
             result_dict["Items"] = cleaned_items
-
-            result = result_dict  
 
             #determine weather the invoice is export or import
             subject = subject.strip()
@@ -235,8 +241,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             match = re.search(r'(uitvoer|invoer):\s*(\d+)', subject, re.IGNORECASE)
             reference = match.group(2) if match else None
 
-            result["File Type"] = doc_type    
-            result["Reference"] = reference   
+            result_dict["File Type"] = doc_type    
+            result_dict["Reference"] = reference
+            result_dict["Filename"] = filename  # Add filename for identification
+             
+            # Add the processed factuur result to the array
+            factuur_results.append(result_dict)
+            logging.info(f"Successfully processed factuur file: {filename}")
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
@@ -245,23 +256,36 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             row for row in extra_file_excel_data.get("rows", [])
             if not (('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True))
             ]
+
+    # Check if we have any factuur results
+    if not factuur_results:
+        logging.warning("No factuur files were successfully processed.")
+        return func.HttpResponse(
+            body=json.dumps({"error": "No factuur files were successfully processed"}),
+            status_code=400,
+            mimetype="application/json"
+        )
                  
-    # Proceed with data processing
     try:
+        # After collecting all factuur_results
+        if len(factuur_results) > 1:
+            merged_result = merge_factuur_objects(factuur_results)
+            
+        else:
+            # Use single result as before
+            excel_file = write_to_excel(factuur_results[0])
         
         # Call writeExcel to generate the Excel file in memory
-        excel_file = write_to_excel(result)
-        logging.info("Generated Excel file.")
-        
+        excel_file = write_to_excel(merged_result)
         
         if extra_file_excel_data is not None:
-            extra_result = result.copy()
+            extra_result = merged_result.copy()
             extra_result["Items"] = extra_file_excel_data.get("rows", [])
             extra_file_excel = write_to_extra_excel(extra_result)
             logging.info("Generated Excel file2.")
         
-        reference = result.get("Reference")
-        fileType = result.get("File Type")
+        reference = merged_result.get("Reference")
+        fileType = merged_result.get("File Type")
         
         # Create zip file
         zip_file = zip_excels(excel_file, extra_file_excel, f"factuur_{reference}.xlsx", f"extra_{reference}.xlsx")
@@ -270,7 +294,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         headers = {
             'Content-Disposition': f'attachment; filename="{reference}.zip"',
             'Content-Type': 'application/zip',
-            'x-file-type': fileType
+            'x-file-type': fileType,
+            'x-factuur-count': str(len(factuur_results))  # Add count of processed factuurs
         }
 
         # Return the ZIP as an HTTP response
@@ -289,4 +314,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             body=json.dumps({"error": "An unexpected error occurred", "details": str(e)}),
             status_code=500,
             mimetype="application/json"
-        ) 
+        )

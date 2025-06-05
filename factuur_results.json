@@ -1,0 +1,131 @@
+[
+    {
+        "Address": [
+            "WÜRTH NORGE A/S",
+            "MORTEVEIEN HOLUM SKOG 12",
+            "HAGAN",
+            "1481",
+            "NO"
+        ],
+        "Cust Nbr": "1003498",
+        "Incoterm": [
+            "FCA",
+            "Turnhout"
+        ],
+        "Inv Date": "2025-06-04",
+        "Inv Number": "1801821467",
+        "Other Ref": "97238226",
+        "Rex Number": "BE1104),",
+        "Total Gross": 3571.776,
+        "Total Net": 2811.744,
+        "VAT": "BE0404914028",
+        "Total Value": 10108.8,
+        "Items": [
+            {
+                "HS Code": "32141010",
+                "COO": "BE",
+                "Gross Weight": 3571.776,
+                "Net Weight": 2811.744,
+                "Value": 10108.8,
+                "Inv Number": "1801821467",
+                "Customs Code": "BE1104",
+                "Currency": "EUR"
+            }
+        ],
+        "Total Pallets": null,
+        "Truck Nbr": null,
+        "Container": null,
+        "Seal": null,
+        "Customs Code": "BE1104",
+        "Currency": "EUR",
+        "File Type": "export",
+        "Reference": "6100027423",
+        "Filename": "factuur 6100027423 - 87870092 Wurth NO.pdf"
+    },
+    {
+        "Address": [
+            "WÜRTH NORGE A/S",
+            "MORTEVEIEN HOLUM SKOG 12",
+            "HAGAN",
+            "1481",
+            "NO"
+        ],
+        "Cust Nbr": "1003498",
+        "Incoterm": [
+            "FCA",
+            "Turnhout"
+        ],
+        "Inv Date": "2025-06-04",
+        "Inv Number": "1801821468",
+        "Other Ref": "97238229",
+        "Rex Number": "BE1104),",
+        "Total Gross": 1785.888,
+        "Total Net": 1405.872,
+        "VAT": "BE0404914028",
+        "Total Value": 5054.4,
+        "Items": [
+            {
+                "HS Code": "32141010",
+                "COO": "BE",
+                "Gross Weight": 1785.888,
+                "Net Weight": 1405.872,
+                "Value": 5054.4,
+                "Inv Number": "1801821468",
+                "Customs Code": "BE1104",
+                "Currency": "EUR"
+            }
+        ],
+        "Total Pallets": null,
+        "Truck Nbr": null,
+        "Container": null,
+        "Seal": null,
+        "Customs Code": "BE1104",
+        "Currency": "EUR",
+        "File Type": "export",
+        "Reference": "6100027423",
+        "Filename": "factuur 6100027423 - 87870086 Wurth NO.pdf"
+    },
+    {
+        "Address": [
+            "WÜRTH NORGE A/S",
+            "MORTEVEIEN HOLUM SKOG 12",
+            "HAGAN",
+            "1481",
+            "NO"
+        ],
+        "Cust Nbr": "1003498",
+        "Incoterm": [
+            "FCA",
+            "Turnhout"
+        ],
+        "Inv Date": "2025-06-04",
+        "Inv Number": "1801821466",
+        "Other Ref": "97238216",
+        "Rex Number": "BE1104),",
+        "Total Gross": 1785.888,
+        "Total Net": 1405.872,
+        "VAT": "BE0404914028",
+        "Total Value": 5054.4,
+        "Items": [
+            {
+                "HS Code": "32141010",
+                "COO": "BE",
+                "Gross Weight": 1785.888,
+                "Net Weight": 1405.872,
+                "Value": 5054.4,
+                "Inv Number": "1801821466",
+                "Customs Code": "BE1104",
+                "Currency": "EUR"
+            }
+        ],
+        "Total Pallets": null,
+        "Truck Nbr": null,
+        "Container": null,
+        "Seal": null,
+        "Customs Code": "BE1104",
+        "Currency": "EUR",
+        "File Type": "export",
+        "Reference": "6100027423",
+        "Filename": "factuur 6100027423 - 87870089 Wurth NO.pdf"
+    }
+]
