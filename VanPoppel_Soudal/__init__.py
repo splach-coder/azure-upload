@@ -215,7 +215,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     continue
                 
                 # Process the item
-                item["COO"] = coo[2:].replace(" ", "").replace(")", "").replace("(", "")
+                if "(" in coo and ")" in coo:
+                    item["COO"] = coo[2:].replace(" ", "").replace(")", "").replace("(", "")
+                else :
+                    item["COO"] = coo.replace(" ", "")
                 item["Gross Weight"] = gross
                 item["Net Weight"] = net
 
@@ -273,7 +276,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
         else:
             # Use single result as before
-            excel_file = write_to_excel(factuur_results[0])
+            merged_result = factuur_results[0]
         
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_result)
@@ -288,7 +291,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         fileType = merged_result.get("File Type")
         
         # Create zip file
-        zip_file = zip_excels(excel_file, extra_file_excel, f"factuur_{reference}.xlsx", f"extra_{reference}.xlsx")
+        if extra_file_excel is not None:
+            zip_file = zip_excels(None, extra_file_excel, f"factuur_{reference}.xlsx", f"extra_{reference}.xlsx")
+        else:
+            zip_file = zip_excels(excel_file, extra_file_excel, f"factuur_{reference}.xlsx", f"extra_{reference}.xlsx")    
 
         # Set response headers for ZIP file
         headers = {
