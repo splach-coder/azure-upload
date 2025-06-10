@@ -149,20 +149,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 header_inv_data["address"] = header_inv_data["billing_address"] 
             else :
                 header_inv_data["address"] = header_inv_data["shipping_address"] 
-        
-        shipping_address_country = header_inv_data.get("shipping_address", [])[-1]
-        #ask if the shipping address is in the EU countries
-        role_forEuCountries = "You are a factual AI that only responds with True or False based on whether a given country is a member of the European Union (EU). Your responses must be strictly Python boolean values: True if the country is an EU member, False if not. No explanations, no extra text — just True or False"
-        prompt_forEuCountries = f"Is \"{shipping_address_country}\" a member of the European Union? Respond only with True or False as a Python boolean"
-        memberOfEU = call.send_request(role_forEuCountries, prompt_forEuCountries)
-        
-        #cast to bool
-        memberOfEU_bool = str(memberOfEU).strip() == "True"
+        else : 
+            shipping_address_country = header_inv_data.get("shipping_address", [])[-1]
+
+            #ask if the shipping address is in the EU countries
+            role_forEuCountries = "You are a factual AI that only responds with True or False based on whether a given country is a member of the European Union (EU). Your responses must be strictly Python boolean values: True if the country is an EU member, False if not. No explanations, no extra text — just True or False"
+            prompt_forEuCountries = f"Is \"{shipping_address_country}\" a member of the European Union? Respond only with True or False as a Python boolean"
+            memberOfEU = call.send_request(role_forEuCountries, prompt_forEuCountries)
+
+            #cast to bool
+            memberOfEU_bool = str(memberOfEU).strip() == "True"
     
-        if memberOfEU_bool:
-            header_inv_data["address"] = header_inv_data["billing_address"] 
-        else :
-            header_inv_data["address"] = header_inv_data["shipping_address"]    
+            if memberOfEU_bool:
+                header_inv_data["address"] = header_inv_data["billing_address"] 
+            else :
+                header_inv_data["address"] = header_inv_data["shipping_address"]    
                        
         # Combine and append result
         invoice_output = {
@@ -197,7 +198,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         - truck (e.g. 'DUTCHQARGO')
         - exit_office (e.g. 'NL000432')
         - colli (as number, e.g. 2)
-        - gross_weight (as number, no KG)
+        - gross_weight (as number, no KG) be aware of the comma it not a separator but a decimal point (e.g. 123,56)
 
         Email body:
         \"\"\"
