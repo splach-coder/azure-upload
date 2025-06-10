@@ -65,7 +65,11 @@ def extract_info_from_email(email_body):
     - TransportDetails (M/S, LloydsNr, Flag, ETS, ETA, Agent, ConveyanceRef, POL, POD, LoCode, LoCodeNCTS)
     - BookingDetails (DateTimeOfIssue, YRef, UnitNr, ORef, KLMEMO)
     - CargoDetails (UCR, ArticleNumber, ReleaseNote, Items: list of (ItemNumber, NoOfPackages, PackageCode, GrossWeightKG, Description, HSCode))
-    - Transport Costs:
+    - Transport Costs - example:
+            "TransportCosts": {{
+                "UK": 325.0,
+                "Belgium": 125.0
+            }},
 
     Return as clean JSON.
     

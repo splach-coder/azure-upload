@@ -12,6 +12,8 @@ from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.OpenAI.custom_call import CustomCall
+
 from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
 from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, normalize_number, safe_float_conversion
@@ -25,7 +27,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         files = req_body.get('files', [])
+        email_body = req_body.get('body', [])
         subject = req_body.get('subject', '')
+        
     except ValueError:
         logging.error("Invalid JSON in request body.")
         return func.HttpResponse(
@@ -254,10 +258,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
+            
+            logging.error(json.dumps(extra_file_excel_data, indent=4))
 
             extra_file_excel_data["rows"] = [
-            row for row in extra_file_excel_data.get("rows", [])
-            if not (('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True))
+                row for row in extra_file_excel_data.get("rows", [])
+                if not (('GrandTotal' in row and row['GrandTotal'] == True) or ('SubTotal' in row and row['SubTotal'] == True)) 
+                and row.get("Comm. Code", "").strip()  # Exclude rows with empty "Comm. Code"
             ]
 
     # Check if we have any factuur results
@@ -268,15 +275,29 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=400,
             mimetype="application/json"
         )
-                 
+    
+    # Extract the exit office from email body
+    prompt = f"""
+    Extract the exit office code from the following email. The code is typically in the format of two letters followed by digits (e.g., BE212000). Return only the code as a plain string. If no code is found, return "NOT Found". Do not include any extra text or formatting.
+
+    Here is the email to extract the exit office code from:
+    '''{email_body}'''
+    """
+    call = CustomCall()
+    response = call.send_request(role="user", prompt_text=prompt)
+    exit_office = response
+    
     try:
         # After collecting all factuur_results
         if len(factuur_results) > 1:
             merged_result = merge_factuur_objects(factuur_results)
-            
         else:
             # Use single result as before
             merged_result = factuur_results[0]
+            
+        if exit_office and exit_office != "NOT Found":
+            # Add exit office to each merged_result
+            merged_result["Exit office"] = exit_office    
         
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_result)

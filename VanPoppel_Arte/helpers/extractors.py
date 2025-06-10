@@ -41,7 +41,7 @@ def extract_products_from_text(text):
                     cleaned_block.append(line)
                 elif re.match(r"^[\d.,]+$", line):  # only the amount (split line)
                     cleaned_block.append(line)
-                elif line.strip() == "EUR":  # only currency
+                elif line.strip() == "EUR" or line.strip() == "USD":  # only currency
                     cleaned_block.append(line)
 
 
@@ -73,13 +73,14 @@ def extract_products_from_text(text):
 
             quantity, unit = block[8].split(" ")
             unit_price = block[9].strip()
+            
             # Handle amount split over two lines (e.g., "2089.34", "EUR")
             amount = None
             if len(block) > 10:
-                if re.match(r"^[\d,.]+$", block[10]) and len(block) > 11 and "EUR" in block[11]:
+                if re.match(r"^[\d,.]+$", block[10]) and len(block) > 11 and ("EUR" in block[11] or "USD" in block[11]):
                     amount = block[10].replace(",", "").strip()
-                elif "EUR" in block[10]:
-                    amount = block[10].replace(",", "").replace("EUR", "").strip()
+                elif "EUR" in block[10] or "USD" in block[10]:
+                    amount = block[10].replace(",", "").replace("EUR", "").replace("USD", "").strip()
 
             results.append({
                 "product_code": product_code,

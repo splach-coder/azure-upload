@@ -28,22 +28,7 @@ class EmailDataExtractor:
             return None
 
         prompt = f"""
-        Extract the following fields from the email text:
-
-        - freight_cost (as float, use . as decimal separator),
-        - collis/pallets (as integer),
-        - exit_office name (as string),
-
-        If any value is missing or not found, return an empty string for that field.
-        Respond ONLY with a valid JSON object in this format:
-
-        {{
-          "freight_cost": float,
-          "collis": int,
-          "exit_office": "string"
-        }}
-
-        Use . as decimal separator for freight_cost, even if the original text uses ,.
+        Extract the exit office name as a string from the following email. Only return the office name with no additional text or formatting.
 
         Email:
         {email_text}
