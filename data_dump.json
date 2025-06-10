@@ -1,6 +1,6 @@
 {
     "AnnexAvailability": true,
-    "HSCode": "4707 1000",
+    "HSCode": "4707 2000",
     "ToAddress": {
         "company name": "CVB Recycling",
         "street": "Radiatorenstraat 51",
@@ -8,73 +8,78 @@
         "postal code": "1800",
         "country": "BE"
     },
-    "Bales/Pallets/bags": 24,
+    "Bales/Pallets/bags": 25,
     "Terms of delivery": [
         "ex works",
-        "Yate"
+        "Liverpool"
     ],
     "Country of Origin": "GB",
-    "Total amount": 1680000,
+    "Total amount": 3960000,
     "Currency": "gbp",
     "GrossWeight": 24000,
     "EORI Number": "GB566143634000",
-    "Company": "williamsrecycling",
-    "InvoiceRef": "201708",
-    "Trailer": "Montichiari 07.04.25",
+    "Freight": 0,
+    "VAT": 0,
+    "Company": "coolsolutions",
+    "InvoiceRef": "io2556631",
+    "Trailer": "COOL841",
     "TransportDetails": {
-        "M/S": "MAZARINE",
-        "LloydsNr": "L9376696",
-        "Flag": "Luxemburger",
-        "ETS": "8/04/2025 19:00",
-        "ETA": "9/04/2025 6:00",
+        "M/S": "CELINE",
+        "LloydsNr": "L9789233",
+        "Flag": "Maltese",
+        "ETS": "9/05/2025 18:30",
+        "ETA": "10/05/2025 10:00",
         "Agent": "COBELF",
-        "ConveyanceRef": "571660",
-        "POL": "PURFLEET",
+        "ConveyanceRef": "572725",
+        "POL": "KILLINGHOLME",
         "POD": "ZEEBRUGGE",
-        "LoCode": "BEZEEA000608",
+        "LoCode": "BEZEEA000612",
         "LoCodeNCTS": "TO801702"
     },
     "BookingDetails": {
-        "DateTimeOfIssue": "4/8/2025 8:14:16 PM",
-        "YRef": "8018/504/0106",
-        "UnitNr": "HROB6260",
-        "ORef": "72044479/7",
-        "KLMEMO": "WALTERKU"
+        "DateTimeOfIssue": "5/9/2025 8:34:12 PM",
+        "YRef": "EX2514267",
+        "UnitNr": "COOL841",
+        "ORef": "72258529/0",
+        "KLMEMO": "COOLSOLU"
     },
     "CargoDetails": {
-        "UCR": "720444790032",
-        "ArticleNumber": "0032",
+        "UCR": "722585290089",
+        "ArticleNumber": "0089",
         "ReleaseNote": "Cargo to be customs cleared and release document uploaded to CWEB prior to collection",
         "Items": [
             {
                 "ItemNumber": 1,
-                "NoOfPackages": 24,
+                "NoOfPackages": 25,
                 "PackageCode": "PK",
                 "GrossWeightKG": 24000,
-                "Description": "Papier und Glas und Verpackungsmate",
-                "HSCode": "47071000"
+                "Description": "MULTIGRADE",
+                "HSCode": "47072000"
             }
         ]
     },
-    "TransportCosts": 1480,
+    "TransportCosts": {
+        "UK": 325.0,
+        "Belgium": 125.0
+    },
     "items": [
         {
             "ItemNumber": 1,
-            "NoOfPackages": 24,
+            "NoOfPackages": 25,
             "PackageCode": "PK",
             "GrossWeightKG": 24000,
-            "Description": "Papier und Glas und Verpackungsmate",
-            "HSCode": "47071000",
-            "Total amount": 1680000,
+            "Description": "MULTIGRADE",
+            "HSCode": "47072000",
+            "Total amount": 3960000,
             "Currency": "gbp",
-            "ConveyanceRef": "571660",
-            "ArticleNumber": "0032",
-            "LloydsNr": "L9376696",
+            "ConveyanceRef": "572725",
+            "ArticleNumber": "0089",
+            "LloydsNr": "L9789233",
             "Agent": "COBELF",
-            "InvoiceRef": "201708",
-            "BL": "720444790032",
+            "InvoiceRef": "io2556631",
+            "BL": "722585290089",
             "CountryOfOrigin": "GB",
-            "Date": "2025-06-06"
+            "Date": "2025-06-10"
         }
     ]
 }

@@ -46,19 +46,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
     # detect the company based on the filename  
     company = detect_sender_flow(email_body)
-    
-    # Handle the Freight and VAT calculations based on the company 
-    if company == 'williamsrecycling':
-        cost = result.get("TransportCosts", {})
-        freight = cost * 0.70  # 70% of cost
-        vat = cost * 0.30      # 30% of cost
-        result["Freight"] = freight
-        result["VAT"] = vat
-    elif company == 'coolsolutions':
-        freight = 0
-        vat = 0
-        result["Freight"] = freight
-        result["VAT"] = vat
 
     result["Company"] = company
 
@@ -73,15 +60,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result.update(email_data)     
     except Exception as e:
         logging.error(f"Failed to extract from email body: {e}")
+        
+    # Handle the Freight and VAT calculations based on the company 
+    if company == 'williamsrecycling':
+        cost = result.get("TransportCosts", 0)
+        freight = cost * 0.70  # 70% of cost
+        vat = cost * 0.30      # 30% of cost
+        result["Freight"] = freight
+        result["VAT"] = vat
+    elif company == 'coolsolutions':
+        result["Freight"] = result.get("TransportCosts").get("UK", 0)
+        result["VAT"] = result.get("TransportCosts").get("Belgium", 0)    
     
     # Build items array from the result
     result = build_items(result)
     
     # Proceed with data processing
     try:
-        # Call writeExcel to generate the Excel file in memory
-        with open('data_dump.json', 'w') as f:
-            json.dump(result, f, indent=4)
             
         excel_file = write_to_excel(result)
         logging.info("Generated Excel file.")

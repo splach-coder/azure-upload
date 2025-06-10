@@ -207,13 +207,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_result["Total pallets"] = result.get("collis", 0)
         merged_result["Freight"] = result.get("freight_cost", 0.0)
         
+        logging.error(result.get("exit_office", ""))
+        
         if len(merged_result.get("Summary")) > 1:
             # Sort items by Customs Tariff Code
             sorted_items = sorted(merged_result.get("Summary"), key=lambda x: x.get("HS", ""))
 
             # Replace the original list with the sorted one
             merged_result["Summary"] = sorted_items  
-        
         try:
             # Get the ILS number
             response = call_logic_app("ETERNIT")
@@ -223,18 +224,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.info(f"ILS_NUMBER: {merged_result['ILS_NUMBER']}")
             else:
                 logging.error(f"Failed to get ILS_NUMBER: {response['error']}")
-    
+                
         except Exception as e:
             logging.exception(f"Unexpected error while fetching ILS_NUMBER: {str(e)}")
-            
-            
-        #switch the address country to abbr
-        ExitOffice = merged_result.get("Exit office", "")
-        finder = CustomCall()
-        role = "You are a customs data assistant for EU countries only. Your job is to return only the official customs exit office code (EXT) for a given place, with no explanation or formatting. If not found, reply with 'Not Found'. The UK is not involved in this request."
-        message = f"Given the following location or customs-related place name: '{ExitOffice}', return only the exact customs **exit office code** (EXT) if it exists, with no explanation or formatting. If not found, return 'Not Found'."
-        parsed_result = finder.send_request(role, message)
-        merged_result["Exit office"] = parsed_result
 
         try:
             # Call writeExcel to generate the Excel file in memory

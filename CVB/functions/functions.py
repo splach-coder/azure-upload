@@ -27,7 +27,7 @@ def extract_info_from_proforma(text):
     - "Total Weight in Kgs: (name it GrossWeight)" : ..., #total weight in Kgs as number
     - "Terms of delivery:" , [incoterm, place] #terms of delivery
     - "Country of Origin:" : "...", #country of origin 2 letter code abbreviation
-    - "Total amount:" : ..., #total amount as number (note that . is a seperator) 
+    - "Total amount:" : ..., #total amount as number (note that . is a seperator like 3.960,000 should be 3960.00) 
     - "Currency:" : "..." #currency of the total amount
     - "EORI Number": ..., #EORI number of the company
 
@@ -44,7 +44,7 @@ def extract_info_from_proforma(text):
         "Bales/Pallets/bags" : ..., #number of bales, pallets or bags
         "Terms of delivery": , [incoterm, place] #terms of delivery
         "Country of Origin": : "...", #country of origin 2 letter code abbreviation
-        "Total amount": : ..., #total amount as number (note that . is a seperator)
+        "Total amount": : ..., #total amount as number (note that . is a seperator like 3.960,000 should be 3960.00) 
         "Currency": : ..., #currency of the total amount,
         "GrossWeight": ..., #total weight in Kgs as number,
         "EORI Number": ..., #EORI number of the company

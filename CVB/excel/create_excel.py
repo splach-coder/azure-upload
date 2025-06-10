@@ -43,8 +43,8 @@ def write_to_excel(json_string):
         data.get('Company', ''),
         data.get('InvoiceRef', ''),
         '',
-        '',
-        '',
+        data.get('Freight', ''),
+        data.get('VAT', ''),
         '',
         '',
         company,
@@ -105,7 +105,7 @@ def write_to_excel(json_string):
                     elif ordered_key == "currency":
                         mini_row.append(obj.get("Currency", ''))
                     elif ordered_key == "Loyds":
-                        mini_row.append(f'L{obj.get("LloydsNr", "")}')
+                        mini_row.append(f'{obj.get("LloydsNr", "")}')
                     elif ordered_key == "Verblijfs":
                         mini_row.append(obj.get("ConveyanceRef", ''))
                     elif ordered_key == "article":
