@@ -106,15 +106,15 @@ def extract_products_from_text(text):
 def extract_invoice_meta_and_shipping(text):
     meta = {}
 
-    # Account Number
-    acc_match = re.search(r"Account Number\s+(\d+)", text)
+    # Account Number / Numéro Client
+    acc_match = re.search(r"(Account Number|Numéro Client)\s+(\d+)", text)
     if acc_match:
-        meta["account_number"] = acc_match.group(1)
+        meta["account_number"] = acc_match.group(2)
 
     # Document Number
-    doc_match = re.search(r"Document Number\s+(\d+)", text)
+    doc_match = re.search(r"(Document Number|Numéro Document)\s+(\d+)", text)
     if doc_match:
-        meta["document_number"] = doc_match.group(1)
+        meta["document_number"] = doc_match.group(2)
 
     # Date
     date_match = re.search(r"Date\s+(\d{2}/\d{2}/\d{4})", text)
@@ -128,13 +128,13 @@ def extract_invoice_meta_and_shipping(text):
     billing_start_idx = None
 
     for i, line in enumerate(lines):
-        if "Billing address:" in line:
+        if "Billing address:" in line or "Adresse de facturation:" in line:
             billing_start_idx = i + 1
             break
 
     if billing_start_idx is not None:
         for line in lines[billing_start_idx:]:
-            if "Account Number" in line:  # Stop when Account Number is found
+            if "Account Number" in line or "Numéro Client" in line:  # Stop when Account Number is found
                 break
             billing_address += line.strip() + "\n"
 
@@ -175,8 +175,8 @@ def extract_totals_and_incoterm(text):
     if incoterm and location:
         data["incoterm"] = f"{incoterm} {location}"
 
-    # Extract Total incl. VAT
-    total_match = re.search(r"Total incl\.?VAT:\s+([\d,.]+)\s+([A-Z]{3})", text)
+    # Updated regex to handle both "Total incl VAT:" and "Montant TTC:"
+    total_match = re.search(r"(?:Total incl\.?VAT|Montant TTC):\s+([\d,.]+)\s+([A-Z]{3})", text)
     if total_match:
         total_str, currency = total_match.groups()
         data["total"] = float(total_str.replace(",", ""))
@@ -222,7 +222,7 @@ def extract_customs_authorization_no(text):
         return match.group(1).strip()
     return None
 
-def find_page_in_invoice(doc, keywords=["Total incl.VAT:", "Total excl. VAT:", "VAT", "Incoterms:"]):
+def find_page_in_invoice(doc, keywords=["Location 1:", "Incoterms:", "Condition paiement:"]):
     try:
         # Open the PDF file
         pdf_document = doc

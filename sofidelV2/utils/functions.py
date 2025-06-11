@@ -114,9 +114,9 @@ def join_cmr_invoice_objects(inv, cmr):
         'Wagon': inv['Wagon'],
         'Address': inv['Address'],
         'Items': joined_items_list,
-        'Gross weight total': cmr['Gross weight total'],
-        'Net weight total': cmr['Net weight total'],
-        'Pallets': cmr['Pallets']
+        'Gross weight total': cmr.get('Gross weight total'),
+        'Net weight total': cmr.get('Net weight total'),
+        'Pallets': cmr.get('Pallets')
     }
 
     return combined_object

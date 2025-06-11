@@ -109,6 +109,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         last_page_text = doc[page[0]-1].get_text()
         footer_inv_data = extract_totals_and_incoterm(last_page_text)
         
+        
+        
         # ----------------------------------------
         # 🔹 Extract Customs Code info from last page
         # ----------------------------------------
@@ -223,6 +225,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         excel_file= write_to_excel(combined_result)
         reference = combined_result.get("header").get("document_number")
+        logging.error(f"Ref : {reference}")
 
         # Set response headers for the Excel file download
         headers = {
