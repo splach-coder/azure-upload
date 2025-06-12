@@ -40,7 +40,7 @@ def write_to_excel(json_string):
 
     if footerdata.get('incoterm', ['', '']) is not None:
         if len(footerdata.get('incoterm', ['', ''])) > 1:
-            term, place = footerdata.get('incoterm', ['', '']).split(' ')
+            term, place = footerdata.get('incoterm', ['', '']).split(' ', 1)
         else:
             term, place =['', '']
 

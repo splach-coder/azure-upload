@@ -4,7 +4,7 @@ import logging
 
 from AI_agents.OpenAI.custom_call import CustomCall
 
-def extract_products_from_text(text):
+"""def extract_products_from_text(text):
     lines = text.strip().splitlines()
     products = []
     current_block = []
@@ -102,7 +102,7 @@ def extract_products_from_text(text):
             continue
 
     return results
-
+"""
 def extract_invoice_meta_and_shipping(text):
     meta = {}
 
@@ -157,7 +157,6 @@ def extract_invoice_meta_and_shipping(text):
 
     meta["shipping_address"] = shipping_address.strip()
     return meta
-
 
 def extract_totals_and_incoterm(text):
     data = {}
@@ -268,3 +267,188 @@ def extract_customs_code(text_content):
         return result.strip()
     else:
         return "EXTRACTION_FAILED"
+    
+    
+import re
+
+def extract_products_from_text(text):
+    lines = text.strip().splitlines()
+    products = []
+    current_block = []
+
+    for line in lines:
+        line = line.strip()
+        if re.match(r"^\d{7}$", line):  # product code
+            if current_block:
+                products.append(current_block)
+            current_block = [line]
+        elif current_block:
+            current_block.append(line)
+
+    if current_block:
+        products.append(current_block)
+    
+    results = []
+    for block in products:
+        try:
+            # 🧼 CLEAN unexpected lines (like 'CONSOL')
+            expected_prefixes = [
+                "• (", "• Order number:", "• Your reference:", "• Customs Tariff:",
+                "• Net:", "• Surface:", "• Country of origin:"
+            ]
+            cleaned_block = [block[0]]  # keep product code
+
+            for line in block[1:]:
+                if any(line.startswith(prefix) for prefix in expected_prefixes):
+                    cleaned_block.append(line)
+                elif re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", line):  # quantity/unit
+                    cleaned_block.append(line)
+                elif is_currency_amount(line):  # Dynamic currency detection
+                    cleaned_block.append(line)
+                elif re.match(r"^[\d.,]+$", line):  # only the amount (split line)
+                    cleaned_block.append(line)
+                elif is_currency_only(line):  # Dynamic currency detection
+                    cleaned_block.append(line)
+
+            # 🩹 Fix broken 'Your reference'
+            fixed_block = []
+            i = 0
+            while i < len(cleaned_block):
+                line = cleaned_block[i]
+                if line.startswith("• Your reference:") and i + 1 < len(cleaned_block) and not cleaned_block[i + 1].startswith("•"):
+                    line += " " + cleaned_block[i + 1]
+                    i += 1
+                fixed_block.append(line)
+                i += 1
+
+            block = fixed_block
+
+            # Validate length
+            if len(block) < 11:
+                raise ValueError("Block too short after cleaning")
+
+            product_code = block[0]
+            product_name = re.search(r"\((.*?)\)\s*(.*)", block[1]).group(2).strip()
+            order_number = block[2].split(":", 1)[1].strip()
+            reference = block[3].split(":", 1)[1].strip()
+            customs_tariff = block[4].split(":", 1)[1].strip()
+            net_weight = block[5].split(":", 1)[1].strip()
+            surface = block[6].split(":", 1)[1].strip()
+            origin = block[7].split(":", 1)[1].strip()
+
+            quantity, unit = block[8].split(" ")
+            unit_price = block[9].strip()
+            
+            # Enhanced amount handling with dynamic currency detection
+            amount, currency = extract_amount_and_currency(block[10:])
+
+            results.append({
+                "product_code": product_code,
+                "product_name": product_name,
+                "order_number": order_number,
+                "reference": reference,
+                "customs_tariff": customs_tariff,
+                "net_weight": net_weight,
+                "surface": surface,
+                "origin": origin,
+                "quantity": quantity,
+                "unit": unit,
+                "unit_price": unit_price,
+                "amount": amount,
+                "currency": currency  # Adding currency field
+            })
+
+        except Exception as e:
+            logging.error(f"Error processing block: {block}. Error: {e}")
+            continue
+
+    return results
+
+
+def is_currency_amount(line):
+    """
+    Check if line contains amount with currency
+    Matches patterns like: "123.45 EUR", "1,234.56EUR", "999 USD", etc.
+    """
+    # Pattern for number followed by currency (3-4 letter currency codes)
+    return bool(re.match(r"^[\d.,]+\s*[A-Z]{3,4}$", line.strip()))
+
+
+def is_currency_only(line):
+    """
+    Check if line contains only currency code
+    Matches common currency codes (3-4 letters, all uppercase)
+    """
+    line = line.strip()
+    # Common currency pattern: 3-4 uppercase letters
+    return bool(re.match(r"^[A-Z]{3,4}$", line)) and len(line) <= 4
+
+
+def extract_amount_and_currency(amount_lines):
+    """
+    Extract amount and currency from the remaining lines after unit_price
+    Handles both single line (amount + currency) and split lines scenarios
+    """
+    if not amount_lines:
+        return None, None
+    
+    # Try first line - check if it has both amount and currency
+    first_line = amount_lines[0].strip()
+    
+    # Check if first line has amount + currency in one line
+    currency_match = re.search(r"^([\d.,]+)\s*([A-Z]{3,4})$", first_line)
+    if currency_match:
+        amount = currency_match.group(1).replace(",", "")
+        currency = currency_match.group(2)
+        return amount, currency
+    
+    # Check if it's split across two lines
+    if len(amount_lines) >= 2:
+        # First line: amount only
+        if re.match(r"^[\d.,]+$", first_line):
+            second_line = amount_lines[1].strip()
+            # Second line: currency only
+            if is_currency_only(second_line):
+                amount = first_line.replace(",", "")
+                currency = second_line
+                return amount, currency
+    
+    # If no clear pattern found, try to extract what we can
+    # Look for any currency in the lines
+    for line in amount_lines:
+        currency_in_line = re.search(r"([A-Z]{3,4})", line)
+        if currency_in_line:
+            currency = currency_in_line.group(1)
+            # Extract numbers from the same or previous lines
+            amount_match = re.search(r"([\d.,]+)", line)
+            if amount_match:
+                amount = amount_match.group(1).replace(",", "")
+                return amount, currency
+    
+    return None, None
+
+
+# Alternative approach: Build currency list dynamically
+def get_detected_currencies(text):
+    """
+    Scan the entire text to detect all currencies used
+    This can be called once before processing to build a currency list
+    """
+    currencies = set()
+    
+    # Find all potential currency codes (3-4 uppercase letters)
+    potential_currencies = re.findall(r'\b[A-Z]{3,4}\b', text)
+    
+    # Filter to keep only likely currencies (you can expand this list)
+    known_currencies = {
+        'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'SEK', 'NOK',
+        'DKK', 'PLN', 'CZK', 'HUF', 'RUB', 'BRL', 'MXN', 'INR', 'KRW', 'SGD',
+        'HKD', 'NZD', 'ZAR', 'TRY', 'ILS', 'AED', 'SAR', 'THB', 'MYR', 'IDR',
+        'PHP', 'VND', 'EGP', 'MAD', 'TND', 'DZD'  # Added some African currencies
+    }
+    
+    for curr in potential_currencies:
+        if curr in known_currencies:
+            currencies.add(curr)
+    
+    return currencies   
