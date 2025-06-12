@@ -27,7 +27,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result = {}
 
             for page in documents:
-                fields = page["fields"]
+                fields = page.get("fields")
                 for key, value in fields.items():
                     if key in ["Items", "Summary"]:
                         arr = value.get("valueArray")
@@ -163,7 +163,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
             del result['Items']
             
-                        #update the numbers in the items
+            #update the numbers in the items
             summaries = result.get("Summary", "")
             TotalNetWeight = 0
             for summary in summaries :
@@ -197,10 +197,29 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         cleaned_email_body_html = extract_and_clean(email)
         
         #extract the table as json object
-        from AI_agents.OpenAI.email_parser import EmailDataExtractor
+        from AI_agents.OpenAI.custom_call import CustomCall
 
-        extractor = EmailDataExtractor()
-        result = extractor.extract_data_from_email(cleaned_email_body_html)
+        extractor = CustomCall()
+        prompt = f"""
+        Extract the following fields from the email below:
+
+        1. Exit office name (from lines like 'Port of EXIT')
+        2. Total pallets (as a number from lines like 'Pallets')
+        3. Freight cost (as a float from lines like 'Vrachtkost', ignore currency symbols)
+
+        Only return a JSON object with these keys:
+        - exit_office
+        - collis
+        - freight_cost
+
+        Email:
+        {cleaned_email_body_html}
+        """
+
+        role = "You are an expert in parsing informal shipping-related emails. Focus on extracting specific structured fields only and return clean values ready for processing (e.g., no currency signs, no extra words)."
+
+        result = extractor.send_request(role, prompt)
+        logging.error(json.dumps(result, indent=4))
         result = json.loads(result)
         
         merged_result["Exit office"] = result.get("exit_office", "")

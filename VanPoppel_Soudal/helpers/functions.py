@@ -71,7 +71,7 @@ def safe_lower(var):
     return var.lower()
 
 def normalize_number(value: str) -> str:
-    return value.replace(" ", "").replace(".", "").replace(",", ".")  
+    return value.replace(" ", "").replace(",", "")
 
 def merge_factuur_objects(factuur_array):
     """

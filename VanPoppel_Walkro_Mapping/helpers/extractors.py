@@ -1,4 +1,5 @@
 import json
+import logging
 from AI_agents.Mistral.MistralDocumentQA import MistralDocumentQA
 
 def extract_clean_excel_from_pdf(base64_pdf: str, filename):
@@ -58,6 +59,8 @@ def extract_clean_excel_from_pdf(base64_pdf: str, filename):
 
     # Clean response
     raw = response.replace("```", "").replace("json", "").strip()
+    
+    logging.error(raw)
     parsed = json.loads(raw)
     
     return parsed

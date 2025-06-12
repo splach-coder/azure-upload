@@ -258,8 +258,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
-            
-            logging.error(json.dumps(extra_file_excel_data, indent=4))
 
             extra_file_excel_data["rows"] = [
                 row for row in extra_file_excel_data.get("rows", [])
