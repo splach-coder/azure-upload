@@ -3,6 +3,16 @@ import re
 
 import fitz
 
+def clean_data_from_texts_that_above_value(text):
+    """
+    Cleans the input text by removing any text that appears above a specified value.
+    The value is defined as a string that contains only digits, commas, or periods.
+    """
+    lines = text.split('\n')
+    if lines and len(lines) > 0:
+        return lines[1].strip()
+    return text
+
 def clean_VAT(VAT_number):
     pattern = r'\w{2}\s?\d{10}'
     match = re.search(pattern, VAT_number)

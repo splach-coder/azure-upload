@@ -1,12 +1,17 @@
+import ast
 import azure.functions as func
 import logging
 import json
 import os
 import base64
 
+import fitz
+
 from AI_agents.Gemeni.adress_Parser import AddressParser
+from AI_agents.OpenAI.CustomCallWithPdf import CustomCallWithPdf
+from AI_agents.OpenAI.custom_call import CustomCall
 from ILS_NUMBER.get_ils_number import call_logic_app
-from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, check_invoice_in_pdf, clean_VAT, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
+from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, check_invoice_in_pdf, clean_VAT, clean_data_from_texts_that_above_value, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
 from TennecoMonroe.service.extractors import extract_dynamic_text_from_pdf, extract_freight_and_exit_office_from_html, extract_text_from_first_page, find_customs_authorisation_coords, find_page_in_invoice
 from TennecoMonroe.helpers.adress_extractors import get_address_structure
 from TennecoMonroe.excel.createExcel import write_to_excel
@@ -96,6 +101,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             first_page_data["Address"] = parsed_result
             #clean the VAT from other chars
             first_page_data["Vat"] = clean_VAT(first_page_data["Vat"])
+            first_page_data["Customer NO"] = clean_data_from_texts_that_above_value(first_page_data["Customer NO"])
+            first_page_data["Inv Date"] = clean_data_from_texts_that_above_value(first_page_data["Inv Date"])
+            first_page_data["Inv No"] = clean_data_from_texts_that_above_value(first_page_data["Inv No"])
 
 
             '''------------------- Extract the Total from the last page ---------------------------'''
@@ -118,15 +126,41 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #find the table page
             table_page = find_page_in_invoice(uploaded_file_path, keywords=["Customs Tariff", "Origin", "Net Weight", "Quantity", "Value Payable"])
             # Call the function
+
             result = extract_dynamic_text_from_pdf(uploaded_file_path, x_coords, y_range, table_page_key_map, table_page)
+            
+            #------------------- Extract items with AI ---------------------------'''
+            pdf_document = fitz.open(uploaded_file_path)
+    
+            # Get the first page
+            table_page_text = pdf_document[table_page[0] - 1].get_text("text")
+
+            prompt = (
+                f"Extract all items from this text in the following JSON array format ONLY:\n\n"
+                f"[{{'HS code': '...', 'Origin': '...', 'Net': ..., 'Quantity': ..., 'Value': ...}}]\n\n"
+                f"Rules:\n"
+                f"- Only extract lines under the table with headers: 'Customs Tariff Code', 'Origin', 'Net Weight (KG)', 'Quantity Items', 'Value Payable'\n"
+                f"- Skip any totals or summary rows like 'Free Circulation Totals'\n"
+                f"- Do not merge or miss any rows\n"
+                f"- Use ISO 2-letter country codes for Origin (e.g. Spain → ES, Germany → DE)\n"
+                f"- Replace commas in numbers with dots where needed (e.g. 1.894,012 → 1894.012)\n"
+                f"- Return numeric fields as numbers (float or int), not strings\n"
+                f"- Your output must be ONLY the JSON array — no explanation, no formatting, no extra text\n\n"
+                f"Be very precise, do not omit or add extra data.\n\n"
+                f"Text to process:\n{table_page_text}"
+            )
+            
+            call = CustomCall()
+            extracted_items = call.send_request("user", prompt)
+            extracted_items = ast.literal_eval(extracted_items)
 
             #cast it to json
-            result = json.loads(result)
+            #result = json.loads(extracted_items)
             #update countries to abbr
-            result = abbr_countries_in_items(result, countries)
+            #result = abbr_countries_in_items(result, countries)
             #update the numbers type
-            result = normalize_the_items_numbers(result)
-            result = add_inv_date_to_items(result, first_page_data.get("Inv No", ""))
+            #result = normalize_the_items_numbers(result)
+            result = add_inv_date_to_items(extracted_items, first_page_data.get("Inv No", ""))
 
 
             '''------------------- Extract the Code BE70 from its page ---------------------------'''
