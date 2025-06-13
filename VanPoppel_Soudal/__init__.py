@@ -258,6 +258,30 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
+            
+            logging.error(json.dumps(extra_file_excel_data, indent=2))
+            
+            def fix_weight(value):
+                if isinstance(value, float):
+                    value_str = str(int(value))  # remove .0
+                    if value.is_integer() and len(value_str) > 4:
+                        return float(value_str[:-3] + '.' + value_str[-3:])
+                    return value
+                elif isinstance(value, int):
+                    value_str = str(value)
+                    if len(value_str) > 4:
+                        return float(value_str[:-3] + '.' + value_str[-3:])
+                    else:
+                        return float(value)
+                return value  # leave as-is if not number
+
+            for row in extra_file_excel_data["rows"]:
+                if "Gross" in row:
+                    row["Gross"] = fix_weight(row["Gross"])
+                if "Net weight" in row:
+                    row["Net weight"] = fix_weight(row["Net weight"])
+
+            logging.error(json.dumps(extra_file_excel_data, indent=2))        
 
             extra_file_excel_data["rows"] = [
                 row for row in extra_file_excel_data.get("rows", [])
