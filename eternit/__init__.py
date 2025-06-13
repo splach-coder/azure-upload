@@ -219,14 +219,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         role = "You are an expert in parsing informal shipping-related emails. Focus on extracting specific structured fields only and return clean values ready for processing (e.g., no currency signs, no extra words)."
 
         result = extractor.send_request(role, prompt)
-        logging.error(json.dumps(result, indent=4))
         result = json.loads(result)
         
         merged_result["Exit office"] = result.get("exit_office", "")
         merged_result["Total pallets"] = result.get("collis", 0)
         merged_result["Freight"] = result.get("freight_cost", 0.0)
         
-        logging.error(result.get("exit_office", ""))
         
         if len(merged_result.get("Summary")) > 1:
             # Sort items by Customs Tariff Code
