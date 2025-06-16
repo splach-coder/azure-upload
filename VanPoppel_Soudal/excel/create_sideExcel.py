@@ -37,7 +37,7 @@ def extract_clean_excel_from_pdf(base64_pdf: str, filename):
               "Gross": 19751.040,
               "Net weight": 15360.480,
               "WeightUnit": "KG",
-              "Net Value": 76.73,
+              "Net Value": 15360.73,
               "Currency": "GBP",
               "SubTotal": true,
               "Packages": 37
