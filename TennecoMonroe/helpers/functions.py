@@ -9,7 +9,7 @@ def clean_data_from_texts_that_above_value(text):
     The value is defined as a string that contains only digits, commas, or periods.
     """
     lines = text.split('\n')
-    if lines and len(lines) > 0:
+    if lines and len(lines) > 1:
         return lines[1].strip()
     return text
 

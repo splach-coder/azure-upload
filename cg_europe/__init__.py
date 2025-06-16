@@ -125,7 +125,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not skip_file:
             # Analyze the document
             try: 
-                poller = client.begin_analyze_document("Gc-europe-model4", file_content)
+                poller = client.begin_analyze_document("Gc-europe-model5", file_content)
                 result = poller.result()
                 
                 document = result.documents
@@ -226,7 +226,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             --- 
             """
         parsed_result = parser.send_request(role, prompt_text)
-        logging.info(f"Parsed email data: {prompt_text}")
         parsed_result = convert_to_list(parsed_result)
         
         parsed_result["GoodsLocation"] = parsed_result.get("template_name", "")

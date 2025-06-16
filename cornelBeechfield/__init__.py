@@ -5,6 +5,7 @@ import os
 import openpyxl
 import base64
 
+from ILS_NUMBER.get_ils_number import call_logic_app
 from cornelBeechfield.excel.create_excel import write_to_excel
 from cornelBeechfield.functions.functions import extract_email_data, process_data
 
@@ -133,6 +134,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     result_data = {**extracted_data_from_pdfs[0], **email_data,"Items" : extracted_data_from_excels[0]}
     
     result_data = process_data(result_data)
+    
+    try:
+        # Get the ILS number
+        response = call_logic_app("CORNEEL")
+    
+        if response["success"]:
+            result_data["ILS_NUMBER"] = response["doss_nr"]
+        else:
+            logging.error(f"Failed to get ILS_NUMBER: {response['error']}")
+
+    except Exception as e:
+        logging.exception(f"Unexpected error while fetching ILS_NUMBER: {str(e)}")    
 
     try:
         # Call writeExcel to generate the Excel file in memory
