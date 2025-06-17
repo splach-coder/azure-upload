@@ -45,7 +45,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         excel_file= write_to_excel(data)
         reference = data.get("Commercial reference")
-        logging.error(f"Ref : {reference}")
 
         # Set response headers for the Excel file download
         headers = {

@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 import fitz
 
 def clean_incoterm(incoterm):
@@ -148,158 +149,43 @@ def merge_factuur_objects(factuur_array):
     
     return merged
 
+import re
 
-# Example usage function
-def test_merge_function():
-    """Test function to demonstrate the merge functionality"""
-    
-    # Your sample data
-    sample_data = [
-        {
-            "Address": [
-                "WÜRTH NORGE A/S",
-                "MORTEVEIEN HOLUM SKOG 12",
-                "HAGAN",
-                "1481",
-                "NO"
-            ],
-            "Cust Nbr": "1003498",
-            "Incoterm": [
-                "FCA",
-                "Turnhout"
-            ],
-            "Inv Date": "2025-06-04",
-            "Inv Number": "1801821467",
-            "Other Ref": "97238226",
-            "Rex Number": "BE1104),",
-            "Total Gross": 3571.776,
-            "Total Net": 2811.744,
-            "VAT": "BE0404914028",
-            "Total Value": 10108.8,
-            "Items": [
-                {
-                    "HS Code": "32141010",
-                    "COO": "BE",
-                    "Gross Weight": 3571.776,
-                    "Net Weight": 2811.744,
-                    "Value": 10108.8,
-                    "Inv Number": "1801821467",
-                    "Customs Code": "BE1104",
-                    "Currency": "EUR"
-                }
-            ],
-            "Total Pallets": None,
-            "Truck Nbr": None,
-            "Container": None,
-            "Seal": None,
-            "Customs Code": "BE1104",
-            "Currency": "EUR",
-            "File Type": "export",
-            "Reference": "6100027423",
-            "Filename": "factuur 6100027423 - 87870092 Wurth NO.pdf"
-        },
-        {
-            "Address": [
-                "WÜRTH NORGE A/S",
-                "MORTEVEIEN HOLUM SKOG 12",
-                "HAGAN",
-                "1481",
-                "NO"
-            ],
-            "Cust Nbr": "1003498",
-            "Incoterm": [
-                "FCA",
-                "Turnhout"
-            ],
-            "Inv Date": "2025-06-04",
-            "Inv Number": "1801821468",
-            "Other Ref": "97238229",
-            "Rex Number": "BE1104),",
-            "Total Gross": 1785.888,
-            "Total Net": 1405.872,
-            "VAT": "BE0404914028",
-            "Total Value": 5054.4,
-            "Items": [
-                {
-                    "HS Code": "32141010",
-                    "COO": "BE",
-                    "Gross Weight": 1785.888,
-                    "Net Weight": 1405.872,
-                    "Value": 5054.4,
-                    "Inv Number": "1801821468",
-                    "Customs Code": "BE1104",
-                    "Currency": "EUR"
-                }
-            ],
-            "Total Pallets": None,
-            "Truck Nbr": None,
-            "Container": None,
-            "Seal": None,
-            "Customs Code": "BE1104",
-            "Currency": "EUR",
-            "File Type": "export",
-            "Reference": "6100027423",
-            "Filename": "factuur 6100027423 - 87870086 Wurth NO.pdf"
-        },
-        {
-            "Address": [
-                "WÜRTH NORGE A/S",
-                "MORTEVEIEN HOLUM SKOG 12",
-                "HAGAN",
-                "1481",
-                "NO"
-            ],
-            "Cust Nbr": "1003498",
-            "Incoterm": [
-                "FCA",
-                "Turnhout"
-            ],
-            "Inv Date": "2025-06-04",
-            "Inv Number": "1801821466",
-            "Other Ref": "97238216",
-            "Rex Number": "BE1104),",
-            "Total Gross": 1785.888,
-            "Total Net": 1405.872,
-            "VAT": "BE0404914028",
-            "Total Value": 5054.4,
-            "Items": [
-                {
-                    "HS Code": "32141010",
-                    "COO": "BE",
-                    "Gross Weight": 1785.888,
-                    "Net Weight": 1405.872,
-                    "Value": 5054.4,
-                    "Inv Number": "1801821466",
-                    "Customs Code": "BE1104",
-                    "Currency": "EUR"
-                }
-            ],
-            "Total Pallets": None,
-            "Truck Nbr": None,
-            "Container": None,
-            "Seal": None,
-            "Customs Code": "BE1104",
-            "Currency": "EUR",
-            "File Type": "export",
-            "Reference": "6100027423",
-            "Filename": "factuur 6100027423 - 87870089 Wurth NO.pdf"
-        }
-    ]
-    
-    # Test the merge function
-    merged_result = merge_factuur_objects(sample_data)
-    
-    print("Merged Result:")
-    print(f"Total Gross: {merged_result['Total Gross']}")  # Should be sum of all
-    print(f"Total Net: {merged_result['Total Net']}")      # Should be sum of all
-    print(f"Total Value: {merged_result['Total Value']}")  # Should be sum of all
-    print(f"Inv Numbers: {merged_result['Inv Number']}")   # Should be concatenated
-    print(f"Other Refs: {merged_result['Other Ref']}")     # Should be concatenated
-    print(f"Filenames: {merged_result['Filename']}")       # Should be concatenated
-    print(f"Items count: {len(merged_result['Items'])}")   # Should be 3 items
-    print(f"Address: {merged_result['Address']}")          # Should remain same as first
-    
-    return merged_result
+def parse_number(number_str: str) -> str:
+    """
+    Normalize a number string into a consistent decimal format string.
+    Handles both EU and EN formats and auto-detects thousands and decimal separators.
+    Returns a cleaned string (not float).
+    """
+    number_str = number_str.strip()
 
-# Uncomment the line below to test the function
-# test_merge_function()  
+    # Match EU format: 1.234,56
+    if re.match(r"^\d{1,3}(\.\d{3})*,\d{1,2}$", number_str):
+        return number_str.replace('.', '').replace(',', '.')
+
+    # Match EN format: 1,234.56
+    # Update to allow up to 6 decimal digits (or more)
+    if re.match(r"^\d{1,3}(,\d{3})*\.\d{1,6}$", number_str):
+        return number_str.replace(',', '')
+
+    # Case: only thousands separator (EU): 2.800 → 2800
+    if re.match(r"^\d{1,3}(\.\d{3})+$", number_str):
+        return number_str.replace('.', '')
+
+    # Case: only thousands separator (EN): 2,800 → 2800
+    if re.match(r"^\d{1,3}(,\d{3})+$", number_str):
+        return number_str.replace(',', '')
+
+    # Case: decimal comma only: 1234,56 → 1234.56
+    if re.match(r"^\d+,\d{1,2}$", number_str):
+        return number_str.replace(',', '.')
+
+    # Case: already clean like 1234.56 or 1234
+    if re.match(r"^\d+(\.\d{1,2})?$", number_str):
+        return number_str
+    
+    # Case: mixed up format like 2.988,800 → treat as 2988.8
+    if re.match(r"^\d{1,3}(\.\d{3})+,\d{3}$", number_str):
+        return number_str.replace('.', '').replace(',', '.')
+
+    raise ValueError(f"Unrecognized number format: {number_str}")
