@@ -150,16 +150,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         excel_file = write_to_excel(result_data)
         logging.info("Generated Excel file.")
         
-        # File name to write the JSON data
-        file_name = "output.txt"
-
-        # Write JSON data to a text file
-        with open(file_name, 'w') as file:
-            # Convert JSON data to a formatted string
-            json_string = json.dumps(result_data, indent=4)
-            # Write the formatted JSON string to the file
-            file.write(json_string)
-        
         reference = result_data.get("ShipmentReference", "")
         if not reference:
             reference = f"ref-{uuid.uuid4().hex}"
