@@ -465,6 +465,10 @@ countries = [
         "abbreviation": "IT"
     },
     {
+        "country": "Italia",
+        "abbreviation": "IT"
+    },
+    {
         "country": "Ivory Coast",
         "abbreviation": "CI"
     },

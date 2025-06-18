@@ -1,178 +1,231 @@
 from io import BytesIO
 import openpyxl
-
+import logging
 from sofidelV2.utils.number_handlers import safe_float_conversion
 
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 def write_to_excel(json_string):
-    # Create a new workbook and select the active sheet
-    wb = openpyxl.Workbook()
-    ws = wb.active
-
-    data = json_string
-
-    header1 = [
-        "VAT exporter",
-        "Contact",
-        "Commericial reference",
-        "Other ref",
-        "Freight",
-        "Goods location",
-        "Export office",
-        "Exit office",
-        "Name",
-        "Street + number",
-        "Postcode",
-        "city",
-        "Country",
-        "Inco Term",
-        "Place",
-        "Container",
-        "Truck",
-        "Rex/Other"
-    ]
-
-    address = data.get('PlaceOfDelivery', [])
-    name, street, city, code_postal, country = address.get('company_name', ''), address.get('street', ''), address.get('city', ''), address.get('postal_code', ''), address.get('country_code', '') 
-
-    
-    Incoterm = data.get('Incoterm', ['', ''])
-    if Incoterm:
-        if len(Incoterm) > 1 :
-            term, place = Incoterm.split(' ')
-        else :
-            term = Incoterm[0]
-            place = ""
+    try:
+        logger.info("Starting Excel file creation process")
         
-    FreightValue =  data.get('FreightCost', {}).get('value', 0)    
+        # Create workbook
+        logger.info("Creating new workbook")
+        wb = openpyxl.Workbook()
+        ws = wb.active
 
-    values1 = [
-        data.get('Vat Number', ''),
-        data.get('Principal', ''),
-        data.get('ShipmentReference', ''),
-        data.get('Other Ref', ''),
-        FreightValue,
-        data.get("Location", ''),
-        data.get('Exit Port BE', ''),
-        data.get('OfficeOfExit', ''),
-        name if 'name' in locals() else '',  # Safely handle variables
-        street if 'street' in locals() else '',
-        code_postal if 'code_postal' in locals() else '',
-        city if 'city' in locals() else '',
-        country if 'country' in locals() else '',
-        term if 'term' in locals() else '',
-        place if 'place' in locals() else '',
-        data.get('container', ''),
-        data.get('Wagon', ''),
-        data.get("Customs code", '')
-    ]
+        data = json_string
+        logger.debug(f"Input data: {data}")
 
-    header2 = [
-        "Commodity",
-        "Description",
-        "Article",
-        "Collis",
-        "Gross",
-        "Net",
-        "Origin",
-        "Invoice value",
-        "Currency",
-        "Statistical Value",
-        "Pieces",
-        "Invoicenumber",
-        "Invoice date",
-        "Rex/other",
-        "Location"
-    ]
-    
-    rows_data = []  # To store the processed rows for "items"
-    row_empty = []   # To store empty values for non-"items" keys
-    
-    for key, value in data.items():
-        # Handle array values
-        if key == "Items":
-            for obj in value:
-                mini_row = []
-                
-                for ordered_key in header2:
-                    # Append the value in the desired order, or an empty string if the key is missing
-                    if ordered_key == "Commodity":
-                        mini_row.append(obj.get("Commodity Code", ''))
-                    elif ordered_key == "Collis":
-                        mini_row.append(obj.get("Cartons", ''))
-                    elif ordered_key == "Article":
-                        mini_row.append(obj.get("Material", ''))
-                    elif ordered_key == "Gross":
-                        mini_row.append(obj.get("Gross Wt", ''))
-                    elif ordered_key == "Net":
-                        mini_row.append(obj.get("Net Wt", ''))
-                    elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("Total Cost", ""))
-                    elif ordered_key == "Pieces":
-                        mini_row.append(obj.get("Qty", ''))
-                    elif ordered_key == "Invoicenumber":
-                        mini_row.append(obj.get("Invoice No", ''))
-                    elif ordered_key == "Origin":
-                        mini_row.append(obj.get("Country of Origin", ''))
-                    elif ordered_key == "Invoice date":
-                        mini_row.append(data.get("Inv Date", ''))
-                    elif ordered_key == "Rex/other":
-                        mini_row.append(data.get("Customs code", ''))
-                    else:    
-                        mini_row.append(obj.get(ordered_key, ''))
-                rows_data.append(mini_row)
-        else:
-            row_empty.append("")
+        # Header definition
+        header1 = [
+            "VAT exporter", "Contact", "Commericial reference", "Other ref", "Freight",
+            "Goods location", "Export office", "Exit office", "Name", "Street + number",
+            "Postcode", "city", "Country", "Inco Term", "Place", "Container", "Truck", "Rex/Other"
+        ]
+        logger.debug("Header1 defined")
 
-    # Add keys (headers) to the first row
-    ws.append(header1)
+        # Address processing
+        try:
+            logger.info("Processing address information")
+            address = data.get('PlaceOfDelivery', {})
+            logger.debug(f"Address data: {address}")
+            
+            name = address.get('company_name', '')
+            street = address.get('street', '')
+            city = address.get('city', '')
+            code_postal = address.get('postal_code', '')
+            country = address.get('country_code', '')
+            logger.debug("Address components extracted")
+        except Exception as e:
+            logger.error(f"Error processing address: {str(e)}")
+            name = street = city = code_postal = country = ''
 
-    # Add values to the second row
-    ws.append(values1)
+        # Incoterm processing
+        try:
+            logger.info("Processing Incoterm")
+            Incoterm = data.get('Incoterm', '')
+            term, place = "", ""
+            
+            if Incoterm:
+                if isinstance(Incoterm, str):
+                    parts = Incoterm.split(' ', 1)
+                    term = parts[0]
+                    place = parts[1] if len(parts) > 1 else ""
+                elif isinstance(Incoterm, (list, tuple)):
+                    term = Incoterm[0] if len(Incoterm) > 0 else ""
+                    place = Incoterm[1] if len(Incoterm) > 1 else ""
+            
+            logger.debug(f"Incoterm processed - term: {term}, place: {place}")
+        except Exception as e:
+            logger.error(f"Error processing Incoterm: {str(e)}")
+            term = place = ""
 
-    # Add empty rows and totals
-    ws.append(row_empty)
-    ws.append(row_empty)
+        # Freight value processing
+        try:
+            logger.info("Processing FreightCost")
+            freight_data = data.get('FreightCost', {})
+            FreightValue = safe_float_conversion(freight_data.get('value', 0))
+            logger.debug(f"FreightValue: {FreightValue}")
+        except Exception as e:
+            logger.error(f"Error processing FreightCost: {str(e)}")
+            FreightValue = 0
 
-    ws.append(["Total invoices"])
-    total = data.get('Total Value', 0)
-    ws.append([total])
-    ws.append(row_empty)
+        # First set of values
+        try:
+            logger.info("Preparing first set of values")
+            values1 = [
+                data.get('Vat Number', ''),
+                data.get('Principal', ''),
+                data.get('ShipmentReference', ''),
+                data.get('Other Ref', ''),
+                FreightValue,
+                data.get("Location", ''),
+                data.get('Exit Port BE', ''),
+                data.get('OfficeOfExit', ''),
+                name,
+                street,
+                code_postal,
+                city,
+                country,
+                term,
+                place,
+                data.get('container', ''),
+                data.get('Wagon', ''),
+                data.get("Customs code", '')
+            ]
+            logger.debug("Values1 prepared")
+        except Exception as e:
+            logger.error(f"Error preparing values1: {str(e)}")
+            values1 = [''] * len(header1)
 
-    ws.append(["Total Collis"])
-    total_pallets = data.get('Collis', 0)
-    ws.append([total_pallets])
-    ws.append(row_empty)
+        # Second header and items processing
+        header2 = [
+            "Commodity", "Description", "Article", "Collis", "Gross", "Net",
+            "Origin", "Invoice value", "Currency", "Statistical Value",
+            "Pieces", "Invoicenumber", "Invoice date", "Rex/other", "Location"
+        ]
+        logger.debug("Header2 defined")
 
-    ws.append(["Total Gross", "Total Net"])
-    total_net = data.get('NetWeight', 0)
-    total_weight = data.get('GrossWeight', 0)
-    ws.append([total_weight, total_net])
-    ws.append(row_empty)
+        rows_data = []
+        try:
+            logger.info("Processing items data")
+            if "Items" in data:
+                for obj in data["Items"]:
+                    try:
+                        mini_row = []
+                        for ordered_key in header2:
+                            try:
+                                if ordered_key == "Commodity":
+                                    mini_row.append(obj.get("Commodity Code", ''))
+                                elif ordered_key == "Collis":
+                                    mini_row.append(obj.get("Cartons", ''))
+                                elif ordered_key == "Article":
+                                    mini_row.append(obj.get("Material", ''))
+                                elif ordered_key == "Gross":
+                                    mini_row.append(obj.get("Gross Wt", ''))
+                                elif ordered_key == "Net":
+                                    mini_row.append(obj.get("Net Wt", ''))
+                                elif ordered_key == "Invoice value":
+                                    mini_row.append(obj.get("Total Cost", ""))
+                                elif ordered_key == "Pieces":
+                                    mini_row.append(obj.get("Qty", ''))
+                                elif ordered_key == "Invoicenumber":
+                                    mini_row.append(obj.get("Invoice No", ''))
+                                elif ordered_key == "Origin":
+                                    mini_row.append(obj.get("Country of Origin", ''))
+                                elif ordered_key == "Invoice date":
+                                    mini_row.append(data.get("Inv Date", ''))
+                                elif ordered_key == "Rex/other":
+                                    mini_row.append(data.get("Customs code", ''))
+                                else:    
+                                    mini_row.append(obj.get(ordered_key, ''))
+                            except Exception as e:
+                                logger.error(f"Error processing item field {ordered_key}: {str(e)}")
+                                mini_row.append('')
+                        rows_data.append(mini_row)
+                    except Exception as e:
+                        logger.error(f"Error processing item row: {str(e)}")
+                        continue
+            logger.info(f"Processed {len(rows_data)} item rows")
+        except Exception as e:
+            logger.error(f"Error processing items: {str(e)}")
 
-    # Add items
-    ws.append(["Items"])
-    ws.append(header2)
+        # Writing to worksheet
+        try:
+            logger.info("Writing data to worksheet")
+            
+            # Write headers and values
+            ws.append(header1)
+            ws.append(values1)
+            
+            # Write empty rows
+            ws.append([""] * len(header1))
+            ws.append([""] * len(header1))
+            
+            # Write totals
+            ws.append(["Total invoices"])
+            total = safe_float_conversion(data.get('Total Value', 0))
+            ws.append([total])
+            ws.append([""] * len(header1))
+            
+            ws.append(["Total Collis"])
+            total_pallets = safe_float_conversion(data.get('Collis', 0))
+            ws.append([total_pallets])
+            ws.append([""] * len(header1))
+            
+            ws.append(["Total Gross", "Total Net"])
+            total_net = safe_float_conversion(data.get('NetWeight', 0))
+            total_weight = safe_float_conversion(data.get('GrossWeight', 0))
+            ws.append([total_weight, total_net])
+            ws.append([""] * len(header1))
+            
+            # Write items
+            ws.append(["Items"])
+            ws.append(header2)
+            for arr in rows_data:
+                ws.append(arr)
+            
+            logger.info("Data written to worksheet")
+        except Exception as e:
+            logger.error(f"Error writing to worksheet: {str(e)}")
+            raise
 
-    for arr in rows_data:
-        ws.append(arr)
+        # Adjust column widths
+        try:
+            logger.info("Adjusting column widths")
+            for col in ws.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)
+                ws.column_dimensions[column].width = adjusted_width
+            logger.info("Column widths adjusted")
+        except Exception as e:
+            logger.error(f"Error adjusting column widths: {str(e)}")
 
-    # Optionally, adjust column widths for better formatting
-    for col in ws.columns:
-        max_length = 0
-        column = col[0].column_letter  # Get the column name
-        for cell in col:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
-            except:
-                pass
-        adjusted_width = (max_length + 2)
-        ws.column_dimensions[column].width = adjusted_width
+        # Save to BytesIO
+        try:
+            logger.info("Saving workbook to BytesIO")
+            file_stream = BytesIO()
+            wb.save(file_stream)
+            file_stream.seek(0)
+            logger.info("Workbook saved successfully")
+            return file_stream
+        except Exception as e:
+            logger.error(f"Error saving workbook: {str(e)}")
+            raise
 
-    # Save the workbook to a BytesIO object (in memory)
-    file_stream = BytesIO()
-    wb.save(file_stream)
-    file_stream.seek(0)
-
-    return file_stream
-
+    except Exception as e:
+        logger.error(f"Fatal error in write_to_excel: {str(e)}")
+        raise

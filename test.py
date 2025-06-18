@@ -32,3 +32,4 @@ if __name__ == "__main__":
     currency = "EUR"  # Example currency code
     exchange_rate = fetch_exchange_rate(currency)
     print(f"Exchange rate for {currency}: {exchange_rate}")
+    

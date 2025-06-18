@@ -107,19 +107,19 @@ def extract_invoice_meta_and_shipping(text):
     meta = {}
 
     # Account Number / Numéro Client
-    acc_match = re.search(r"(Account Number|Numéro Client)\s+(\d+)", text)
+    acc_match = re.search(r"(Account Number|Numéro Client|Kunden-Nummer)\s+(\d+)", text)
     if acc_match:
         meta["account_number"] = acc_match.group(2)
 
     # Document Number
-    doc_match = re.search(r"(Document Number|Numéro Document)\s+(\d+)", text)
+    doc_match = re.search(r"(Document Number|Numéro Document|Dokumentnummer)\s+(\d+)", text)
     if doc_match:
         meta["document_number"] = doc_match.group(2)
 
     # Date
-    date_match = re.search(r"Date\s+(\d{2}/\d{2}/\d{4})", text)
+    date_match = re.search(r"(Date|Datum)\s+(\d{2}/\d{2}/\d{4})", text)
     if date_match:
-        meta["date"] = date_match.group(1)
+        meta["date"] = date_match.group(2)
 
     lines = text.splitlines()
 
@@ -175,7 +175,7 @@ def extract_totals_and_incoterm(text):
         data["incoterm"] = f"{incoterm} {location}"
 
     # Updated regex to handle both "Total incl VAT:" and "Montant TTC:"
-    total_match = re.search(r"(?:Total incl\.?VAT|Montant TTC):\s+([\d,.]+)\s+([A-Z]{3})", text)
+    total_match = re.search(r"(?:Total incl\.?VAT|Montant TTC|Total inkl. MwSt.):\s+([\d,.]+)\s+([A-Z]{3})", text)
     if total_match:
         total_str, currency = total_match.groups()
         data["total"] = float(total_str.replace(",", ""))
@@ -221,7 +221,7 @@ def extract_customs_authorization_no(text):
         return match.group(1).strip()
     return None
 
-def find_page_in_invoice(doc, keywords=["Location 1:", "Incoterms:"]):
+def find_page_in_invoice(doc, keywords=["Incoterms Version 2020", "Incoterms:"]):
     try:
         # Open the PDF file
         pdf_document = doc
@@ -340,7 +340,7 @@ def extract_products_from_text(text):
             unit_price = block[9].strip()
             
             # Enhanced amount handling with dynamic currency detection
-            amount, currency = extract_amount_and_currency(block[10:])
+            amount, currency = extract_amount_and_currency(block[10:12])
 
             results.append({
                 "product_code": product_code,

@@ -142,11 +142,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     email = json.loads(email_data)
     
     result_data = {**email, "Total Value" : TotalCost, "Items": extracted_data_from_excels[0]}
+    
+    logging.error(result_data.get("Total Value"))
 
     try:
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(result_data)
         logging.info("Generated Excel file.")
+        
+        # File name to write the JSON data
+        file_name = "output.txt"
+
+        # Write JSON data to a text file
+        with open(file_name, 'w') as file:
+            # Convert JSON data to a formatted string
+            json_string = json.dumps(result_data, indent=4)
+            # Write the formatted JSON string to the file
+            file.write(json_string)
         
         reference = result_data.get("ShipmentReference", "")
         if not reference:
