@@ -84,6 +84,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         #extract the address
 
         address = header_inv_data.get("Address")
+        
 
         parser = AddressParser()
         parsed_result = parser.parse_address(address)
