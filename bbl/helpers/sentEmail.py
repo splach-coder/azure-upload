@@ -104,7 +104,7 @@ def json_to_xml(data):
     <netMass>{netweight}</netMass>
     <grossMass>{grossweight}</grossMass>
     <Packaging>
-      <marksNumber>NO AN</marksNumber>
+      <marksNumber>.</marksNumber>
       <packages>{packages}</packages>
       <packageType>PA</packageType>
     </Packaging>
