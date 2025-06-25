@@ -7,6 +7,8 @@ from AI_agents.Gemeni.functions.functions import convert_to_list, query_gemini
 from bs4 import BeautifulSoup
 import re
 
+from AI_agents.OpenAI.custom_call import CustomCall
+
 class TransmareEmailParser:
     def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="Gemeni-api-key"):
         """
@@ -91,8 +93,8 @@ class TransmareEmailParser:
             [{address}]"""
         
         try:
-            result = query_gemini(self.api_key, prompt)
-            result = result.get("candidates")[0].get("content").get("parts")[0].get("text")
+            call = CustomCall()
+            result = call.send_request("user", prompt)
             #parsed_address = convert_to_list(result)
             return result
         except requests.exceptions.RequestException as e:

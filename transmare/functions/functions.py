@@ -75,11 +75,11 @@ def safe_int_conversion(value: str) -> int:
     except ValueError:
         return 0
 
-def safe_float_conversion(value: str) -> float:
+def safe_float_conversion(value) -> float:
     try:
         return float(value)
-    except ValueError:
-        return 0.00  
+    except (ValueError, TypeError):
+        return 0.00 
     
 def extract_and_clean(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')

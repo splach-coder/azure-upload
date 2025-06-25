@@ -28,7 +28,6 @@ def write_to_excel(json_string):
         "Container",
         "Truck",
         "Rex/Other",
-        "Vissel",
     ]
     
     values1 = [
@@ -36,15 +35,15 @@ def write_to_excel(json_string):
         data.get('Principal', ''),
         data.get('Commericial reference', ''),
         data.get('Other Ref', ''),
-        data.get('Freight', ''),
+        data.get('Transport fee', ''),
         data.get('kaai', ''),
         data.get('Export office', ''),
         data.get('Exit office', ''),
-        data.get("Name",''),
-        data.get("Street + number",''),
-        data.get("Postcode",''),
-        data.get("city",''),
-        data.get("Country",''),
+        data.get("Address").get("Company name",''),
+        data.get("Address").get("Street",''),
+        data.get("Address").get("Postcode",''),
+        data.get("Address").get("City",''),
+        data.get("Address").get("Country",''),
         data.get('Exit office', ''),
         data.get('Exit office', ''),
         data.get('Container'),
@@ -79,7 +78,18 @@ def write_to_excel(json_string):
             for obj in value:
                 mini_row = []
                 for ordered_key in header2:
-                    mini_row.append(obj.get(ordered_key, ''))
+                    # Append the value in the desired order, or an empty string if the key is missing
+                    if ordered_key == "Net":
+                        mini_row.append(obj.get("Net weight", ''))
+                    elif ordered_key == "Invoice value":
+                        mini_row.append(obj.get("Invoice value", ""))
+                    elif ordered_key == "Invoice date":
+                        mini_row.append(obj.get("Invoice date", ''))
+                    elif ordered_key == "Collis":
+                        mini_row.append(obj.get("Package", ''))
+                    else:    
+                        mini_row.append(obj.get(ordered_key, ''))
+                
                 rows_data.append(mini_row)
         else:
             row_empty.append("")

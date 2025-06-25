@@ -2,6 +2,7 @@
   "recommendations": [
     "ms-azuretools.vscode-azurefunctions",
     "ms-python.python",
-    "github.copilot-chat"
+    "github.copilot-chat",
+    "kevinrose.vsc-python-indent"
   ]
 }

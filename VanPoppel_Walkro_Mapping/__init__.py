@@ -1,8 +1,11 @@
+import re
 import azure.functions as func
 import logging
 import json
+import uuid
 
 from VanPoppel_Walkro_Mapping.helpers.extractors import extract_clean_excel_from_pdf
+from VanPoppel_Walkro_Mapping.helpers.functions import safe_int_conversion, safe_float_conversion
 from VanPoppel_Walkro_Mapping.excel.create_excel import write_to_excel
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -34,17 +37,29 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     data = None
     
     for file_info in files:
-        
         file_content_base64 = file_info.get('file')
         filename = file_info.get('filename', 'temp.pdf')
         
         data = extract_clean_excel_from_pdf(file_content_base64, filename)
-        
-        logging.error(json.dumps(data, indent=4))
+        TotalValue = 0.00
+        TotalCollis = 0.00
+        TotalNet = 0.00
+        for item in data.get('Items', []):
+            item['Package'] = safe_int_conversion(re.sub(r'\D', '', item.get('Package', '')))
+            TotalValue += safe_float_conversion(item.get("Invoice value", 0.0))
+            TotalCollis += safe_float_conversion(item.get("Package", 0.0))
+            TotalNet += safe_float_conversion(item.get("Net weight", 0.0))
+            
+        data['Total Value'] = TotalValue
+        data['Total Pallets'] = TotalCollis
+        data['Total Net'] = TotalNet    
+            
     try:
-        
         excel_file= write_to_excel(data)
-        reference = data.get("Commercial reference")
+        
+        # Generate a random UUID
+        my_uuid = uuid.uuid4().hex[:8]
+        reference = my_uuid
 
         # Set response headers for the Excel file download
         headers = {
