@@ -9,7 +9,7 @@ from AI_agents.Gemeni.transmare_Email import TransmareEmailParser
 from ILS_NUMBER.get_ils_number import call_logic_app
 from global_db.countries.functions import get_abbreviation_by_country
 from global_db.functions.dates import change_date_format
-from transmare.functions.functions import  clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
+from transmare.functions.functions import  add_statistical_values, clean_incoterm, clean_Origin, clean_HS_code, clean_number_from_chars, extract_and_clean, extract_Exitoffice, merge_json_objects, normalize_numbers, normalize_numbers_gross, safe_float_conversion, safe_int_conversion
 from transmare.excel.create_excel import write_to_excel
 from global_db.functions.container import is_valid_container_number, is_valid_quay_number
 
@@ -169,6 +169,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         try:
             # Call writeExcel to generate the Excel file in memory
+            merged_result = add_statistical_values(merged_result) 
+            logging.error(json.dumps(merged_result, indent=4, ensure_ascii=False))
             excel_file = write_to_excel(merged_result)
             logging.info("Generated Excel file.")
             

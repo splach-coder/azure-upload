@@ -263,3 +263,35 @@ async def process_page_with_openai_a(client, text_content):
         return {
             "error": str(e)
         }
+               
+def add_statistical_values(data):
+    # Safety checks
+    freight = data.get("Freight")
+    total_net = data.get("Total net")
+    items = data.get("Items", [])
+
+    if not isinstance(freight, (int, float)) or freight == 0:
+        print("Invalid or zero Freight. Skipping calculation.")
+        return data
+
+    if not isinstance(total_net, (int, float)) or total_net == 0:
+        print("Invalid or zero Total net. Skipping calculation.")
+        return data
+
+    # Loop through items and apply deduction logic
+    for item in items:
+        net_weight = item.get("Net weight", 0.0)
+        if not isinstance(net_weight, (int, float)) or net_weight == 0:
+            item["deduction_price"] = 0.0
+            item["statistical_value"] = item.get("Price", 0.0)
+            continue
+
+        price = item.get("Price", 0.0)
+        deduction = round((freight * net_weight) / total_net, 4)
+        statistical_value = round(price + deduction, 4)
+
+        item["deduction_price"] = deduction
+        item["statistical_value"] = statistical_value
+
+    return data
+        
