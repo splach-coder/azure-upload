@@ -86,6 +86,7 @@ def write_to_excel(json_string):
     rows_data = []  # To store the processed rows for "items"
     row_empty = []   # To store empty values for non-"items" keys
     
+    
     for key, value in data.items():
         # Handle array values
         if key == "Items":
@@ -106,7 +107,7 @@ def write_to_excel(json_string):
                     elif ordered_key == "Net":
                         mini_row.append(obj.get("Net weight", ''))
                     elif ordered_key == "Invoice value":
-                        mini_row.append(obj.get("statistical_value", ""))
+                        mini_row.append(obj.get("statistical_value") or obj.get("Price"))
                     elif ordered_key == "Currency":
                         mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":
