@@ -175,7 +175,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             collis, grosses = cast_arrays_to_int(collis), cast_arrays_to_float(grosses)
                             collis, grosses = process_arrays(collis, grosses)
 
-                        else:
+                        elif "IF" in file_name.upper() or "TO" in file_name.upper() :
                             pdf_path = os.path.join(temp_dir, file_name)    
                             with open(pdf_path, "rb") as f:
                                 document = f.read()
