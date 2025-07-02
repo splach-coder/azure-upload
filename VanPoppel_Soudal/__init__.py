@@ -14,6 +14,7 @@ from azure.core.credentials import AzureKeyCredential
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.OpenAI.custom_call import CustomCall
 
+from ILS_NUMBER.get_ils_number import call_logic_app
 from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
 from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, normalize_number, safe_float_conversion, parse_number
@@ -316,7 +317,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
         if exit_office and exit_office != "NOT Found":
             # Add exit office to each merged_result
-            merged_result["Exit office"] = exit_office    
+            merged_result["Exit office"] = exit_office
+            
+        try:
+            # Get the ILS number
+            response = call_logic_app("BESOUDAL", company="vp") 
+    
+            if response["success"]:
+                merged_result["ILS_NUMBER"] = response["doss_nr"]
+                logging.info(f"ILS_NUMBER: {merged_result['ILS_NUMBER']}")
+            else:
+                logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+        
+        except Exception as e:
+            logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")                
         
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_result)

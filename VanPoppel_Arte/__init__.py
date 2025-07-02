@@ -8,6 +8,7 @@ import fitz
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.OpenAI.custom_call import CustomCall
+from ILS_NUMBER.get_ils_number import call_logic_app
 from VanPoppel_Arte.helpers.extractors import extract_customs_authorization_no, extract_customs_code, extract_invoice_meta_and_shipping, extract_products_from_text, extract_totals_and_incoterm, find_page_in_invoice
 from VanPoppel_Arte.helpers.functions import clean_invoice_items, extract_email_body, merge_invoice_outputs, safe_float_conversion, safe_int_conversion
 from VanPoppel_Arte.excel.create_excel import write_to_excel
@@ -221,11 +222,23 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     }
     combined_result["email_data"] = email_data
     
+    try:
+        # Get the ILS number
+        response = call_logic_app("ARTE", company="vp") 
+
+        if response["success"]:
+            combined_result["ILS_NUMBER"] = response["doss_nr"]
+            logging.info(f"ILS_NUMBER: {combined_result['ILS_NUMBER']}")
+        else:
+            logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
+    
     # Proceed with data processing
     try:
         excel_file= write_to_excel(combined_result)
         reference = combined_result.get("header").get("document_number")
-        logging.error(f"Ref : {reference}")
 
         # Set response headers for the Excel file download
         headers = {
