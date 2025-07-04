@@ -221,7 +221,7 @@ def extract_customs_authorization_no(text):
         return match.group(1).strip()
     return None
 
-def find_page_in_invoice(doc, keywords=["Incoterms Version 2020", "Incoterms:"]):
+def find_page_in_invoice(doc, keywords=[ "Incoterms:"]):
     try:
         # Open the PDF file
         pdf_document = doc
