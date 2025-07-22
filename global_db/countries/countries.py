@@ -1041,6 +1041,10 @@ countries = [
         "abbreviation": "US"
     },
     {
+        "country": "Etats-Unis",
+        "abbreviation": "US"
+    },
+    {
         "country": "United States",
         "abbreviation": "US"
     },

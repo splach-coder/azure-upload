@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime, timedelta
 import azure.functions as func
 import logging
 import json
@@ -7,7 +8,7 @@ import io
 from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-from performance.functions.functions import calculate_process_times
+from performance.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days
 
 # Key Vault Configuration
 key_vault_url = "https://kv-functions-python.vault.azure.net"
@@ -19,184 +20,106 @@ api_key = client.get_secret(secret_name).value
 # Blob Storage Configuration
 CONNECTION_STRING = api_key
 CONTAINER_NAME = "document-intelligence"
-BLOB_NAME = "DKM_DECLARATIONS.csv"
+PARQUET_BLOB_PATH = "logs/all_data.parquet"
+CHECKPOINT_BLOB = "logs/last_checkpoint.txt"
+SUMMARY_BLOB = "Dashboard/cache/users_summary.json"
 
-# Load CSV from Blob
-def load_csv_from_blob():
+def load_parquet_from_blob():
+    try:
+        blob_service = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+        blob_client = blob_service.get_blob_client(CONTAINER_NAME, PARQUET_BLOB_PATH)
+        stream = io.BytesIO()
+        blob_client.download_blob().readinto(stream)
+        stream.seek(0)
+        df = pd.read_parquet(stream)
+        return df
+    except Exception as e:
+        logging.warning(f"No existing parquet found or failed to load: {e}")
+        return pd.DataFrame()
+
+def save_parquet_to_blob(df):
+    blob_service = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    blob_client = blob_service.get_blob_client(CONTAINER_NAME, PARQUET_BLOB_PATH)
+    stream = io.BytesIO()
+    df.to_parquet(stream, index=False)
+    stream.seek(0)
+    blob_client.upload_blob(stream, overwrite=True)
+
+def clear_blob_parquet():
     blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-    blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
-    stream = blob_client.download_blob().readall()
-    return pd.read_csv(io.StringIO(stream.decode("utf-8"))), blob_client
+    blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=PARQUET_BLOB_PATH)
+
+    columns = [
+    ]
+
+    empty_df = pd.DataFrame(columns=columns)
+    buffer = io.BytesIO()
+    empty_df.to_parquet(buffer, index=False)
+    buffer.seek(0)
+    blob_client.upload_blob(buffer, overwrite=True)
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    logging.info('Processing request. Method: ' + req.method)
-    method = req.method
+    try:
+        method = req.method
 
-    # GET - Fetch all data from the blob and process it
-    if method == "GET":
-        try:
-            # Load existing records from the blob
-            existing_data, blob_client = load_csv_from_blob()
-            
-            # Group data by DECLARATIONID
-            grouped_data = defaultdict(list)
-            
-            logging.error(grouped_data)
-
-            # Process each row from the existing data
-            for _, row in existing_data.iterrows():
-                declaration_id = row["DECLARATIONID"]
-                
-                # Create history entry with all required fields
-                history_entry = {
-                    "HISTORYDATETIME": row["HISTORYDATETIME"],
-                    "HISTORY_STATUS": row["HISTORY_STATUS"],
-                    "ACTIVECOMPANY": row["ACTIVECOMPANY"],
-                    "USERCODE": row["USERCODE"],
-                    "TYPEDECLARATIONSSW": row["TYPEDECLARATIONSSW"]
-                }
-                
-                grouped_data[declaration_id].append(history_entry)
-
-            # Sort history entries by HISTORYDATETIME
-            for key in grouped_data:
-                grouped_data[key] = sorted(grouped_data[key], key=lambda x: x["HISTORYDATETIME"])
-
-            # Convert to final grouped format
-            result = [{"DECLARATIONID": key, "HISTORY": grouped_data[key]} for key in grouped_data]
-
-            # Calculate the required time metrics
-            metrics = calculate_process_times(result)
-            
-            return func.HttpResponse(
-                json.dumps(metrics),
-                mimetype="application/json",
-                status_code=200
-            )
-        except Exception as e:
-            logging.error(f"Error processing GET request: {e}")
-            return func.HttpResponse(
-                body=json.dumps({"error": "Failed to process data", "details": str(e)}),
-                status_code=500,
-                mimetype="application/json"
-            )
-            
-    # POST - Insert new data OR fetch specific ID data
-    elif method == "POST":
-        try:
-            # Attempt to get the JSON body from the request
+        if method == "POST":
             body = req.get_json()
-            data = body.get('data', [])
-            
-            # Check if ID parameter is provided for fetching specific records
-            id_param = body.get('id')
-            
-            # If ID parameter is provided, fetch data for that ID
-            if id_param:
-                logging.info(f"Fetching records for ID: {id_param}")
-                
-                # Load existing records from the blob
-                existing_data, blob_client = load_csv_from_blob()
-                
-                # Filter data for the specific ID
-                filtered_data = existing_data[existing_data["DECLARATIONID"] == id_param]
-                
-                if filtered_data.empty:
-                    return func.HttpResponse(
-                        body=json.dumps({"message": f"No records found for ID: {id_param}"}),
-                        status_code=404,
-                        mimetype="application/json"
-                    )
-                
-                # Group data by DECLARATIONID (will be only one in this case)
-                grouped_data = defaultdict(list)
-                
-                # Process each row from the filtered data
-                for _, row in filtered_data.iterrows():
-                    declaration_id = row["DECLARATIONID"]
-                    
-                    # Create history entry with all required fields
-                    history_entry = {
-                        "HISTORYDATETIME": row["HISTORYDATETIME"],
-                        "HISTORY_STATUS": row["HISTORY_STATUS"],
-                        "ACTIVECOMPANY": row["ACTIVECOMPANY"],
-                        "USERCODE": row["USERCODE"],
-                        "TYPEDECLARATIONSSW": row["TYPEDECLARATIONSSW"]
-                    }
-                    
-                    grouped_data[declaration_id].append(history_entry)
-                
-                # Sort history entries by HISTORYDATETIME
-                for key in grouped_data:
-                    grouped_data[key] = sorted(grouped_data[key], key=lambda x: x["HISTORYDATETIME"])
-                
-                # Convert to final grouped format
-                result = {"DECLARATIONID": id_param, "HISTORY": grouped_data[id_param]}
-                
-                return func.HttpResponse(
-                    body=json.dumps(result),
-                    status_code=200,
-                    mimetype="application/json"
-                )
-            
-            # If no ID parameter, proceed with normal POST to insert data
-            if not data:
-                return func.HttpResponse(
-                    body=json.dumps({"error": "No data provided"}),
-                    status_code=200,
-                    mimetype="application/json"
-                )
+            query_data = body.get("data", {}).get("Table1", [])
+            new_df = pd.DataFrame(query_data)
+            if new_df.empty:
+                return func.HttpResponse("No data provided.", status_code=400)
 
-            queryData = data.get("Table1", [])
+            required_cols = ["DECLARATIONID", "HISTORYDATETIME", "HISTORY_STATUS",
+                             "ACTIVECOMPANY", "USERCODE", "TYPEDECLARATIONSSW", "USERCREATE"]
             
-            # Load existing records from the blob
-            existing_data, blob_client = load_csv_from_blob()
+            for col in required_cols:
+                if col not in new_df.columns:
+                    return func.HttpResponse(f"Missing column: {col}", status_code=400)
+
+            if new_df.empty:
+                return func.HttpResponse("No allowed users in data.", status_code=400)
+
+            existing_df = load_parquet_from_blob()
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+            save_parquet_to_blob(combined_df)
+
+            return func.HttpResponse("✅ Data stored successfully.", status_code=200)
+
+        elif method == "GET":    
+            username = req.params.get("user")
             
-            # Convert incoming data to DataFrame
-            new_data = pd.DataFrame(queryData)
-            
-            # Validate required columns
-            required_columns = ["DECLARATIONID", "HISTORYDATETIME", "HISTORY_STATUS", 
-                               "ACTIVECOMPANY", "USERCODE", "TYPEDECLARATIONSSW"]
-            
-            missing_columns = [col for col in required_columns if col not in new_data.columns]
-            if missing_columns:
+            if username:
+                # Load full data from blob or wherever
+                df = load_parquet_from_blob()
+
+                # Call the user metrics function
+                metrics = calculate_single_user_metrics_fast(df, username.upper())
+
                 return func.HttpResponse(
-                    body=json.dumps({"error": f"Missing required columns: {missing_columns}"}),
-                    status_code=400,
+                    body=json.dumps(metrics),
+                    status_code=200,
                     mimetype="application/json"
                 )
             
-            # Combine existing data with new data
-            combined_data = pd.concat([existing_data, new_data], ignore_index=True)
-            
-            # Convert DataFrame back to CSV string
-            csv_data = combined_data.to_csv(index=False)
-            
-            # Upload updated CSV to blob storage
-            blob_service_client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-            blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=BLOB_NAME)
-            blob_client.upload_blob(csv_data, overwrite=True)
-            
-            return func.HttpResponse(
-                body=json.dumps({
-                    "message": "Data successfully uploaded",
-                    "records_added": len(new_data)
-                }),
-                status_code=200,
-                mimetype="application/json"
-            )
-        except Exception as e:
-            logging.error(f"Error processing POST request: {e}")
-            return func.HttpResponse(
-                body=json.dumps({"error": "Failed to upload data to blob", "details": str(e)}),
-                status_code=500,
-                mimetype="application/json"
-            )
-    
-    else:
-        return func.HttpResponse(
-            body=json.dumps({"error": f"Unsupported HTTP method: {method}"}),
-            status_code=405,
-            mimetype="application/json"
-        )
+            # Calculate and return metrics
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse("No data available to calculate.", status_code=400)
+
+            metrics = count_user_file_creations_last_10_days(df)
+            summary_blob = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+            blob_client = summary_blob.get_blob_client(CONTAINER_NAME, SUMMARY_BLOB)
+            blob_client.upload_blob(json.dumps(metrics, indent=2), overwrite=True)
+
+            return func.HttpResponse(json.dumps(metrics), mimetype="application/json", status_code=200)
+
+        elif method == "DELETE":
+            clear_blob_parquet()
+            return func.HttpResponse("✅ All data cleared successfully.", status_code=200)
+        
+        else:
+            return func.HttpResponse("Only POST and GET methods supported.", status_code=405)
+
+    except Exception as e:
+        logging.error(f"Error in function: {e}")
+        return func.HttpResponse(json.dumps({"error": str(e)}), status_code=500)

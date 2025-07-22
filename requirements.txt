@@ -20,3 +20,4 @@ asyncio==3.4.3
 aiohttp==3.11.16
 xlrd==1.2.0
 mistralai==1.7.0
+pyarrow

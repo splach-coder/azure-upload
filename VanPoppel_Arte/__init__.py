@@ -139,7 +139,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             role_forCountryDestination = "You are a data extraction agent. Your task is to extract the FINAL DESTINATION county from this text"
             prompt_forCountryDestination = f"""
             Extract the FINAL DESTINATION county as 2 letters abbreviation if country panama return pa from the following text and return it as a single string without any additional text or formatting.
-
+            
             Text :
             \"\"\"
             {finalDestination_text}
@@ -152,8 +152,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 header_inv_data["address"] = header_inv_data["billing_address"] 
             else :
                 header_inv_data["address"] = header_inv_data["shipping_address"] 
-        else : 
-            shipping_address_country = header_inv_data.get("shipping_address", [])[-1]
+        else :
+            shipping_address_country = header_inv_data.get("shipping_address", [])[-1] if header_inv_data.get("shipping_address") not in [None, ""] else ""
 
             #ask if the shipping address is in the EU countries
             role_forEuCountries = "You are a factual AI that only responds with True or False based on whether a given country is a member of the European Union (EU). Your responses must be strictly Python boolean values: True if the country is an EU member, False if not. No explanations, no extra text — just True or False"
@@ -164,9 +164,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             memberOfEU_bool = str(memberOfEU).strip() == "True"
     
             if memberOfEU_bool:
+                #logging.error("m in billing address")
                 header_inv_data["address"] = header_inv_data["billing_address"] 
             else :
-                header_inv_data["address"] = header_inv_data["shipping_address"]    
+                #logging.error("m in shipping address")
+                header_inv_data["address"] = header_inv_data["shipping_address"]  
                        
         # Combine and append result
         invoice_output = {

@@ -51,7 +51,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Retrieve the secret value
     try:
         api_key = client.get_secret(secret_name).value
-        logging.info(f"API Key retrieved: {api_key}")
     except Exception as e:
         logging.error(f"Failed to retrieve secret: {str(e)}")
         return func.HttpResponse(
@@ -62,7 +61,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     endpoint = "https://document-intelligence-python.cognitiveservices.azure.com/"
     client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(api_key))
-    
+    logging.error(client)
     results = []
     
     for file_info in files:
