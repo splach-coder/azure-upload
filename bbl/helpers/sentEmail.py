@@ -1,3 +1,4 @@
+import logging
 import xml.etree.ElementTree as ET
 import json
 
@@ -185,6 +186,13 @@ def json_to_xml(data):
     # Join the goods items list into a single string
     formatted_goods_items_str = "".join(formatted_goods_items)
 
+
+  if data["Incoterm"] is None or len(data["Incoterm"]) < 2:
+    if len(data["Incoterm"]) == 1:
+      data["Incoterm"] = [data["Incoterm"][0], ""]
+    else:
+      data["Incoterm"] = ["", ""]  
+  
   # Fill the XML template with the formatted goods items
   xml_filled = xml_template.format (
       Container=data["container"],

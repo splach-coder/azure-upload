@@ -8,7 +8,7 @@ import io
 from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
-from performance.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days
+from performance.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days, calculate_all_users_monthly_metrics
 
 # Key Vault Configuration
 key_vault_url = "https://kv-functions-python.vault.azure.net"
@@ -87,6 +87,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         elif method == "GET":    
             username = req.params.get("user")
+            all_users = req.params.get("all_users", "false").lower() == "true"
             
             if username:
                 # Load full data from blob or wherever
@@ -94,6 +95,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                 # Call the user metrics function
                 metrics = calculate_single_user_metrics_fast(df, username.upper())
+
+                return func.HttpResponse(
+                    body=json.dumps(metrics),
+                    status_code=200,
+                    mimetype="application/json"
+                )
+            
+            if all_users:
+                # Load full data from blob or wherever
+                df = load_parquet_from_blob()
+
+                # Call the all users metrics function
+                metrics = calculate_all_users_monthly_metrics(df)
 
                 return func.HttpResponse(
                     body=json.dumps(metrics),

@@ -1,3 +1,4 @@
+import logging
 import re
 import requests
 import xml.etree.ElementTree as ET
@@ -42,7 +43,11 @@ def process_container_data(data):
 
     final_freight, final_vat = calculationVATndFREIGHT(total_devises, freight, vat1, vat2)
 
-    dispatch_country = search_ports(incoterm_array[1])
+    # If incoterm is not provided, set it to an empty array
+    if len(incoterm_array) > 1:
+        dispatch_country = search_ports(incoterm_array[1])
+    else:
+        dispatch_country = ""    
 
     # Reconstruct the processed entry
     processed_entry = {
