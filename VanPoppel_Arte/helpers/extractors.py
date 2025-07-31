@@ -291,7 +291,7 @@ def extract_products_from_text(text):
     results = []
     for block in products:
         try:
-            # 🧼 CLEAN unexpected lines (like 'CONSOL')
+            # 🧼 CLEAN unexpected lines
             expected_prefixes = [
                 "• (", "• Order number:", "• Your reference:", "• Customs Tariff:",
                 "• Net:", "• Surface:", "• Country of origin:"
@@ -303,12 +303,21 @@ def extract_products_from_text(text):
                     cleaned_block.append(line)
                 elif re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", line):  # quantity/unit
                     cleaned_block.append(line)
-                elif is_currency_amount(line):  # Dynamic currency detection
+                elif is_currency_amount(line):
                     cleaned_block.append(line)
-                elif re.match(r"^[\d.,]+$", line):  # only the amount (split line)
+                elif re.match(r"^[\d.,]+$", line):  # just numbers
                     cleaned_block.append(line)
-                elif is_currency_only(line):  # Dynamic currency detection
+                elif is_currency_only(line):
                     cleaned_block.append(line)
+                else:
+                    # Keep product name lines
+                    if not cleaned_block or cleaned_block == [block[0]]:
+                        cleaned_block.append(line)
+
+            # 🩹 FIX: merge stray product name lines if second line not starting with expected label
+            if len(cleaned_block) > 2 and not cleaned_block[2].startswith("• Order number:"):
+                cleaned_block[1] = cleaned_block[1].strip() + " " + cleaned_block[2].strip()
+                del cleaned_block[2]
 
             # 🩹 Fix broken 'Your reference'
             fixed_block = []
@@ -328,7 +337,12 @@ def extract_products_from_text(text):
                 raise ValueError("Block too short after cleaning")
 
             product_code = block[0]
-            product_name = re.search(r"\((.*?)\)\s*(.*)", block[1]).group(2).strip()
+            product_name_match = re.search(r"\((.*?)\)\s*(.*)", block[1])
+            if product_name_match:
+                product_name = product_name_match.group(2).strip()
+            else:
+                product_name = block[1].strip()
+
             order_number = block[2].split(":", 1)[1].strip()
             reference = block[3].split(":", 1)[1].strip()
             customs_tariff = block[4].split(":", 1)[1].strip()
@@ -339,7 +353,7 @@ def extract_products_from_text(text):
             quantity, unit = block[8].split(" ")
             unit_price = block[9].strip()
             
-            # Enhanced amount handling with dynamic currency detection
+            # Enhanced amount handling
             amount, currency = extract_amount_and_currency(block[10:12])
 
             results.append({
@@ -355,7 +369,7 @@ def extract_products_from_text(text):
                 "unit": unit,
                 "unit_price": unit_price,
                 "amount": amount,
-                "currency": currency  # Adding currency field
+                "currency": currency
             })
 
         except Exception as e:
