@@ -17,7 +17,7 @@ def extract_clean_excel_from_pdf(base64_pdf: str, filename):
         - Mark Subtotal rows with "SubTotal": true and include the "Packages" value.
         - Keep the row order as in the table.
         - Remove empty or irrelevant rows.
-        - Convert all number formats correctly:
+        - Convert all number formats correctly: (understand all the numbers logically (gross should be greater than net, etc.) understand the number formats and convert them correctly)
           - All numbers use European formatting where dot (.) is the thousands separator and comma (,) is the decimal separator.
           - Convert values like '19.751,040' to 19751.040 (float).
           - This applies to Gross, Net weight, and Net Value fields.

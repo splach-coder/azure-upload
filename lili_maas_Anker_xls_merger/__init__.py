@@ -1,5 +1,4 @@
 import re
-import uuid
 import azure.functions as func
 import logging
 import json
@@ -10,14 +9,6 @@ import xlrd
 import gc
 import time
 
-from lili_maas_Anker_xls_merger.helpers.functions import fetch_exchange_rate, find_shipping_fee_from_sheet, merge_json_items
-from lili_maas_Anker_xls_merger.excel.create_excel import write_to_excel
-
-def safe_float(val):
-    try:
-        return float(val)
-    except:
-        return 0.0
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Lili Maas JSON File Merger - Started.')
@@ -177,40 +168,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.error(f"Exception while processing file {filename}: {str(e)}")
             return func.HttpResponse(json.dumps({"error": f"Error processing {filename}: {str(e)}"}), status_code=500)
 
-    data = merge_json_items(data)
-
-    InsuranceCurrency = data.get("items", [{}])[0].get("VALUTA", "")
-    data["InsuranceCurrency"] = InsuranceCurrency
     
-    try :
-        if InsuranceCurrency == "EUR": 
-            data["ExchangeCalc"] = 1
-        else:
-            exchange_rate = safe_float(fetch_exchange_rate('USD').replace(",", "."))    
-            data["ExchangeCalc"] = exchange_rate
-    except ZeroDivisionError:
-        data["ExchangeCalc"] = 0.0
-        
-    try:       
-        excel_file = write_to_excel(data)
-        logging.info("Generated Excel file.")
-        
-        reference = data.get("INVOICENUMBER", "") or ("Lilly_mass_" + uuid.uuid4().hex[:8])
-
-        headers = {
-            'Content-Disposition': f'attachment; filename="{reference}.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-
-        return func.HttpResponse(
-            excel_file.getvalue(),
-            headers=headers,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-
-    except Exception as e:
-        logging.error(f"Error generating final output: {e}")
-        return func.HttpResponse(
-            json.dumps({"error": f"Error processing request: {e}"}),
-            status_code=500
-        )

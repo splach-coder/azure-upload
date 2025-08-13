@@ -259,7 +259,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
              
         elif 'extra' in filename.lower():
             extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
-            logging.error(json.dumps(extra_file_excel_data, indent=2))  # Log the extracted data for debugging
             
             def fix_weight(value):
                 if isinstance(value, float):
