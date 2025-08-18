@@ -92,7 +92,6 @@ def count_user_file_creations_last_10_days(df):
 
     return results
 
-
 def calculate_single_user_metrics_fast(df_all, username):
     df = df_all.copy()
 
@@ -395,5 +394,3 @@ def calculate_all_users_monthly_metrics(df_all):
         }
     
     return user_results
-
-

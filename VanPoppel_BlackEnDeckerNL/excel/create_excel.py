@@ -26,7 +26,7 @@ def write_to_excel(json_string):
         header1 = [
             "VAT exporter", "Contact", "Commericial reference", "Other ref", "Freight",
             "Goods location", "Export office", "Exit office", "Name", "Street + number",
-            "Postcode", "city", "Country", "Inco Term", "Place", "Container", "Truck", "Rex/Other"
+            "Postcode", "city", "Country", "Inco Term", "Place", "Container", "Truck", "Rex/Other", "ILS NUMBER"
         ]
         logger.debug("Header1 defined")
 
@@ -97,7 +97,8 @@ def write_to_excel(json_string):
                 place,
                 data.get('container', ''),
                 data.get('Wagon', ''),
-                data.get("Customs code", '')
+                data.get("Customs code", ''),
+                data.get("ILS_NUMBER", '')
             ]
             logger.debug("Values1 prepared")
         except Exception as e:
@@ -108,7 +109,7 @@ def write_to_excel(json_string):
         header2 = [
             "Commodity", "Description", "Article", "Collis", "Gross", "Net",
             "Origin", "Invoice value", "Currency", "Statistical Value",
-            "Pieces", "Invoicenumber", "Invoice date", "Rex/other", "Location"
+            "Pieces", "Invoicenumber", "Invoice date", "Rex/other", "Location", "ILS NUMBER"
         ]
         logger.debug("Header2 defined")
 
@@ -128,9 +129,9 @@ def write_to_excel(json_string):
                                 elif ordered_key == "Net":
                                     mini_row.append(obj.get("net_weight_kg", ''))
                                 elif ordered_key == "Invoice value":
-                                    mini_row.append(obj.get("amount", ""))
+                                    mini_row.append(obj.get("amount", "")) 
                                 elif ordered_key == "Currency":
-                                    mini_row.append(data.get("currency", ""))
+                                    mini_row.append(data.get("currency", "")) 
                                 elif ordered_key == "Invoicenumber":
                                     mini_row.append(data.get("Invoice No", ''))
                                 else:    
@@ -142,7 +143,20 @@ def write_to_excel(json_string):
                     except Exception as e:
                         logger.error(f"Error processing item row: {str(e)}")
                         continue
-            logger.info(f"Processed {len(rows_data)} item rows")
+
+            # --- Sorting rows by HS code (first column of header2 = "Commodity") ---
+            def hs_key(row):
+                hs = str(row[0]).strip()
+                if not hs:
+                    return float("inf")  # empty hs_code -> bottom
+                try:
+                    return int(hs.replace(".", "").replace(" ", ""))
+                except:
+                    return float("inf")  # non-numeric hs_code -> bottom
+
+            rows_data.sort(key=hs_key)
+
+            logger.info(f"Processed {len(rows_data)} item rows (sorted by HS code)")
         except Exception as e:
             logger.error(f"Error processing items: {str(e)}")
 

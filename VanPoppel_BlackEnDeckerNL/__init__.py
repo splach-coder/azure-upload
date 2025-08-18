@@ -1,3 +1,4 @@
+from ILS_NUMBER.get_ils_number import call_logic_app
 import azure.functions as func
 import logging
 import json
@@ -178,6 +179,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if temp_file_path and os.path.exists(temp_file_path):
             os.remove(temp_file_path)
             logging.info(f"Cleaned up temporary file: {temp_file_path}")
+            
+    try:
+        # Get the ILS number
+        response = call_logic_app("STANLEY", company="vp") 
+
+        if response["success"]:
+            result_data["ILS_NUMBER"] = response["doss_nr"]
+            logging.info(f"ILS_NUMBER: {result_data['ILS_NUMBER']}")
+        else:
+            logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")        
 
     # --- 4. Generate and Return New Excel File ---
     try:
