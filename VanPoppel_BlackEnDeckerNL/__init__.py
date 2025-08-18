@@ -58,6 +58,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # --- 3. Extract and Process Data ---
     workbook = None
+    # --- NEW: Initialize second_layout variable ---
+    second_layout = False # Default value
     try:
         workbook = openpyxl.load_workbook(temp_file_path, data_only=True)
         sheet = workbook.active
@@ -87,6 +89,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # If it's not a string (e.g., a number or None), return it as is
             return value
 
+        # --- NEW: Check for 'bruto' in E13 ---
+        e13_value = get_cell_value('E13')
+        if isinstance(e13_value, str) and 'bruto' in e13_value.lower():
+            second_layout = True
+            logging.info(f"Cell E13 contains 'bruto'. Setting second_layout to True.")
+        
         # --- Static Data Extraction ---
         header_data = {
             "reference": get_first_part(get_cell_value('B2')),
@@ -127,14 +135,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 continue
         
         # --- Address Parsing ---
-        # Combine client details into a single address string
         address_parts = [client_data['name'], client_data['address'], client_data['postal_code_city'], client_data['country']]
         full_address_string = ", ".join(filter(None, [str(part) for part in address_parts]))
         
         parser = AddressParser()
         parsed_address_list = parser.parse_address(full_address_string)
         
-        # Convert parsed list to a dictionary
         parsed_address = {
             "company_name": parsed_address_list[0] if len(parsed_address_list) > 0 else None,
             "street": parsed_address_list[1] if len(parsed_address_list) > 1 else None,
@@ -155,7 +161,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "OfficeOfExit": header_data.get("office_of_exit"),
             "PlaceOfDelivery": parsed_address,
             "Invoice No": header_data.get("invoice_number"),
-            "Items": line_items # Assuming write_to_excel can handle this structure
+            "Items": line_items 
         }
         logging.info("Successfully extracted and restructured data.")
 
@@ -183,9 +189,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not reference:
             reference = f"ref-{uuid.uuid4().hex}"
 
+        # --- MODIFIED: Add custom header to the response ---
         headers = {
             'Content-Disposition': f'attachment; filename="{reference}.xlsx"',
-            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'X-Second-Layout': str(second_layout) # Pass the variable as a string ('True' or 'False')
         }
 
         return func.HttpResponse(excel_file_bytes.getvalue(), headers=headers)
