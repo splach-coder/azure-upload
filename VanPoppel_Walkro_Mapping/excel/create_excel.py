@@ -28,12 +28,13 @@ def write_to_excel(json_string):
         "Container",
         "Truck",
         "Rex/Other",
+        "License plate",
     ]
     
     values1 = [
         data.get('VAT exporter', ''),
-        data.get('Principal', ''),
-        data.get('Commericial reference', ''),
+        data.get('Relatie number', ''),
+        data.get('Order number', ''),
         data.get('Other Ref', ''),
         data.get('Transport fee', ''),
         data.get('kaai', ''),
@@ -49,7 +50,7 @@ def write_to_excel(json_string):
         data.get('Container'),
         data.get('Truck Nbr', ''),
         data.get("Customs Code", ''),
-        data.get("Seal", ''),
+        data.get("License plate", ''),
     ]
 
     header2 = [

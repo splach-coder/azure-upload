@@ -66,6 +66,8 @@ def write_to_extra_excel(json_string):
         "Net Value",
         "Currency",
         "Comm. Code",
+        "Invoice number",
+        "Invoice date",
     ]
     
     rows_data = []  # To store the processed rows for "items"
@@ -77,7 +79,12 @@ def write_to_extra_excel(json_string):
             for obj in value:
                 mini_row = []
                 for ordered_key in header2:
-                    mini_row.append(obj.get(ordered_key, ''))
+                    if ordered_key == "Invoice number":
+                        mini_row.append(data.get("Inv Number", ''))
+                    elif ordered_key == "Invoice date":
+                        mini_row.append(data.get("Inv Date", ''))
+                    else :    
+                        mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)
         else:
             row_empty.append("")

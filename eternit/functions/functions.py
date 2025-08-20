@@ -1,9 +1,21 @@
 import json
 import re
 from bs4 import BeautifulSoup
+from typing import List, Optional, Union
 
-def clean_incoterm(inco : str) -> list :
-    return inco.split(' ', maxsplit=1)
+def clean_incoterm(inco: Optional[Union[str, object]]) -> List[str]:
+    """
+    Splits an incoterm string into [term, location].
+    Always returns exactly 2 elements, filling with '' if missing.
+    """
+    if not isinstance(inco, str) or not inco.strip():
+        return ["", ""]
+    
+    parts = inco.strip().split(" ", maxsplit=1)
+    if len(parts) == 1:
+        return [parts[0], ""]
+    return parts
+
 
 def normalize_numbers(number_str : str) -> float:
     """

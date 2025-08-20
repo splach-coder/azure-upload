@@ -17,7 +17,8 @@ def count_user_file_creations_last_10_days(df):
 
     users = import_users + export_users
 
-    manual_statuses = {"INTERFACE", "COPIED", "COPY", "NEW"}
+    # --- CHANGE 1: "INTERFACE" is no longer considered a manual status ---
+    manual_statuses = {"COPIED", "COPY", "NEW"}
 
     # Clean columns like in calculate_single_user_metrics_fast
     for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS"]:
@@ -63,22 +64,14 @@ def count_user_file_creations_last_10_days(df):
             if first_action_date not in working_days:
                 continue
 
+            # --- CHANGE 2: Simplified automatic/manual classification logic ---
+            # A file is AUTOMATIC if "INTERFACE" exists anywhere in its history for any user.
+            is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+            
+            # A file is MANUAL if the user performed a manual action AND it's not automatic.
             user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
-            is_manual = bool(manual_statuses.intersection(user_statuses))
-
-            is_automatic = False
-            if not is_manual:
-                has_batchproc_interface = not group[
-                    (group["USERCODE"] == "BATCHPROC") & (group["HISTORY_STATUS"] == "INTERFACE")
-                ].empty
-
-                if has_batchproc_interface:
-                    mod_users = group[
-                        (group["HISTORY_STATUS"] == "MODIFIED") & (group["USERCODE"] != "BATCHPROC")
-                    ]["USERCODE"].value_counts()
-
-                    if not mod_users.empty and mod_users.index[0] == user:
-                        is_automatic = True
+            is_manual = bool(manual_statuses.intersection(user_statuses)) and not is_automatic
+            # --- END OF CHANGES ---
 
             if is_manual or is_automatic:
                 key = first_action_date.strftime("%d/%m")
@@ -115,7 +108,9 @@ def calculate_single_user_metrics_fast(df_all, username):
         }
 
     user_scope_df = df[df["DECLARATIONID"].isin(user_decls)].copy()
-    manual_statuses = {"INTERFACE", "COPIED", "COPY", "NEW"}
+    
+    # --- CHANGE 1: "INTERFACE" is no longer considered a manual status ---
+    manual_statuses = {"COPIED", "COPY", "NEW"}
 
     daily_summary = defaultdict(lambda: {
         "manual_files_created": 0,
@@ -140,30 +135,22 @@ def calculate_single_user_metrics_fast(df_all, username):
             continue
 
         first_action_date = user_rows["HISTORYDATETIME"].min().date().isoformat()
-        is_manual, is_automatic = False, False
-
+        
+        # --- CHANGE 2: Simplified automatic/manual classification logic ---
+        # A file is AUTOMATIC if "INTERFACE" exists anywhere in its history for any user.
+        is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+        
+        # A file is MANUAL if the user performed a manual action AND it's not automatic.
         user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
-        if manual_statuses.intersection(user_statuses):
-            is_manual = True
-
-        if not is_manual:
-            has_batchproc_interface = not group[
-                (group["USERCODE"] == "BATCHPROC") & (group["HISTORY_STATUS"] == "INTERFACE")
-            ].empty
-
-            if has_batchproc_interface:
-                mod_users = group[
-                    (group["HISTORY_STATUS"] == "MODIFIED") & (group["USERCODE"] != "BATCHPROC")
-                ]["USERCODE"].value_counts()
-
-                if not mod_users.empty and mod_users.index[0] == username:
-                    is_automatic = True
+        is_manual = manual_statuses.intersection(user_statuses) and not is_automatic
+        # --- END OF CHANGES ---
 
         if is_manual:
             daily_summary[first_action_date]["manual_files_created"] += 1
             daily_summary[first_action_date]["total_files_handled"].add(decl_id)
             daily_summary[first_action_date]["manual_file_ids"].append(decl_id)
         elif is_automatic:
+            # Credit for the automatic file is given if the user has interacted with it.
             daily_summary[first_action_date]["automatic_files_created"] += 1
             daily_summary[first_action_date]["total_files_handled"].add(decl_id)
             daily_summary[first_action_date]["automatic_file_ids"].append(decl_id)
@@ -173,7 +160,7 @@ def calculate_single_user_metrics_fast(df_all, username):
         daily_summary[first_action_date]["total_files_handled"].update(mods["DECLARATIONID"].tolist())
         daily_summary[first_action_date]["modification_file_ids"].update(mods["DECLARATIONID"].tolist())
 
-        # 🆕 File lifecycle logic
+        # File lifecycle logic
         session_start = None
         for _, row in mods.sort_values("HISTORYDATETIME").iterrows():
             if row["HISTORY_STATUS"] == "MODIFIED" and session_start is None:
@@ -215,7 +202,7 @@ def calculate_single_user_metrics_fast(df_all, username):
 
     most_productive_day = max(daily_metrics, key=lambda d: d["total_files_handled"], default={"date": None})["date"] if daily_metrics else None
 
-    # 🆕 Smart avg per day (only weekdays + at least 1 file created)
+    # Smart avg per day (only weekdays + at least 1 file created)
     valid_days = [
         d for d in daily_metrics
         if (datetime.strptime(d["date"], "%Y-%m-%d").weekday() < 5) and
@@ -263,15 +250,24 @@ def calculate_single_user_metrics_fast(df_all, username):
             "hour_with_most_activity": hour_with_most_activity
         }
     }
-    
+
 def calculate_all_users_monthly_metrics(df_all):
     """
-    Calculate file creation metrics for all users in the last month (30 days)
+    Calculate file creation metrics for a specific list of users in the last month (30 days)
     Returns summary of files created and daily averages per user
     """
     df = df_all.copy()
     
-    # Data preprocessing (same as original function)
+    # --- NEW: Hardcoded list of users to include in the report ---
+    target_users = [
+        'FADWA.ERRAZIKI', 'AYOUB.SOURISTE', 'AYMANE.BERRIOUA', 'SANA.IDRISSI', 'AMINA.SAISS',
+        'KHADIJA.OUFKIR', 'ZOHRA.HMOUDOU', 'SIMO.ONSI', 'YOUSSEF.ASSABIR', 'ABOULHASSAN.AMINA',
+        'MEHDI.OUAZIR', 'OUMAIMA.EL.OUTMANI', 'HAMZA.ALLALI', 'MUSTAPHA.BOUJALA', 'HIND.EZZAOUI',
+        'IKRAM.OULHIANE', 'MOURAD.ELBAHAZ', 'MOHSINE.SABIL', 'AYA.HANNI',
+        'ZAHIRA.OUHADDA', 'CHAIMAAE.EJJARI', 'HAFIDA.BOOHADDOU', 'KHADIJA.HICHAMI', 'FATIMA.ZAHRA.BOUGSIM'
+    ]
+    
+    # Data preprocessing
     for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS"]:
         df[col] = df[col].astype(str).str.strip().str.upper()
     
@@ -279,27 +275,24 @@ def calculate_all_users_monthly_metrics(df_all):
     df = df.dropna(subset=["HISTORYDATETIME"])
     df["HISTORYDATETIME"] = df["HISTORYDATETIME"].dt.tz_localize(None)
     
-    # Filter for last 30 days instead of 90
+    # Filter for last 30 days
     cutoff = datetime.now() - timedelta(days=30)
     recent_df = df[df["HISTORYDATETIME"] >= cutoff]
     
     if recent_df.empty:
         return {}
     
-    # Get all users who had activity in the last month
-    active_users = recent_df["USERCODE"].unique()
-    manual_statuses = {"INTERFACE", "COPIED", "COPY", "NEW"}
+    manual_statuses = {"COPIED", "COPY", "NEW"}
     
     user_results = {}
     
-    for username in active_users:
-        # Skip system users
-        if username in ["BATCHPROC", "SYSTEM", ""]:
-            continue
-            
+    # --- CHANGE: Loop through the target_users list instead of all active users ---
+    for username in target_users:
         # Get declarations this user worked on
         user_decls = recent_df[recent_df["USERCODE"] == username]["DECLARATIONID"].unique()
         if len(user_decls) == 0:
+            # If user has no activity, you might want to skip them or return a zero-value entry.
+            # Here we skip them to match the previous logic.
             continue
         
         # Get all activity for these declarations
@@ -320,42 +313,20 @@ def calculate_all_users_monthly_metrics(df_all):
             if group.empty:
                 continue
             
-            # Check if user worked on this declaration
             user_rows = group[group["USERCODE"] == username]
             if user_rows.empty:
                 continue
             
-            # Get the first action date within our 30-day window
             user_actions_in_period = user_rows[user_rows["HISTORYDATETIME"] >= cutoff]
             if user_actions_in_period.empty:
                 continue
                 
             first_action_date = user_actions_in_period["HISTORYDATETIME"].min().date().isoformat()
             
-            # Determine if this is manual or automatic file creation
-            is_manual = False
-            is_automatic = False
-            
-            # Check for manual creation (same logic as original)
+            is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
             user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
-            if manual_statuses.intersection(user_statuses):
-                is_manual = True
+            is_manual = bool(manual_statuses.intersection(user_statuses)) and not is_automatic
             
-            # Check for automatic creation (same logic as original)
-            if not is_manual:
-                has_batchproc_interface = not group[
-                    (group["USERCODE"] == "BATCHPROC") & (group["HISTORY_STATUS"] == "INTERFACE")
-                ].empty
-                
-                if has_batchproc_interface:
-                    mod_users = group[
-                        (group["HISTORY_STATUS"] == "MODIFIED") & (group["USERCODE"] != "BATCHPROC")
-                    ]["USERCODE"].value_counts()
-                    
-                    if not mod_users.empty and mod_users.index[0] == username:
-                        is_automatic = True
-            
-            # Count the file creation
             if is_manual:
                 daily_files[first_action_date]["manual_files"] += 1
                 daily_files[first_action_date]["total_files"].add(decl_id)
@@ -368,13 +339,11 @@ def calculate_all_users_monthly_metrics(df_all):
         total_automatic = sum(day_data["automatic_files"] for day_data in daily_files.values())
         total_files = total_manual + total_automatic
         
-        # Calculate average per day (only for weekdays with file creation activity)
         valid_days = []
         for date_str, day_data in daily_files.items():
             date_obj = datetime.strptime(date_str, "%Y-%m-%d")
             files_created = day_data["manual_files"] + day_data["automatic_files"]
             
-            # Only count weekdays (Monday=0, Sunday=6) with actual file creation
             if date_obj.weekday() < 5 and files_created > 0:
                 valid_days.append(files_created)
         

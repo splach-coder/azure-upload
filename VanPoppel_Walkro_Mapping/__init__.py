@@ -55,6 +55,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         data['Total Net'] = TotalNet    
             
     try:
+        logging.error(data)
         excel_file= write_to_excel(data)
         
         # Generate a random UUID

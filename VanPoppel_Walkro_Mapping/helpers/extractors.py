@@ -27,12 +27,17 @@ Extract only the invoice data and ignore other pages. Extract the following fiel
 - package: from the package details (Extract from invoice exp 52 PK)
 - date: from the invoice date
 - transport_fee: from any transport fee if available
-- address: [company name, street, city, postal code, country (in 2-letter ISO code)]
+- address: The reciever address we need its always in the right (this one WALKRO HANDELSONDERNEMING BELGIË NV is the sender don't extract it ). [company name, street, city, postal code, country (in 2-letter ISO code)]
+- Order number: from the order number if available
+- Relatie number: from the relatie number if available
 
 Dictionary Structure:
 invoice_data = {
     "VAT exporter": "<VAT number without dots or spaces>",
     "Transport fee": "<transport fee if available>",
+    "Order number": "< Order number fee if available> (always extract it from the second page)",
+    "Relatie number": "< Relatie number fee if available> (always extract it from the second page) (only number if a letter or special case is present remove it)",
+    "License plate": "<license plate or pass number>",
     "Address": {
         "Company name": "<name of the company>",
         "Street": "<street and number>",
@@ -47,7 +52,6 @@ invoice_data = {
             "Invoice value": <invoice value as a number>,
             "Currency": "<currency code>",
             "Invoice date": "<invoice date in YYYY-MM-DD format>",
-            "License plate": "<license plate or pass number>",
             "Package": "<package details>",
             "Date": "<date in YYYY-MM-DD format>"
         }
@@ -58,13 +62,13 @@ Instructions:
 - VAT Exporter: Extract and normalize the VAT number (no spaces or dots).
 - Address: Extract Company name, street, postcode, city, and country (as ISO code).
 - Transport fee: Extract transport fee if available
+- License plate: Kenteken/Pasnr.
 - Items: Extract the commodity data:
   - Description: Commodity description
   - Net weight: Convert weight from ton to kg
   - Invoice value: Extract as a number (if available)
   - Currency: Extract currency code (if available)
   - Invoice date: From invoice date
-  - License plate: Kenteken/Pasnr.
   - Package: Package details
   - Date: Invoice date
   

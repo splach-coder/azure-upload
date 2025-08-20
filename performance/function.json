@@ -6,7 +6,7 @@
             "direction": "in",
             "name": "req",
             "methods": ["post", "get", "delete"],
-            "route": "performance/{*action}"
+            "route": "performance/{action?}"
         },
         {
             "type": "http",
