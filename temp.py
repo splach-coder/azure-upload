@@ -1,46 +1,54 @@
-import os
-import requests
-from zipfile import ZipFile
+import re
 
-# List of image URLs
-urls = [
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/GUARDIAN-ARTICLE-page-001.jpg",
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/SAINSBURY-MAGAZINE-LOGO.jpg",
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/E-AND-I-LOGO.jpg",
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/LONDON-EVENING-STANDARD-LOGO.jpg",
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/Retire-move-magazine-LOGO.jpg",
-    "http://www.kasbahangour.com/wp-content/uploads/2019/10/BOE-JPG.jpg",
-    "http://www.kasbahangour.com/wp-content/uploads/2019/10/OMOTG-LOGO.jpg",
-    "https://www.kasbahangour.com/wp-content/uploads/2019/10/DAILY-TELEGRAPH-LOGO.jp"
-]
+def parse_weight(number_str: str) -> str:
+    """
+    Normalizes a weight string from an invoice to a standard format (e.g., '1234.565').
 
-# Create a folder to store the downloads
-folder = "downloaded_images"
-os.makedirs(folder, exist_ok=True)
+    This function is designed based on the rule that weights always have three decimal places.
+    It intelligently detects the decimal separator (',' or '.') based on this rule.
 
-# Download each image
-for url in urls:
-    filename = os.path.basename(url)
+    Args:
+        number_str: The number string to parse, e.g., "1.234,565" or "1,234.565".
 
-    # Fix incomplete extensions
-    if filename.endswith(".jp"):
-        filename += "g"
+    Returns:
+        A cleaned string in the standard 'INTEGER.DECIMAL' format.
 
-    filepath = os.path.join(folder, filename)
+    Raises:
+        ValueError: If the number format is ambiguous or unrecognized.
+    """
+    if not isinstance(number_str, str):
+        raise TypeError("Input must be a string.")
 
-    print(f"Downloading {url} -> {filename}...")
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        with open(filepath, "wb") as f:
-            f.write(response.content)
-    except Exception as e:
-        print(f"Failed to download {url}: {e}")
+    s = number_str.strip()
 
-# Create ZIP archive
-zip_filename = "images_archive.zip"
-with ZipFile(zip_filename, "w") as zipf:
-    for file in os.listdir(folder):
-        zipf.write(os.path.join(folder, file), file)
+    # If the last character is a comma or dot, it might be a dangling separator.
+    if s.endswith(',') or s.endswith('.'):
+        s = s[:-1]
+        
+    # Find the last occurrence of a comma and a dot
+    last_comma_index = s.rfind(',')
+    last_dot_index = s.rfind('.')
 
-print(f"\nAll done! Images are saved in '{folder}' and zipped into '{zip_filename}'.")
+    # Case 1: The last separator is a comma, followed by exactly 3 digits.
+    # This strongly indicates the EU format (e.g., "1.234,565" or "0,156").
+    if last_comma_index > last_dot_index and len(s) - last_comma_index - 1 == 3:
+        # Remove all dots (as thousands separators) and replace the comma with a dot.
+        return s.replace('.', '').replace(',', '.')
+
+    # Case 2: The last separator is a dot, followed by exactly 3 digits.
+    # This strongly indicates the EN format (e.g., "1,234.565" or "0.635").
+    if last_dot_index > last_comma_index and len(s) - last_dot_index - 1 == 3:
+        # Remove all commas (as thousands separators).
+        return s.replace(',', '')
+
+    # Case 3: The number has no separators or they are not followed by 3 digits.
+    # Treat it as an integer and remove all separators.
+    cleaned_s = s.replace(',', '').replace('.', '')
+    if cleaned_s.isdigit():
+        return cleaned_s
+
+    # If none of the above rules apply, the format is unrecognized.
+    raise ValueError(f"Unrecognized or ambiguous number format: '{number_str}'")
+
+
+print(parse_weight("0,350 "))

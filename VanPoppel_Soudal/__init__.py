@@ -17,7 +17,7 @@ from AI_agents.OpenAI.custom_call import CustomCall
 from ILS_NUMBER.get_ils_number import call_logic_app
 from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
-from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, normalize_number, safe_float_conversion, parse_number
+from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, normalize_number, safe_float_conversion, parse_numbers, parse_weights
 from VanPoppel_Soudal.excel.create_excel import write_to_excel
 from VanPoppel_Soudal.zip.create_zip import zip_excels 
 
@@ -168,8 +168,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result_dict["Address"] = parsed_result
 
             #clean the total gross and net
-            result_dict["Total Gross"] = safe_float_conversion(parse_number(result_dict.get("Total Gross", 0.0)))
-            result_dict["Total Net"] = safe_float_conversion(parse_number(result_dict.get("Total Net", 0.0)))
+            result_dict["Total Gross"] = safe_float_conversion(parse_weights(result_dict.get("Total Gross", 0.0)))
+            result_dict["Total Net"] = safe_float_conversion(parse_weights(result_dict.get("Total Net", 0.0)))
 
             #split the invoice value and seperate the currency
             invoice_value = result_dict.get("Total Value", "")
@@ -182,7 +182,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 else:
                     result_dict["Currency"] = ""
                     invoice_value = invoice_value[0]
-                result_dict["Total Value"] = safe_float_conversion(parse_number(invoice_value))
+                result_dict["Total Value"] = safe_float_conversion(parse_numbers(invoice_value))
             else:
                 result_dict["Total Value"] = 0.00
                 result_dict["Currency"] = ""
@@ -212,8 +212,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             for item in items:
                 coo = item.get("COO", "")
-                gross = safe_float_conversion(parse_number(item.get("Gross Weight", 0.0)))
-                net = safe_float_conversion(parse_number(item.get("Net Weight", 0.0)))
+                gross = safe_float_conversion(parse_weights(item.get("Gross Weight", 0.0)))
+                net = safe_float_conversion(parse_weights(item.get("Net Weight", 0.0)))
 
                 # Skip if COO is empty/None and both weights are 0
                 if not coo or (gross == 0 and net == 0):
@@ -228,7 +228,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Net Weight"] = net
 
                 if item.get("Value", 0.0) is not None:
-                    item["Value"] = safe_float_conversion(parse_number(item.get("Value", 0.0)))
+                    item["Value"] = safe_float_conversion(parse_numbers(item.get("Value", 0.0)))
                 else:
                     item["Value"] = 0.00
                     

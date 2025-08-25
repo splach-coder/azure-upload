@@ -28,6 +28,7 @@ def write_to_excel(json_string):
         "Container",
         "Truck",
         "Rex/Other",
+        "ILS NUMBER",
         "License plate",
     ]
     
@@ -50,6 +51,7 @@ def write_to_excel(json_string):
         data.get('Container'),
         data.get('Truck Nbr', ''),
         data.get("Customs Code", ''),
+        data.get("ILS_NUMBER", ''),
         data.get("License plate", ''),
     ]
 

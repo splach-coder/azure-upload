@@ -1,4 +1,5 @@
 import re
+from ILS_NUMBER.get_ils_number import call_logic_app
 import azure.functions as func
 import logging
 import json
@@ -52,7 +53,20 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
         data['Total Value'] = TotalValue
         data['Total Pallets'] = TotalCollis
-        data['Total Net'] = TotalNet    
+        data['Total Net'] = TotalNet
+        
+    try:
+        # Get the ILS number
+        response = call_logic_app("WALKRO H", company="vp") 
+
+        if response["success"]:
+            data["ILS_NUMBER"] = response["doss_nr"]
+            logging.info(f"ILS_NUMBER: {data['ILS_NUMBER']}")
+        else:
+            logging.error(f"❌ Failed to get ILS_NUMBER: {response['error']}")
+    
+    except Exception as e:
+        logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")             
             
     try:
         logging.error(data)
