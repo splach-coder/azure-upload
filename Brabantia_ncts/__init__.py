@@ -137,6 +137,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     # Merge items with MRN numbers
     merged_data = merge_items_with_mrn(extracted_data)
+    
+    logging.error(json.dumps(merged_data, indent=4))
 
     # Create the Excel file with unique filename
     excel_stream, filename = create_excel_from_merged_data(merged_data, "brabantia_export")

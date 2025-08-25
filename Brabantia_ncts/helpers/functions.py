@@ -21,12 +21,19 @@ def safe_float_conversion(value):
     
 def merge_items_with_mrn(data):
     header_lookup = {entry["Code"]: entry["Number"] for entry in data.get("header", [])}
-    
+   
     for item in data.get("items", []):
         key = item.get("merged_EX_A_D")
         if key and key in header_lookup:
             item["MRN_number"] = header_lookup[key]
     
+    # Sort items by merged_EX_A_D in alphabetical order (A-Z)
+    # Handle None values by placing them at the end
+    data["items"] = sorted(
+        data.get("items", []), 
+        key=lambda x: x.get("merged_EX_A_D") or ""
+    )
+   
     return data
 
 import openpyxl
