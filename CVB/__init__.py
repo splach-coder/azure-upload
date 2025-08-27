@@ -67,7 +67,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
     # Handle the Freight and VAT calculations based on the company 
     if company == 'williamsrecycling':
-        cost = result.get("TransportCosts", 0)
+        cost = result.get("TransportCosts", 0).get("UK", 0)
         freight = cost * 0.70  # 70% of cost
         vat = cost * 0.30      # 30% of cost
         result["Freight"] = freight
