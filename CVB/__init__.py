@@ -61,10 +61,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error(f"Failed to extract from email body: {e}")
         
-    # Call writeExcel to generate the Excel file in memory
-    with open('data_dump.json', 'w') as f:
-        json.dump(result, f, indent=4)    
-        
     # Handle the Freight and VAT calculations based on the company 
     if company == 'williamsrecycling':
         cost = result.get("TransportCosts", 0).get("UK", 0)
