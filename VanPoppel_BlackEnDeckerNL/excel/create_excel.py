@@ -109,7 +109,7 @@ def write_to_excel(json_string):
         header2 = [
             "Commodity", "Description", "Article", "Collis", "Gross", "Net",
             "Origin", "Invoice value", "Currency", "Statistical Value",
-            "Pieces", "Invoicenumber", "Invoice date", "Rex/other", "Location", "ILS NUMBER"
+            "Pieces", "Invoice number", "Invoice date", "Rex/other"
         ]
         logger.debug("Header2 defined")
 
@@ -123,17 +123,19 @@ def write_to_excel(json_string):
                         for ordered_key in header2:
                             try:
                                 if ordered_key == "Commodity":
-                                    mini_row.append(obj.get("hs_code", ''))
+                                    mini_row.append(obj.get("HSCode", ''))
+                                elif ordered_key == "Pieces":
+                                    mini_row.append(obj.get("Quantity", ''))
                                 elif ordered_key == "Gross":
                                     mini_row.append(obj.get("gross_weight_kg", ''))
                                 elif ordered_key == "Net":
-                                    mini_row.append(obj.get("net_weight_kg", ''))
+                                    mini_row.append(obj.get("NetWeight", ''))
                                 elif ordered_key == "Invoice value":
-                                    mini_row.append(obj.get("amount", "")) 
-                                elif ordered_key == "Currency":
-                                    mini_row.append(data.get("currency", "")) 
-                                elif ordered_key == "Invoicenumber":
-                                    mini_row.append(data.get("Invoice No", ''))
+                                    mini_row.append(obj.get("Amount", "")) 
+                                elif ordered_key == "Invoice number":
+                                    mini_row.append(obj.get("InvoiceNumber", ''))
+                                elif ordered_key == "Invoice date":
+                                    mini_row.append(obj.get("InvoiceDate", ''))
                                 else:    
                                     mini_row.append(obj.get(ordered_key, ''))
                             except Exception as e:

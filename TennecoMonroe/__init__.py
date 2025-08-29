@@ -8,7 +8,6 @@ import base64
 import fitz
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
-from AI_agents.OpenAI.CustomCallWithPdf import CustomCallWithPdf
 from AI_agents.OpenAI.custom_call import CustomCall
 from ILS_NUMBER.get_ils_number import call_logic_app
 from TennecoMonroe.helpers.functions import abbr_countries_in_items, add_inv_date_to_items, check_invoice_in_pdf, clean_VAT, clean_data_from_texts_that_above_value, handle_terms_into_arr, merge_pdf_data, normalize_the_items_numbers, normalize_the_totals_type
