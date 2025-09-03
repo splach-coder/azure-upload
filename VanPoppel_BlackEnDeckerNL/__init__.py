@@ -1,3 +1,4 @@
+from datetime import datetime
 from ILS_NUMBER.get_ils_number import call_logic_app
 import azure.functions as func
 import logging
@@ -170,6 +171,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if result_data and pdf_result and "Items" in pdf_result and pdf_result["Items"]:
         result_data["Items"] = pdf_result["Items"]
         logging.info(f"Final merged {len(pdf_result['Items'])} items from PDF into result_data.")
+        
+    for item in (result_data.get("Items", []) if result_data else []):
+        if "InvoiceDate" in item and isinstance(item["InvoiceDate"], str):
+            # Remove any extra whitespace
+            item["InvoiceDate"] = item["InvoiceDate"].replace('-', '/').strip()
 
     # --- Build Response ---
     if not result_data:
@@ -179,6 +185,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     try:
+        logging.error(json.dumps(result_data, indent=2))
         excel_file_bytes = write_to_excel(result_data)
         reference = result_data.get("ShipmentReference", f"ref-{uuid.uuid4().hex}")
 
