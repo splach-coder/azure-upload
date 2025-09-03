@@ -57,9 +57,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             # --- Handle PDF ---
             if file_extension == ".pdf":
-                extractor = PDFInvoiceExtractor()
-                pdf_result = extractor.extract_items_from_pdf(temp_file_path, timeout=90)
-                logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
+                if "eur1" not in filename.lower():  
+                    extractor = PDFInvoiceExtractor()
+                    pdf_result = extractor.extract_items_from_pdf(temp_file_path, timeout=90)
+                    logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
 
             # --- Handle Excel ---
             elif file_extension in [".xlsm", ".xlsx", ".xls"]:
@@ -188,6 +189,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.error(json.dumps(result_data, indent=2))
         excel_file_bytes = write_to_excel(result_data)
         reference = result_data.get("ShipmentReference", f"ref-{uuid.uuid4().hex}")
+        
+        logging.error(f"Correct Layout: {str(second_layout)}")
 
         headers = {
             "Content-Disposition": f'attachment; filename="{reference}.xlsx"',
