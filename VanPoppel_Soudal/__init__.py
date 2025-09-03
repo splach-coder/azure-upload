@@ -205,6 +205,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 result_dict["Inv Date"] = datetime.datetime.strptime(invoice_date_str, fmt).date()
                                 break
                             except ValueError:
+                                
                                 continue
 
                     cleaned_items = []
@@ -311,7 +312,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         reference = merged_result.get("Reference", "document")
         
         if extra_file_excel is not None:
-            zip_file = zip_excels(excel_file, extra_file_excel, f"factuur_{reference}.xlsx", f"extra_{reference}.xlsx")
+            zip_file = zip_excels(None, extra_file_excel, None, f"extra_{reference}.xlsx")
         else:
             zip_file = zip_excels(excel_file, None, f"factuur_{reference}.xlsx", None)
         
