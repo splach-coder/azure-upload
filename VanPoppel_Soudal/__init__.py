@@ -103,13 +103,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 logging.error(f"Failed to decode base64 for '{filename}': {e}")
                 continue
 
+            # Get number of pages in the PDF
+            try:
+                with fitz.open(stream=file_content, filetype="pdf") as pdf_doc:
+                    num_pages = pdf_doc.page_count
+                logging.error(f"The document has {num_pages if num_pages is not None else 'an unknown number of'} pages.")    
+            except Exception as e:
+                logging.error(f"Failed to get page count for '{filename}': {e}")
+                num_pages = None
+
             detection_prompt = (
-                "Analyze the attached document using OCR to find the starting page number of each distinct invoice. "
-                "A new invoice usually begins with text like 'Page 1/'. "
+                "Analyze the attached document using OCR to find the starting page number of each distinct invoice."
+                "A new invoice usually begins with text like 'Delivery address', 'Invoice n°', 'Sales ref', 'Cust. VAT n°' only if these text are not on the top of the page so its not a new page "
                 "Return a JSON object with a single key 'invoices', which is a list of objects. "
                 "Each object must have one key, 'start_page', with the page number as an integer. "
                 "Example: {\"invoices\": [{\"start_page\": 1}, {\"start_page\": 3}]}. "
                 "Return ONLY the valid JSON."
+                "Make sure to return a logical split if there are multiple invoices. and not overlook any pages. and not gave numbers that are out of range. get the number of pages to make sure you gave the correct split. "
+                f"The document has {num_pages if num_pages is not None else 'an unknown number of'} pages."
             )
         
             invoice_files_to_process = []
@@ -124,6 +135,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     cleaned_response = cleaned_response[7:-3].strip()
                 
                 detection_result = json.loads(cleaned_response)
+                logging.error(f"Detection result for '{filename}': {detection_result}")
 
                 temp_dir = os.getenv('TEMP', '/tmp')
                 original_temp_path = os.path.join(temp_dir, filename)
