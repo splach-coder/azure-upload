@@ -3,77 +3,107 @@ from AI_agents.Mistral.MistralDocumentQA import MistralDocumentQA
 
 def extract_clean_excel_from_pdf(base64_pdf: str, filename):
     prompt = """
-        Extract all table data from the image into a clean JSON object.
+        Extract the following fields from the provided document in JSON format.
+Ensure all fields are present, even if empty. Do not add or remove any fields.
 
-        Row classification rules:
-        - Rows with one star "*" in the "Customs cd" column are regular data rows.
-        - Rows with two stars "**" in the "Customs cd" column are Subtotal rows. Mark them with "SubTotal": true.
-        - Rows with three stars "***" in the "Customs cd" column are the GrandTotal row. Mark it with "GrandTotal": true.
-        - If no row contains three stars, treat the last row as the GrandTotal.
-        - Subtotal rows summarize the section above and include an extra value on the right side called "Packages" (highlighted in blue). Extract it as an integer under "Packages".
+**Required Fields:**
+1. \"delivery_address\": [\"company_name\", \"street\", \"city\", \"postal_code\", \"country\"]
+2. \"VAT_NO_delivery\": \"str\"
+3. \"EORI_NO_delivery\": \"str\"
+4. \"INCOTERM\": \"str\"
+5. \"INVOICE_NO\": \"str\"
+6. \"invoice_date\": \"YYYY-MM-DD\"
+7. \"STAT_NO\": \"str\"
+8. \"COUNTRY_OF_ORIGIN\": \"str\"
+9. \"DESTINATION\": \"str\"
+10. \"Exporter_Reference_No\": \"str\"
+11. \"items\": [
+    {
+      \"ORDER_NUMBER\": \"str\",
+      \"TRANSP_NO\": \"str\",
+      \"CHASSIS_NUMBER\": \"str\",
+      \"TYPE\": \"str\",
+      \"TYPE_CODE\": \"str\",
+      \"QTY\": int,
+      \"GROSS_WEIGHT\": int,
+      \"NETT_WEIGHT\": int,
+      \"LOAD_LIST\": int,
+      \"AMOUNT_EUR\": float,
+      \"FREIGHT_CHARGE\": \"str\",
+      \"TOTAL\": float (make sure to extqract as number, not string)
+    }
+  ]
 
-        Data preservation:
-        - Preserve all ID-like fields (e.g., "Bill. Doc.", "Comm. Code") as strings with leading zeros intact.
-        - Preserve row order from the table.
-        - Remove empty or irrelevant rows.
+**Extraction Rules:**
+- If \"company_name\" is not explicitly stated, use the most likely company name mentioned in the address block.
+- \"VAT_NO_delivery\" and \"EORI_NO_delivery\" must start with 'GB' if the country is the UK.
+- \"INCOTERM\" is usually a 3-letter code (e.g., 'FCA') or a short phrase.
+- \"INVOICE_NO\" is a numeric or alphanumeric code.
+- \"invoice_date\" must be in 'YYYY-MM-DD' format.
+- \"STAT_NO\" is a numeric code, often labeled as 'STAT. NO.' or similar.
+- \"COUNTRY_OF_ORIGIN\" and \"DESTINATION\" are country names.
+- \"Exporter_Reference_No\" is a code starting with 'NLREX' or similar.
+- \"items\" is an array of objects, one per row in the item table.
 
-        Numeric conversion rules (MUST be followed exactly):
-        - Numeric columns:
-          - "Gross": float with exactly 3 decimal places.
-          - "Net weight": float with exactly 3 decimal places.
-          - "Net Value": float with exactly 2 decimal places.
-        - Numbers may use European or other formats:
-          - European style: dot (.) is thousands separator, comma (,) is decimal separator.
-          - US/other style: comma (,) is thousands separator, dot (.) is decimal separator.
-        - Always interpret separators so that:
-          - "Gross" and "Net weight" end with exactly 3 decimals.
-          - "Net Value" ends with exactly 2 decimals.
-        - Rules for separators:
-          1. If both "." and "," appear → choose the one that produces the correct number of decimals for that column (3 or 2). The other is a thousands separator.
-          2. If only one separator appears:
-             - If it has the correct number of digits after it (3 for weights, 2 for value) → it is the decimal separator.
-             - Otherwise, it is a thousands separator and must be removed.
-          3. If no decimal part is visible → append ".000" for weights or ".00" for value.
-        - Always remove thousands separators (., ,, or spaces inside numbers).
-        - Sanity check: If Gross < Net weight, re-evaluate separator interpretation until Gross ≥ Net weight.
-        - Round half up to the required decimal precision.
-
-        Examples of numeric normalization (input → parsed float):
-        - "19.751,040" → 19751.040
-        - "1.382,400" → 1382.400
-        - "6,336" → 6.336
-        - "2,816" → 2.816
-        - "19 468,370" → 19468.370
-        - "19,468.370" → 19468.370
-
-        Other fields:
-        - Add "WeightUnit": "KG" when Gross or Net weight is extracted.
-        - Preserve currency codes or symbols if present (e.g., EUR, USD).
-        - Include any additional fields if present in the table.
-
-        Output format:
-        - Return ONLY the final JSON object.
-        - Top-level structure: { "rows": [ ... ] }
-        - No explanations, no markdown, no extra text.
-
-        Example output:
-        {
-          "rows": [
-            {
-              "Customs code": "BEIPOH00058",
-              "Bill. Doc.": "97266154",
-              "Comm. Code": "32141010",
-              "# Collies": 0,
-              "Gross": 19751.040,
-              "Net weight": 15360.480,
-              "WeightUnit": "KG",
-              "Net Value": 15360.73,
-              "Currency": "EUR",
-              "SubTotal": true,
-              "Packages": 37
-            }
-          ]
+**Output:**
+Return only a valid JSON object. Do not include explanations, notes, or placeholders.
+"
+}
+ Copy{
+  "function": {
+    "name": "extract_invoice_data",
+    "description": "Extracts structured invoice data from a PDF or text document.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "delivery_address": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "[company_name, street, city, postal_code, country]"
+        },
+        "VAT_NO_delivery": {"type": "string"},
+        "EORI_NO_delivery": {"type": "string"},
+        "INCOTERM": {"type": "string"},
+        "INVOICE_NO": {"type": "string"},
+        "invoice_date": {"type": "string", "format": "date"},
+        "STAT_NO": {"type": "string"},
+        "COUNTRY_OF_ORIGIN": {"type": "string"},
+        "DESTINATION": {"type": "string"},
+        "Exporter_Reference_No": {"type": "string"},
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ORDER_NUMBER": {"type": "string"},
+              "TRANSP_NO": {"type": "string"},
+              "CHASSIS_NUMBER": {"type": "string"},
+              "TYPE": {"type": "string"},
+              "TYPE_CODE": {"type": "string"},
+              "QTY": {"type": "integer"},
+              "GROSS_WEIGHT": {"type": "integer"},
+              "NETT_WEIGHT": {"type": "integer"},
+              "LOAD_LIST": {"type": "integer"},
+              "AMOUNT_EUR": {"type": "number"},
+              "FREIGHT_CHARGE": {"type": "string"},
+              "TOTAL": {"type": "number"}
+            },
+            "required": [
+              "ORDER_NUMBER", "TRANSP_NO", "CHASSIS_NUMBER", "TYPE", "TYPE_CODE",
+              "QTY", "GROSS_WEIGHT", "NETT_WEIGHT", "LOAD_LIST", "AMOUNT_EUR",
+              "FREIGHT_CHARGE", "TOTAL"
+            ]
+          }
         }
+      },
+      "required": [
+        "delivery_address", "VAT_NO_delivery", "EORI_NO_delivery", "INCOTERM",
+        "INVOICE_NO", "invoice_date", "STAT_NO", "COUNTRY_OF_ORIGIN",
+        "DESTINATION", "Exporter_Reference_No", "items"
+      ]
+    }
+  }
+}
     """
 
     # Mistral call

@@ -186,12 +186,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     try:
-        logging.error(json.dumps(result_data, indent=2))
-        excel_file_bytes = write_to_excel(result_data)
+        excel_file_bytes = write_to_excel(result_data, second_layout)
         reference = result_data.get("ShipmentReference", f"ref-{uuid.uuid4().hex}")
         
-        logging.error(f"Correct Layout: {str(second_layout)}")
-
         headers = {
             "Content-Disposition": f'attachment; filename="{reference}.xlsx"',
             "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

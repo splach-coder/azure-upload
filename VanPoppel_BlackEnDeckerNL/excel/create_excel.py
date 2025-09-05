@@ -10,7 +10,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def write_to_excel(json_string):
+def write_to_excel(json_string, second_layout=False):
     try:
         logger.info("Starting Excel file creation process")
         
@@ -26,7 +26,7 @@ def write_to_excel(json_string):
         header1 = [
             "VAT exporter", "Contact", "Commericial reference", "Other ref", "Freight",
             "Goods location", "Export office", "Exit office", "Name", "Street + number",
-            "Postcode", "city", "Country", "Inco Term", "Place", "Container", "Truck", "Rex/Other", "ILS NUMBER"
+            "Postcode", "city", "Country", "Inco Term", "Place", "Container", "Truck", "Rex/Other", "ILS NUMBER", "EUR1" if second_layout else ""
         ]
         logger.debug("Header1 defined")
 
@@ -98,7 +98,8 @@ def write_to_excel(json_string):
                 data.get('container', ''),
                 data.get('Wagon', ''),
                 data.get("Customs code", ''),
-                data.get("ILS_NUMBER", '')
+                data.get("ILS_NUMBER", ''),
+                "N954" if second_layout else ""
             ]
             logger.debug("Values1 prepared")
         except Exception as e:

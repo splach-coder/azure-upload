@@ -25,6 +25,8 @@ def call_logic_app(principal: str, company = "DKM") -> dict:
 
         # Decode the string inside 'data'
         inner_data = json.loads(raw_data["data"])
+        
+        logging.error(inner_data)
 
         # Extract DOSS_NR
         doss_nr = inner_data["ResultSets"]["Table1"][0]["DOSS_NR"]

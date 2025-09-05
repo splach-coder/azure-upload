@@ -39,61 +39,40 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not files:
         return func.HttpResponse(body=json.dumps({"error": "No selected files"}), status_code=400, mimetype="application/json")
         
-        
-    factuur_results = []
     extra_file_excel_data = None
     
     for file_info in files:
         file_content_base64 = file_info.get('file')
         filename = file_info.get('filename', 'temp.pdf')
-           
         extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
         
     try:
-        prompt = f"""Your task is to read export instruction email and extract all shipment data into a structured JSON object.
+        prompt = f"""Your task is to read an export-instruction e-mail and extract all shipment data into a structured JSON object.
 
-"{email_body}"
+{email_body}
 
-The emails are written in Dutch with repeating patterns. Even if some words vary slightly, you must always capture the following fields when present:
+The e-mails are written in Dutch and contain repeating patterns. Even if some words vary slightly, you must always capture the following fields when present:
 
-Exporter Name (from "Naam afzender/exporteur")
-
-Exporter EORI Number (from "Eori-nummer afzender/exporteur")
-
-Exporter VAT Number (from "Btw-nummer afzender/exporteur")
-
-Invoice Number (from "Factuurnummer")
-
-Unit ID (from "Unit ID")
-
-Partial Shipment (from "Deelzending")
-
-Booking Number (from "boekingsnummer")
-
-Office of Exit (from "Kantoor van uitgang")
-
-Cabins (from lines like "x CABINES")
-
-Gross Weight (kg) (from lines like "BRUTO KG")
-
-Value (€) (from lines like "= €...")
+- Exporter Name (from "Naam afzender/exporteur")
+- Exporter EORI Number (from "Eori-nummer afzender/exporteur")
+- Exporter VAT Number (from "Btw-nummer afzender/exporteur")
+- Invoice Number (from "Factuurnummer")
+- Unit ID (from "Unit ID")
+- Partial Shipment (from "Deelzending")
+- Booking Number (from "boekingsnummer")
+- Office of Exit (from "Kantoor van uitgang")
+- Cabins (from lines like "x CABINES")
+- Gross Weight (kg) (from lines like "BRUTO KG")
+- Value (€) (from lines like "= €...")
 
 Instructions:
+- Always output the result as valid JSON.
+- If a field is missing, set its value to null.
+- Normalise numbers (strip units like "KG", "€") but keep them as strings.
+- Do not skip any detail, even if wording or formatting changes.
 
-Always output results as a valid JSON object.
-
-If a field is missing, set its value to null.
-
-Normalize numbers (strip units like "KG", "€") but keep them as strings.
-
-If multiple shipments are in the email, return a JSON array of objects (one per shipment).
-
-Do not skip any detail, even if wording or formatting changes.
-
-Example Output:
-
-[
-  {
+Example output:
+  {{
     "Exporter Name": "DAF TRUCKS NV",
     "Exporter EORI Number": "NL801426972",
     "Exporter VAT Number": "BE08766688176",
@@ -101,31 +80,26 @@ Example Output:
     "Unit ID": "FZA-70408",
     "Partial Shipment": "Deelzending 2",
     "Booking Number": "PONFEU05219050",
-    "Office of Exit": "Via Europort (Rotterdam)",
-    "Cabins": "5",
-    "Gross Weight (kg)": "7406",
-    "Value (€)": "94269.45"
-  }
-]"""
+    "Office of Exit": "Rotterdam", only the name
+    "Cabins": 5,
+    "Gross Weight": 7406,
+    "Value": 94269.45
+  }}
+""" 
         call = CustomCall()
         email_data = call.send_request(role="You are an information extraction assistant.", prompt_text=prompt)
-        
-        merged_result = factuur_results[0]
-            
-        response = call_logic_app("BESOUDAL", company="vp") 
-        if response.get("success"):
-            merged_result["ILS_NUMBER"] = response["doss_nr"]
-        else:
-            logging.error(f"❌ Failed to get ILS_NUMBER: {response.get('error')}")
-        
+        # Clean response
+        raw = email_data.replace("```", "").replace("json", "").strip()
+        parsed = json.loads(raw)
+
+        merged_result = {**extra_file_excel_data, **parsed}
+
         excel_file = write_to_excel(merged_result)
-        reference = "NoRef"
+        reference = merged_result.get("Booking Number")
         
         headers = {
-            'Content-Disposition': f'attachment; filename="{reference}.zip"',
-            'Content-Type': 'application/zip',
-            'x-file-type': merged_result.get("File Type", "unknown"),
-            'x-factuur-count': str(len(factuur_results))
+            'Content-Disposition': f'attachment; filename="{reference}.xlsx"',
+            'Content-Type': 'application/excel',
         }
         return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/excel', status_code=200)
     
