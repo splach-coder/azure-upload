@@ -131,6 +131,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                     parser = AddressParser()
                     parsed_address_list = parser.parse_address(full_address)
+                    logging.error(f"Parsing address: {parsed_address_list}")
                     parsed_address = {
                         "company_name": parsed_address_list[0] if len(parsed_address_list) > 0 else None,
                         "street": parsed_address_list[1] if len(parsed_address_list) > 1 else None,

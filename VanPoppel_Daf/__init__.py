@@ -1,28 +1,13 @@
-import datetime
-import re
 import azure.functions as func
 import logging
 import json
-import os
-import base64
-import fitz
-
-from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
-from azure.ai.formrecognizer import DocumentAnalysisClient 
-from azure.core.credentials import AzureKeyCredential
 
 # --- Imports for Splitting Logic & Your Helpers ---
-from AI_agents.Mistral.MistralDocumentQA import MistralDocumentQA
-from AI_agents.Gemeni.adress_Parser import AddressParser
 from AI_agents.OpenAI.custom_call import CustomCall
 
 from ILS_NUMBER.get_ils_number import call_logic_app
-from VanPoppel_Daf.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Daf.excel.create_sideExcel import extract_clean_excel_from_pdf
-from VanPoppel_Daf.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, safe_float_conversion, parse_numbers, parse_weights
 from VanPoppel_Daf.excel.create_excel import write_to_excel
-from VanPoppel_Daf.zip.create_zip import zip_excels 
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -80,10 +65,10 @@ Example output:
     "Unit ID": "FZA-70408",
     "Partial Shipment": "Deelzending 2",
     "Booking Number": "PONFEU05219050",
-    "Office of Exit": "Rotterdam", only the name
-    "Cabins": 5,
-    "Gross Weight": 7406,
-    "Value": 94269.45
+    "Office of Exit": "Rotterdam", only the city name
+    "Cabins": 5, should be integer
+    "Gross Weight": 7406, should be float
+    "Value": 94269.45  should be float
   }}
 """ 
         call = CustomCall()
@@ -91,8 +76,21 @@ Example output:
         # Clean response
         raw = email_data.replace("```", "").replace("json", "").strip()
         parsed = json.loads(raw)
+        
+        # calc the Net Weight Total
+        try:
+            Total_Net_Weight = 0.0
+            for item in extra_file_excel_data.get("Items", []):
+                if "NETT_WEIGHT" in item:
+                    Total_Net_Weight += item["NETT_WEIGHT"]
+            extra_file_excel_data["Total Net"] = Total_Net_Weight
+        except Exception as e:  
+            logging.error(f"Error calculating Total Net Weight: {e}")
+            extra_file_excel_data["Total Net"] = 0.00        
 
         merged_result = {**extra_file_excel_data, **parsed}
+        
+        logging.error(f"Merged result data: {json.dumps(merged_result, indent=4)}")
 
         excel_file = write_to_excel(merged_result)
         reference = merged_result.get("Booking Number")

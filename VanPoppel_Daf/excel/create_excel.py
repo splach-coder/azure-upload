@@ -94,10 +94,10 @@ def write_to_excel(json_string):
                         mini_row.append(obj.get("NETT_WEIGHT", ''))
                     elif ordered_key == "Origin":
                         mini_row.append(data.get("COUNTRY_OF_ORIGIN", ''))
+                    elif ordered_key == "Collis":
+                        mini_row.append(obj.get("QTY", ''))
                     elif ordered_key == "Invoice value":
                         mini_row.append(obj.get("TOTAL", ""))
-                    elif ordered_key == "Currency":
-                        mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Currency":
                         mini_row.append(data.get("Currency", ''))
                     elif ordered_key == "Invoicenumber":

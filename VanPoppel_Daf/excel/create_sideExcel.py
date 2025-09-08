@@ -12,12 +12,13 @@ Ensure all fields are present, even if empty. Do not add or remove any fields.
 3. \"EORI_NO_delivery\": \"str\"
 4. \"INCOTERM\": \"str\"
 5. \"INVOICE_NO\": \"str\"
-6. \"invoice_date\": \"YYYY-MM-DD\"
+6. \"invoice_date\": \"YYYY/MM/DD\"
 7. \"STAT_NO\": \"str\"
-8. \"COUNTRY_OF_ORIGIN\": \"str\"
-9. \"DESTINATION\": \"str\"
+8. \"COUNTRY_OF_ORIGIN\": \"str\" as 2 letter country code
+9. \"DESTINATION\": \"str\" as 2 letter country code
 10. \"Exporter_Reference_No\": \"str\"
-11. \"items\": [
+12. \"Currency\": \"str\"
+13. \"items\": [
     {
       \"ORDER_NUMBER\": \"str\",
       \"TRANSP_NO\": \"str\",
@@ -30,20 +31,23 @@ Ensure all fields are present, even if empty. Do not add or remove any fields.
       \"LOAD_LIST\": int,
       \"AMOUNT_EUR\": float,
       \"FREIGHT_CHARGE\": \"str\",
-      \"TOTAL\": float (make sure to extqract as number, not string)
+      \"TOTAL\": float (the total amount for the line item) - (make sure to extarct as number, not string)
     }
   ]
 
 **Extraction Rules:**
 - If \"company_name\" is not explicitly stated, use the most likely company name mentioned in the address block.
 - \"VAT_NO_delivery\" and \"EORI_NO_delivery\" must start with 'GB' if the country is the UK.
-- \"INCOTERM\" is usually a 3-letter code (e.g., 'FCA') or a short phrase.
+- \"INCOTERM\" is usually a 3-letter code (e.g., 'FCA').
 - \"INVOICE_NO\" is a numeric or alphanumeric code.
-- \"invoice_date\" must be in 'YYYY-MM-DD' format.
+- \"invoice_date\" must be in 'YYYY/MM/DD' format.
 - \"STAT_NO\" is a numeric code, often labeled as 'STAT. NO.' or similar.
-- \"COUNTRY_OF_ORIGIN\" and \"DESTINATION\" are country names.
-- \"Exporter_Reference_No\" is a code starting with 'NLREX' or similar.
+- \"COUNTRY_OF_ORIGIN\" and \"DESTINATION\" are country names should be as the 2 lettres ISO format.
+- \"Exporter_Reference_No\" is a code always starting with 'NLREX'.
+- \"Currency\" the invoice currency that you can find on the items table.
 - \"items\" is an array of objects, one per row in the item table.
+- \"TOTAL\" in \"items\" always on the last column on the table make sure u extract it well this is the most important one.
+- all Countries must be in 2 letter ISO format.
 
 **Output:**
 Return only a valid JSON object. Do not include explanations, notes, or placeholders.
@@ -59,7 +63,7 @@ Return only a valid JSON object. Do not include explanations, notes, or placehol
         "delivery_address": {
           "type": "array",
           "items": {"type": "string"},
-          "description": "[company_name, street, city, postal_code, country]"
+          "description": "[company_name, street, city, postal_code, country as 2 letrres iso code] "
         },
         "VAT_NO_delivery": {"type": "string"},
         "EORI_NO_delivery": {"type": "string"},
@@ -70,6 +74,7 @@ Return only a valid JSON object. Do not include explanations, notes, or placehol
         "COUNTRY_OF_ORIGIN": {"type": "string"},
         "DESTINATION": {"type": "string"},
         "Exporter_Reference_No": {"type": "string"},
+        "Currency": {"type": "string"},
         "items": {
           "type": "array",
           "items": {
@@ -86,7 +91,7 @@ Return only a valid JSON object. Do not include explanations, notes, or placehol
               "LOAD_LIST": {"type": "integer"},
               "AMOUNT_EUR": {"type": "number"},
               "FREIGHT_CHARGE": {"type": "string"},
-              "TOTAL": {"type": "number"}
+              "TOTAL": {"type": "number"} (the total amount for the line item its the last column)
             },
             "required": [
               "ORDER_NUMBER", "TRANSP_NO", "CHASSIS_NUMBER", "TYPE", "TYPE_CODE",
@@ -99,7 +104,7 @@ Return only a valid JSON object. Do not include explanations, notes, or placehol
       "required": [
         "delivery_address", "VAT_NO_delivery", "EORI_NO_delivery", "INCOTERM",
         "INVOICE_NO", "invoice_date", "STAT_NO", "COUNTRY_OF_ORIGIN",
-        "DESTINATION", "Exporter_Reference_No", "items"
+        "DESTINATION", "Exporter_Reference_No", "items", "Currency"
       ]
     }
   }
