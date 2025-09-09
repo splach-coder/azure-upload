@@ -13,7 +13,28 @@ from AI_agents.Gemeni.adress_Parser import AddressParser
 from VanPoppel_BlackEnDeckerNL.excel.create_excel import write_to_excel
 from VanPoppel_BlackEnDeckerNL.functions.functions import extract_clean_excel_from_pdf
 
+import tempfile
+import time
+import io
+import gc
 
+def _safe_remove(path, attempts=3, delay=0.1):
+    """Try to remove a file with a few retries (useful on Windows when transient locks occur)."""
+    if not path:
+        return
+    for i in range(attempts):
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+            return
+        except PermissionError as e:
+            logging.warning(f"PermissionError removing file {path}, attempt {i+1}/{attempts}: {e}")
+            # force GC and small sleep to allow handles to close
+            gc.collect()
+            time.sleep(delay)
+        except Exception as e:
+            logging.error(f"Unexpected error removing file {path}: {e}")
+            break
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing Stanley Excel + PDF extraction request.')
@@ -47,22 +68,46 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             continue
 
         temp_file_path = None
+        pdf_document = None
+        workbook = None
+
         try:
             decoded_data = base64.b64decode(file_content_base64)
-            temp_dir = os.getenv("TEMP", "/tmp")
-            temp_file_path = os.path.join(temp_dir, filename)
 
-            with open(temp_file_path, "wb") as temp_file:
-                temp_file.write(decoded_data)
+            # Use a unique temporary file name (prevents collisions)
+            suffix = os.path.splitext(filename)[1] or ""
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                temp_file_path = tmp.name
+                tmp.write(decoded_data)
 
             logging.info(f"Saved temporary file {temp_file_path}")
             file_extension = os.path.splitext(filename.lower())[1]
 
+            # Option: avoid disk usage by opening from bytes in memory:
+            # import fitz
+            # pdf_document = fitz.open(stream=decoded_data, filetype="pdf")
+            # (If you do that, you don't need the temp file at all.)
+
             # --- Handle PDF ---
             if file_extension == ".pdf":
-                if "eur1" not in filename.lower():  
-                    pdf_result = extract_clean_excel_from_pdf(file_content_base64, filename)
-                    logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
+                if "eur1" not in filename.lower():
+                    import fitz  # PyMuPDF
+                    try:
+                        pdf_document = fitz.open(temp_file_path)  # explicit open
+                        # you can also: with fitz.open(temp_file_path) as pdf_document:
+                        text = ""
+                        with fitz.open(pdf_document) as doc:
+                            for page in doc:  # iterate over all pages
+                                text += page.get_text("text") + "\n"
+                        pdf_result = extract_clean_excel_from_pdf(text)
+                        logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
+                    finally:
+                        if pdf_document is not None:
+                            try:
+                                pdf_document.close()
+                            except Exception as close_e:
+                                logging.warning(f"Error closing pdf document: {close_e}")
+                            pdf_document = None
 
             # --- Handle Excel ---
             elif file_extension in [".xlsm", ".xlsx", ".xls"]:
@@ -164,11 +209,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         logging.error(f"ILS_NUMBER fetch failed: {e}")
 
                 finally:
-                    workbook.close()
+                    if workbook is not None:
+                        try:
+                            workbook.close()
+                        except Exception as e:
+                            logging.warning(f"Error closing workbook: {e}")
+                        workbook = None
+
+        except Exception as outer_e:
+            logging.error(f"Error processing file {filename}: {outer_e}", exc_info=True)
 
         finally:
-            if temp_file_path and os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
+            # Always attempt safe remove of temp file (with retries)
+            try:
+                _safe_remove(temp_file_path)
+            except Exception as e:
+                logging.error(f"Failed to remove temp file {temp_file_path}: {e}")
 
     # --- Merge PDF Items into Excel Skeleton ---
     if result_data and pdf_result and "Items" in pdf_result and pdf_result["Items"]:
@@ -212,7 +268,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             "X-Second-Layout": str(second_layout)
         }
-        return func.HttpResponse(excel_file_bytes.getvalue(), headers=headers)
+        # excel_file_bytes expected to be BytesIO-like
+        body_bytes = excel_file_bytes.getvalue() if hasattr(excel_file_bytes, "getvalue") else bytes(excel_file_bytes)
+        return func.HttpResponse(body_bytes, headers=headers)
     except Exception as e:
-        logging.error(f"Error writing Excel: {e}")
+        logging.error(f"Error writing Excel: {e}", exc_info=True)
         return func.HttpResponse(body=f"Error: {e}", status_code=500)
