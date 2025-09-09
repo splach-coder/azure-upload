@@ -325,6 +325,10 @@ countries = [
         "abbreviation": "FR"
     },
     {
+        "country": "Frankreich",
+        "abbreviation": "FR"
+    },
+    {
         "country": "French Guiana",
         "abbreviation": "GF"
     },
@@ -462,6 +466,10 @@ countries = [
     },
     {
         "country": "Italy",
+        "abbreviation": "IT"
+    },
+    {
+        "country": "Italien",
         "abbreviation": "IT"
     },
     {

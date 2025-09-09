@@ -22,7 +22,7 @@ from VanPoppel_Soudal.excel.write_to_extra_excel import write_to_extra_excel
 from VanPoppel_Soudal.excel.create_sideExcel import extract_clean_excel_from_pdf
 from VanPoppel_Soudal.helpers.functions import clean_incoterm, clean_customs_code, merge_factuur_objects, safe_float_conversion, parse_numbers, parse_weights
 from VanPoppel_Soudal.excel.create_excel import write_to_excel
-from VanPoppel_Soudal.zip.create_zip import zip_excels 
+from VanPoppel_Soudal.zip.create_zip import zip_excels
 
 # --- Helper Function to Split PDF ---
 def split_pdf_by_pages(source_path: str, start_pages: list) -> list:
@@ -299,7 +299,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(body=json.dumps({"error": "No factuur files were successfully processed"}), status_code=400, mimetype="application/json")
     
     try:
-        prompt = f"Extract the exit office code from the email body: '''{email_body}'''. The code is like BE212000. Return only the code or 'NOT Found'."
+        prompt = f"Extract the exit office code from the email body: '''{email_body}'''. The code is like BE212000. Return only the code or 'NOT Found', no text explanation no other text only code or 'NOT Found'."
         call = CustomCall()
         exit_office = call.send_request(role="user", prompt_text=prompt)
         

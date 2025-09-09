@@ -31,7 +31,7 @@ class PDFInvoiceExtractor:
             logging.error(f"🔐 Failed to initialize OpenAI client: {str(e)}")
             return False
 
-    def extract_items_from_pdf(self, pdf_path: str, instructions: str = None, timeout: int = 60):
+    def extract_items_from_pdf(self, pdf_path: str, instructions: str = None, timeout: int = 90):
         """Extract items from PDF using the reusable assistant.
 
         Args:
@@ -46,29 +46,33 @@ class PDFInvoiceExtractor:
 
         if not instructions:
             instructions = (
-                "Extract all invoice items from the attached PDF and return them in this JSON format:\n"
-                "{\n"
-                "  \"Items\": [\n"
-                "    {\n"
-                "      \"InvoiceNumber\": \"string\",\n"
-                "      \"InvoiceDate\": \"dd-mm-yyyy\",\n"
-                "      \"Description\": \"string\",\n"
-                "      \"HSCode\": \"string\",\n"
-                "      \"Origin\": \"string\",\n"
-                "      \"NetWeight\": number,\n"
-                "      \"Quantity\": number,\n"
-                "      \"Amount\": number,\n"
-                "      \"Currency\": \"string\"\n"
-                "    }\n"
-                "  ]\n"
-                "}\n\n"
-                "Rules:\n"
-                "- Dates: dd-mm-yyyy\n"
-                "- Numbers: numeric only, dot as decimal separator\n"
-                "- Amount must include currency\n"
-                "- Combine all invoice items from the PDF\n"
-                "Return ONLY valid JSON."
-            )
+    "Your task is to extract *every* invoice item from the attached PDF without skipping or limiting the number of rows.\n"
+    "Do not stop after a fixed number of items (like 19). Keep extracting until ALL items from ALL invoice pages are included.\n\n"
+    "Output must strictly follow this JSON structure:\n"
+    "{\n"
+    "  \"Items\": [\n"
+    "    {\n"
+    "      \"InvoiceNumber\": \"string\",\n"
+    "      \"InvoiceDate\": \"dd-mm-yyyy\",\n"
+    "      \"Description\": \"string\",\n"
+    "      \"HSCode\": \"string\",\n"
+    "      \"Origin\": \"string\",\n"
+    "      \"NetWeight\": number,\n"
+    "      \"Quantity\": number,\n"
+    "      \"Amount\": number,\n"
+    "      \"Currency\": \"string\"\n"
+    "    }\n"
+    "  ]\n"
+    "}\n\n"
+    "Rules:\n"
+    "- Dates: dd-mm-yyyy\n"
+    "- Numbers: numeric only, dot as decimal separator\n"
+    "- Amount must include currency\n"
+    "- Extract and combine ALL invoice items from the entire PDF (no omissions, no truncation)\n"
+    "- If there are more than 50, 100, or even 1000 items, include them all\n"
+    "- Do not summarize or cut off the output\n"
+    "- Return ONLY valid JSON with the full list of items."
+)
 
         # --- Upload PDF ---
         with open(pdf_path, "rb") as f:

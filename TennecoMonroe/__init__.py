@@ -151,6 +151,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
             call = CustomCall()
             extracted_items = call.send_request("user", prompt)
+            extracted_items = extracted_items.replace("```", "").replace("json", "").strip()
+            
             extracted_items = ast.literal_eval(extracted_items)
 
             #cast it to json

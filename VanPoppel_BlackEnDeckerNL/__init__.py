@@ -1,4 +1,5 @@
 from datetime import datetime
+from AI_agents.OpenAI.custom_call import CustomCall
 from ILS_NUMBER.get_ils_number import call_logic_app
 import azure.functions as func
 import logging
@@ -10,7 +11,8 @@ import uuid
 import re
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from VanPoppel_BlackEnDeckerNL.excel.create_excel import write_to_excel
-from AI_agents.OpenAI.CustomCallWithPdf import PDFInvoiceExtractor
+from VanPoppel_BlackEnDeckerNL.functions.functions import extract_clean_excel_from_pdf
+
 
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -20,6 +22,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         body = req.get_json()
         files_data = body.get("files", [])
+        email_data = body.get("email", "")
         if not files_data:
             raise ValueError("No files provided in 'files' array")
     except Exception as e:
@@ -58,8 +61,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # --- Handle PDF ---
             if file_extension == ".pdf":
                 if "eur1" not in filename.lower():  
-                    extractor = PDFInvoiceExtractor()
-                    pdf_result = extractor.extract_items_from_pdf(temp_file_path, timeout=90)
+                    pdf_result = extract_clean_excel_from_pdf(file_content_base64, filename)
                     logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
 
             # --- Handle Excel ---
@@ -84,7 +86,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                     # detect layout
                     e13_value = get_cell_value("E13")
-                    if isinstance(e13_value, str) and "bruto" in e13_value.lower():
+                    if isinstance(e13_value, str) and "eur1" in e13_value.lower():
                         second_layout = True
 
                     header_data = {
@@ -131,7 +133,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                     parser = AddressParser()
                     parsed_address_list = parser.parse_address(full_address)
-                    logging.error(f"Parsing address: {parsed_address_list}")
                     parsed_address = {
                         "company_name": parsed_address_list[0] if len(parsed_address_list) > 0 else None,
                         "street": parsed_address_list[1] if len(parsed_address_list) > 1 else None,
@@ -187,6 +188,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     try:
+        prompt = f"""You will receive a raw email in HTML or plain text format. 
+            Your task: extract the sender's email address, and return only the part before the "@" symbol.  
+
+            For example:  
+            - If the sender is "Ellen.Nowak@sbdinc.com", return "Ellen.Nowak".  
+            - If the sender is "john_doe@example.org", return "john_doe".  
+
+            Rules:  
+            - Always return just the extracted string, no explanations.  
+            - If no valid email is found, return an empty string.
+            
+            Here is the email body: '''{email_data}'''. """
+        call = CustomCall()
+        contact = call.send_request(role="user", prompt_text=prompt)
+        
+        result_data["Contact"] = contact.strip()[:10]
         excel_file_bytes = write_to_excel(result_data, second_layout)
         reference = result_data.get("ShipmentReference", f"ref-{uuid.uuid4().hex}")
         

@@ -212,7 +212,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         """
     
     email_data = call.send_request(role, prompt)
-    
+    email_data = email_data.replace("```", "").replace("json", "").strip()
     email_data = json.loads(email_data)
     
     combined_result, TotalNetWeight, TotalSurface, TotalQuantity = clean_invoice_items(combined_result)

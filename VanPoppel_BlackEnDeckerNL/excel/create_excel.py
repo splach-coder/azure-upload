@@ -81,7 +81,7 @@ def write_to_excel(json_string, second_layout=False):
             logger.info("Preparing first set of values")
             values1 = [
                 data.get('Vat Number', ''),
-                data.get('Principal', ''),
+                data.get('Contact', ''),
                 data.get('ShipmentReference', ''),
                 data.get('Other Ref', ''),
                 FreightValue,

@@ -13,31 +13,6 @@ WHERE PLDA.CPDECLHISTORY.DECLARATION_ID = PLDA.CPDECLARATION.DECLARATION_ID
 FETCH FIRST 2 ROWS ONLY
 -------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 SELECT
     d.DECLARATION_ID,
     d.PRINCIPAL, 
