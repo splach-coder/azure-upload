@@ -51,10 +51,12 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     else :
                         result[key] = value.get("content")      
 
-            '''------------------   Clean the JSON response   ------------------ ''' 
-                      
+            '''------------------   Clean the JSON response   ------------------ '''       
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
+            first_twoChars = result.get("Reference", "")[:2]
+            if first_twoChars == "00":
+                result["Reference"] = result.get("Reference", "")[2:]
             
             #clean and convert the Gross weight
             gross_weight_total = result.get("Gross weight Total", "")
@@ -219,6 +221,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         role = "You are an expert in parsing informal shipping-related emails. Focus on extracting specific structured fields only and return clean values ready for processing (e.g., no currency signs, no extra words)."
 
         result = extractor.send_request(role, prompt)
+        result = result.replace("```", "").replace("json", "").strip()
         result = json.loads(result)
         
         merged_result["Exit office"] = result.get("exit_office", "")

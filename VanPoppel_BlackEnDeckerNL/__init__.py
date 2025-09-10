@@ -36,6 +36,14 @@ def _safe_remove(path, attempts=3, delay=0.1):
             logging.error(f"Unexpected error removing file {path}: {e}")
             break
 
+def merge_pdf_results(pdf_results):
+    merged = {"Items": []}
+    for entry in pdf_results:
+        items = entry.get("Items", [])
+        if isinstance(items, list):
+            merged["Items"].extend(items)
+    return merged
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing Stanley Excel + PDF extraction request.')
 
@@ -57,7 +65,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     result_data = None
     pdf_result = None
     second_layout = False
-
+    pdf_results = []
     # --- Loop files ---
     for file_data in files_data:
         filename = file_data.get("filename")
@@ -83,11 +91,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logging.info(f"Saved temporary file {temp_file_path}")
             file_extension = os.path.splitext(filename.lower())[1]
 
-            # Option: avoid disk usage by opening from bytes in memory:
-            # import fitz
-            # pdf_document = fitz.open(stream=decoded_data, filetype="pdf")
-            # (If you do that, you don't need the temp file at all.)
-
             # --- Handle PDF ---
             if file_extension == ".pdf":
                 if "eur1" not in filename.lower():
@@ -100,7 +103,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                             for page in doc:  # iterate over all pages
                                 text += page.get_text("text") + "\n"
                         pdf_result = extract_clean_excel_from_pdf(text)
-                        logging.info(f"Extracted {len(pdf_result.get('Items', [])) if pdf_result else 0} items from PDF.")
+                        pdf_results.append(pdf_result)
                     finally:
                         if pdf_document is not None:
                             try:
@@ -225,11 +228,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 _safe_remove(temp_file_path)
             except Exception as e:
                 logging.error(f"Failed to remove temp file {temp_file_path}: {e}")
+                
+    # --- Merge all PDF results ---
+    pdf_final_data = merge_pdf_results(pdf_results)      
 
     # --- Merge PDF Items into Excel Skeleton ---
-    if result_data and pdf_result and "Items" in pdf_result and pdf_result["Items"]:
-        result_data["Items"] = pdf_result["Items"]
-        logging.info(f"Final merged {len(pdf_result['Items'])} items from PDF into result_data.")
+    if result_data and pdf_final_data and "Items" in pdf_final_data and pdf_final_data["Items"]:
+        result_data["Items"] = pdf_final_data["Items"]
+        logging.info(f"Final merged {len(pdf_final_data['Items'])} items from PDF into result_data.")
         
     for item in (result_data.get("Items", []) if result_data else []):
         if "InvoiceDate" in item and isinstance(item["InvoiceDate"], str):
