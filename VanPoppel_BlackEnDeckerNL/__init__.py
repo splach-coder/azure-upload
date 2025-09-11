@@ -131,11 +131,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
                     def get_first_part(value):
                         return value.split()[0] if isinstance(value, str) else value
+                    
+                    
 
                     # detect layout
-                    e13_value = get_cell_value("E13")
-                    if isinstance(e13_value, str) and "eur1" in e13_value.lower():
-                        second_layout = True
+                    for row in sheet.iter_rows(values_only=True):
+                        for cell in row:
+                            if cell and str(cell).strip().upper() == "EUR1":
+                                second_layout = True
+                                break
 
                     header_data = {
                         "reference": get_first_part(get_cell_value("B2")),
@@ -228,6 +232,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 _safe_remove(temp_file_path)
             except Exception as e:
                 logging.error(f"Failed to remove temp file {temp_file_path}: {e}")
+    
                 
     # --- Merge all PDF results ---
     pdf_final_data = merge_pdf_results(pdf_results)      
@@ -271,9 +276,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         headers = {
             "Content-Disposition": f'attachment; filename="{reference}.xlsx"',
-            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "X-Second-Layout": str(second_layout)
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         }
+        
         # excel_file_bytes expected to be BytesIO-like
         body_bytes = excel_file_bytes.getvalue() if hasattr(excel_file_bytes, "getvalue") else bytes(excel_file_bytes)
         return func.HttpResponse(body_bytes, headers=headers)

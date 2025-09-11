@@ -6,63 +6,63 @@ import base64
 
 def extract_clean_excel_from_pdf(base64_pdf: str, filename):
     prompt = """
-      Extract the following fields from the provided document in JSON format.
-      Pay special attention to the items table - extract ALL numeric values exactly as they appear.
-      
-      **Required Fields:**
-      1. "delivery_address": ["company_name", "street", "city", "postal_code", "country"]
-      2. "VAT_NO_delivery": "str"
-      3. "EORI_NO_delivery": "str"
-      4. "INCOTERM": "str"
-      5. "INVOICE_NO": "str"
-      6. "invoice_date": "YYYY/MM/DD"
-      7. "STAT_NO": "str"
-      8. "COUNTRY_OF_ORIGIN": "str" as 2 letter country code
-      9. "DESTINATION": "str" as 2 letter country code
-      10. "Exporter_Reference_No": "str"
-      11. "Currency": "str"
-      12. "items": [
-          {
-            "ORDER_NUMBER": "str",
-            "TRANSP_NO": "str", 
-            "CHASSIS_NUMBER": "str",
-            "TYPE": "str",
-            "TYPE_CODE": "str",
-            "QTY": number,
-            "GROSS_WEIGHT": number,
-            "NETT_WEIGHT": number,
-            "LOAD_LIST": number,
-            "AMOUNT_EUR": number,
-            "FREIGHT_CHARGE": "str",
-            "TOTAL": number
-          }
-        ]
-      
-      **CRITICAL EXTRACTION RULES FOR NUMBERS:**
-      - GROSS_WEIGHT, NETT_WEIGHT, TOTAL: Extract exact numeric values from the table
-      - Look for weight columns that may contain values like: 1520, 1100, 7600, etc.
-      - TOTAL is typically the rightmost column with monetary values
-      - If a cell contains "1520" extract it as 1520, not 0
-      - If a cell contains "7600" extract it as 7600, not 0
-      - QTY is usually 1 for trucks/vehicles
-      - NEVER default numeric fields to 0 unless the cell is truly empty
-      
-      **Table Extraction Tips:**
-      - Scan the entire table row by row
-      - Look for patterns like: ORDER_NO | TRANSP_NO | CHASSIS | TYPE | QTY | GROSS_WT | NET_WT | AMOUNT | TOTAL
-      - Weight values are often 4-digit numbers (1000-9999)
-      - Total amounts are usually the last numeric column
-      
-      **Extraction Rules:**
-      - If "company_name" is not explicit, use the most likely company name in address
-      - "VAT_NO_delivery" and "EORI_NO_delivery" start with 'GB' if UK
-      - "INCOTERM" is usually 3-letter code (e.g., 'FCA')
-      - "invoice_date" must be 'YYYY/MM/DD' format
-      - "COUNTRY_OF_ORIGIN" and "DESTINATION" as 2-letter ISO codes
-      - "Exporter_Reference_No" starts with 'NLREX'
-      
-      **Output:**
-      Return ONLY valid JSON. No explanations or notes.
+    Extract the following fields from the provided document in JSON format.
+    Pay special attention to the items table - extract ALL numeric values exactly as they appear.
+    
+    **Required Fields:**
+    1. "delivery_address": ["company_name", "street", "city", "postal_code", "country"]
+    2. "VAT_NO_delivery": "str"
+    3. "EORI_NO_delivery": "str"
+    4. "INCOTERM": "str"
+    5. "INVOICE_NO": "str"
+    6. "invoice_date": "YYYY/MM/DD"
+    7. "STAT_NO": "str"
+    8. "COUNTRY_OF_ORIGIN": "str" as 2 letter country code
+    9. "DESTINATION": "str" as 2 letter country code
+    10. "Exporter_Reference_No": "str"
+    11. "Currency": "str"
+    12. "items": [
+        {
+          "ORDER_NUMBER": "str",
+          "TRANSP_NO": "str", 
+          "CHASSIS_NUMBER": "str",
+          "TYPE": "str",
+          "TYPE_CODE": "str",
+          "QTY": number,
+          "GROSS_WEIGHT": number,
+          "NETT_WEIGHT": number,
+          "LOAD_LIST": number,
+          "AMOUNT_EUR": number,
+          "FREIGHT_CHARGE": "str",
+          "TOTAL": number
+        }
+      ]
+    
+    **CRITICAL EXTRACTION RULES FOR NUMBERS:**
+    - GROSS_WEIGHT, NETT_WEIGHT, TOTAL: Extract exact numeric values from the table
+    - Look for weight columns that may contain values like: 1520, 1100, 7600, etc.
+    - TOTAL is typically the rightmost column with monetary values
+    - If a cell contains "1520" extract it as 1520, not 0
+    - If a cell contains "7600" extract it as 7600, not 0
+    - QTY is usually 1 for trucks/vehicles
+    - NEVER default numeric fields to 0 unless the cell is truly empty
+    
+    **Table Extraction Tips:**
+    - Scan the entire table row by row
+    - Look for patterns like: ORDER_NO | TRANSP_NO | CHASSIS | TYPE | QTY | GROSS_WT | NET_WT | AMOUNT | TOTAL
+    - Weight values are often 4-digit numbers (1000-9999)
+    - Total amounts are usually the last numeric column
+    
+    **Extraction Rules:**
+    - If "company_name" is not explicit, use the most likely company name in address
+    - "VAT_NO_delivery" and "EORI_NO_delivery" start with 'GB' if UK
+    - "INCOTERM" is usually 3-letter code (e.g., 'FCA')
+    - "invoice_date" must be 'YYYY/MM/DD' format
+    - "COUNTRY_OF_ORIGIN" and "DESTINATION" as 2-letter ISO codes
+    - "Exporter_Reference_No" starts with 'NLREX'
+    
+    **Output:**
+    Return ONLY valid JSON. No explanations or notes.
 """
 
     # Mistral call
