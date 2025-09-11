@@ -6,7 +6,7 @@ import json
 from AI_agents.OpenAI.custom_call import CustomCall
 
 from ILS_NUMBER.get_ils_number import call_logic_app
-from VanPoppel_Daf.excel.create_sideExcel import extract_clean_excel_from_pdf
+from VanPoppel_Daf.excel.create_sideExcel import extract_clean_excel_from_pdf, get_invoice_page_number, extract_specific_page_as_base64
 from VanPoppel_Daf.excel.create_excel import write_to_excel
 
 
@@ -25,11 +25,41 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(body=json.dumps({"error": "No selected files"}), status_code=400, mimetype="application/json")
         
     extra_file_excel_data = None
+    call = CustomCall()
     
     for file_info in files:
         file_content_base64 = file_info.get('file')
         filename = file_info.get('filename', 'temp.pdf')
-        extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
+
+        # Get invoice page number from AI
+        invoice_page_number = get_invoice_page_number(file_content_base64, filename)
+        logging.error(f"Determined invoice page number: {invoice_page_number} for file: {filename}")
+
+        # Process based on invoice page number
+        if invoice_page_number == 0:
+            # No invoice found - this is a barcode-only file
+            logging.error(f"No invoice found in {filename} - skipping Excel extraction")
+            continue
+        else:
+            # Extract the specific invoice page
+            try:
+                # Check if page 2 needs rotation
+                rotate_needed = False
+
+                # Extract only the invoice page
+                invoice_page_base64 = extract_specific_page_as_base64(
+                    file_content_base64, 
+                    invoice_page_number, 
+                    rotate_right=rotate_needed
+                )
+
+                # Send only the invoice page for Excel extraction
+                extra_file_excel_data = extract_clean_excel_from_pdf(invoice_page_base64, filename)
+                logging.error(extra_file_excel_data)
+
+            except Exception as e:
+                logging.error(f"Error processing invoice page {invoice_page_number} from {filename}: {str(e)}")
+                continue
         
     try:
         prompt = f"""Your task is to read an export-instruction e-mail and extract all shipment data into a structured JSON object.
@@ -89,8 +119,6 @@ Example output:
             extra_file_excel_data["Total Net"] = 0.00        
 
         merged_result = {**extra_file_excel_data, **parsed}
-        
-        logging.error(f"Merged result data: {json.dumps(merged_result, indent=4)}")
 
         excel_file = write_to_excel(merged_result)
         reference = merged_result.get("Booking Number")
