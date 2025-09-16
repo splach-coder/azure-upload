@@ -76,7 +76,7 @@ def test_extract_items_from_pdf(base64_pdf: str, filename):
 
         Description: Use the item description (e.g., MFX Rivet Stainl Steel DH 4.8x30).
         HSCode: Use the commodity code (e.g., 8308200090).
-        NetWeight: Extract the individual item weight (e.g., 12.4).
+        NetWeight: Extract the individual item weight (e.g., 12.4) always near KG extract the exact one and always the . are decimal seprators .
 
         If only the total weight is provided, distribute it proportionally by quantity.
         Amount: ALWAYS the LAST numeric value in the row (regardless of column headers).

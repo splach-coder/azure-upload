@@ -79,7 +79,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 Currency = row[7] if len(row) > 7 else ''
                 Incoterm = row[8] if len(row) > 8 else ''
                 Commodity = row[9] if len(row) > 9 else ''
-                Net_wt = row[12] if len(row) > 12 else 0
+                Net_wt = row[10] if len(row) > 10 else 0
                 Gross_wt = row[13] if len(row) > 13 else 0
 
                 # Skip rows with critical missing data
@@ -138,12 +138,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     """
     
     email_data = call.send_request(role, prompt)
+    email_data = email_data.replace("```", "").replace("json", "").strip()
     
     email = json.loads(email_data)
     
     result_data = {**email, "Total Value" : TotalCost, "Items": extracted_data_from_excels[0]}
-    
-    logging.error(result_data.get("Total Value"))
 
     try:
         # Call writeExcel to generate the Excel file in memory
