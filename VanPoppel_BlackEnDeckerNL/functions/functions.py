@@ -149,9 +149,9 @@ def test_extract_items_from_pdf(base64_pdf: str, filename):
 def extract_clean_excel_from_pdf(doc_text: str):
 
     prompt = f"""
-Extract all invoice line items from the provided document text and return them in strict JSON format.
+Extract all invoice items from the provided text document(s) and return the results in strict JSON format as specified below.
 
-JSON structure:
+JSON Structure Requirements:
 {{
   "Items": [
     {{
@@ -162,31 +162,83 @@ JSON structure:
       "Origin": "string",
       "NetWeight": number,
       "Quantity": number,
-      "Amount": number,    // ALWAYS the last numeric value in the row
+      "Amount": number,    // ALWAYS the LAST numeric value in the row located in the last column (Amount)
       "Currency": "string"
     }}
   ]
 }}
 
-Rules:
-1. Extract every item from all pages. Do not stop after a fixed number of rows. Combine all into one array.
-2. Dates must be in dd-mm-yyyy format.
-3. Numbers:
-   - Use dot (.) as decimal separator.
-   - No thousands separators (10,000 → 10000).
-   - NetWeight, Quantity, and Amount must be numeric.
-4. Currency must always be a 3-letter code (e.g., USD, EUR).  
-5. If any field is missing, return an empty string "".
-6. Column mapping:
-   - Description: item description text.
-   - HSCode: commodity code.
-   - NetWeight: per-item weight (if only total weight is provided, distribute proportionally by quantity).
-   - Amount: strictly the LAST numeric value in the row (ignore unit price).
-7. Do not include UnitPrice in the output. Only capture Amount as defined above.
-8. If the document is unclear, leave ambiguous fields as "".
+Extraction Rules:
 
-Output rules:
-- Return ONLY valid JSON. No comments, no notes, no explanations.
+No Omissions:
+- Extract every line item from all pages of the invoice.
+- Do not stop after a fixed number of rows.
+- If the invoice spans multiple pages, combine all items into a single JSON array.
+
+Data Formatting:
+- Dates: Always use dd-mm-yyyy format.
+- Numbers:
+  - Use dots (.) for decimals (e.g., 374.00).
+  - Remove thousands separators (e.g., 10,000 → 10000).
+  - Ensure NetWeight, Quantity, UnitPrice, and Amount are numeric.
+- Currency: Always include the 3-letter currency code (e.g., GBP, USD).
+- Empty Fields: If a field (e.g., Origin) is missing, use an empty string "".
+
+Column Mapping:
+- Description: Use the item description (e.g., MFX Rivet Stainl Steel DH 4.8x30).
+- HSCode: Use the commodity code (e.g., 8308200090).
+- NetWeight: Extract the individual item weight (e.g., 12.400).
+  - Always near "KG", extract the exact one.
+  - NetWeight always has 3 digits after the decimal point.
+  - If only the total weight is provided, distribute it proportionally by quantity.
+- Amount: ALWAYS the LAST numeric value in the row (regardless of column headers).
+  - Example: If the row ends with 81.74, that is the Amount.
+
+Validation:
+- Do not calculate or derive values.
+- Do not cross-check Quantity × UnitPrice = Amount.
+- If the document is unclear, flag ambiguous fields with "".
+
+Output:
+- Return only valid JSON — no explanations, notes, or placeholders.
+- If unclear, flag ambiguous fields with "".
+
+Example Output:
+{{
+  "Items": [
+    {{
+      "InvoiceNumber": "",
+      "InvoiceDate": "",
+      "Description": "",
+      "HSCode": "",
+      "Origin": "",
+      "NetWeight": 0.000,
+      "Quantity": 0,
+      "Amount": 0.00,
+      "Currency": ""
+    }},
+    {{
+      "InvoiceNumber": "",
+      "InvoiceDate": "",
+      "Description": "",
+      "HSCode": "",
+      "Origin": "",
+      "NetWeight": 0.000,
+      "Quantity": 0,
+      "Amount": 0.00,
+      "Currency": ""
+    }}
+  ]
+}}
+
+Key Clarifications:
+- Amount is always the last numeric value in the row.
+- Do not mix it up with UnitPrice.
+- UnitPrice is the numeric value with a currency before the Amount.
+- Amount is the last numeric value in the row and does not include a currency (currency is in the header).
+- Do not put UnitPrice in the Amount field.
+- You may check the total amount at the bottom of the invoice to confirm extraction.
+- If the invoice has multiple pages, extract all items into a single JSON array.
 
 Document text:
 {doc_text}
