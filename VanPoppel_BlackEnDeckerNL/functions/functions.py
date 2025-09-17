@@ -191,8 +191,8 @@ Column Mapping:
   - Always near "KG", extract the exact one.
   - NetWeight always has 3 digits after the decimal point.
   - If only the total weight is provided, distribute it proportionally by quantity.
-- Amount: ALWAYS the LAST numeric value in the row (regardless of column headers).
-  - Example: If the row ends with 81.74, that is the Amount.
+- Amount: ALWAYS the LAST numeric value in the row (regardless of column headers). don't mix it up with UnitPrice. the UnitPrice is the numeric value with a currency before the Amount.
+  - Example: If the row ends with 0.44, that is the Amount.
 
 Validation:
 - Do not calculate or derive values.
