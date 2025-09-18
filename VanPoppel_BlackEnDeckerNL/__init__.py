@@ -124,7 +124,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     def extract_number(value):
                         if isinstance(value, str):
                             numbers = re.findall(r"\d+", value)
-                            return int(numbers[0]) if numbers else None
+                            return sum(map(int, numbers)) if numbers else None
                         if isinstance(value, (int, float)):
                             return value
                         return None
