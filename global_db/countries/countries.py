@@ -109,6 +109,10 @@ countries = [
         "abbreviation": "BE"
     },
     {
+        "country": "Bélgica",
+        "abbreviation": "BE"
+    },
+    {
         "country": "Belgien",
         "abbreviation": "BE"
     },
@@ -1054,6 +1058,10 @@ countries = [
     },
     {
         "country": "United States",
+        "abbreviation": "US"
+    },
+    {
+        "country": "Estados Unidos",
         "abbreviation": "US"
     },
     {
