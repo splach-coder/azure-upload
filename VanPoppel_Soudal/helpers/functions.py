@@ -14,7 +14,7 @@ def clean_incoterm(incoterm):
     
     return incoterm_parts
 
-def clean_customs_code(value: str) -> str:
+def clean_customs_code(value) -> str:
     if value is None:
         return ""
     return value.replace(')', '').replace(' ', '').replace(",", "")
@@ -52,13 +52,13 @@ def transform_date(date_str):
     formatted_date = parsed_date.strftime('%d.%m.%Y')
     return formatted_date
 
-def safe_int_conversion(value: str) -> int:
+def safe_int_conversion(value) -> int:
     try:
         return int(value)
     except (ValueError, TypeError):
         return 0
 
-def safe_float_conversion(value: str) -> float:
+def safe_float_conversion(value) -> float:
     try:
         return float(value)
     except (ValueError, TypeError):
@@ -73,7 +73,7 @@ def safe_lower(var):
         return ""
     return var.lower()
 
-def normalize_number(value: str) -> str:
+def normalize_number(value) -> str:
     return value.replace(" ", "").replace(",", "")
 
 def merge_factuur_objects(factuur_array):
@@ -151,7 +151,7 @@ def merge_factuur_objects(factuur_array):
     
     return merged
 
-def parse_weights(number_str: str) -> str:
+def parse_weights(number_str) -> str:
     """
     Normalizes a weight string from an invoice to a standard format (e.g., '1234.565').
 
@@ -168,7 +168,7 @@ def parse_weights(number_str: str) -> str:
         ValueError: If the number format is ambiguous or unrecognized.
     """
     if not isinstance(number_str, str):
-        raise TypeError("Input must be a string.")
+        return ""
 
     s = number_str.strip()
 
@@ -201,7 +201,7 @@ def parse_weights(number_str: str) -> str:
     # If none of the above rules apply, the format is unrecognized.
     raise ValueError(f"Unrecognized or ambiguous number format: '{number_str}'")
 
-def parse_numbers(number_str: str) -> str:
+def parse_numbers(number_str) -> str:
     """
     Normalize a number string into a consistent decimal format string.
     Handles both EU and EN formats and auto-detects thousands and decimal separators.

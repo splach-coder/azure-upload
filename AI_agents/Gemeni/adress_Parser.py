@@ -94,7 +94,6 @@ class AddressParser:
         try:
             call = CustomCall()
             result = call.send_request("user", prompt)
-            logging.error(result)
             parsed_address = convert_to_list(result)
             return parsed_address
         except requests.exceptions.RequestException as e:

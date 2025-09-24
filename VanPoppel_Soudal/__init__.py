@@ -220,6 +220,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 
                                 continue
 
+
                     cleaned_items = []
                     for item in result_dict.get("Items", []):
                         coo = item.get("COO", "")
@@ -241,6 +242,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         item["Currency"] = result_dict.get("Currency", "")
                         cleaned_items.append(item)
                     result_dict["Items"] = cleaned_items
+                    
+                    logging.error("Cher me here")
 
                     doc_type = "export" if "uitvoer" in subject.lower() else "import" if "invoer" in subject.lower() else "unknown"
                     match = re.search(r'(uitvoer|invoer):\s*(\d+)', subject, re.IGNORECASE)
