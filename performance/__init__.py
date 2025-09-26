@@ -9,6 +9,7 @@ from azure.storage.blob import BlobServiceClient
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 # Make sure this import path is correct for your project structure
+from performance.dms_functions import count_dms_import_files_created, get_dms_import_summary
 from performance.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days, calculate_all_users_monthly_metrics
 
 # --- Configuration ---
@@ -194,7 +195,65 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 return func.HttpResponse(blob_client.download_blob().readall(), mimetype="application/json", status_code=200)
             except Exception as e:
                 return func.HttpResponse(json.dumps({"error": f"Could not read cache file: {e}"}), status_code=500, mimetype="application/json")
-
+        
+        elif method == "PUT":
+            logging.info("DMS import analysis request started.")
+            
+            # Load the dataframe from blob storage
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": "No data available for analysis."
+                    }), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            try:
+                # Get the days parameter from query string, default to 30
+                days_back = int(req.params.get('days', 30))
+                
+                # Run the DMS import analysis
+                result = count_dms_import_files_created(df, days_back)
+                
+                # Optionally get the summary as well
+                summary = get_dms_import_summary(df, days_back)
+                
+                logging.info(f"DMS import analysis completed. Found {result['total_dms_import_files']} files.")
+                
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "success", 
+                        "message": "DMS import analysis completed.", 
+                        "data": result,
+                        "summary": summary
+                    }), 
+                    status_code=200, 
+                    mimetype="application/json"
+                )
+                
+            except ValueError:
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": "Invalid 'days' parameter. Must be a valid integer."
+                    }), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            except Exception as e:
+                logging.error(f"Error during DMS import analysis: {e}")
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": f"Analysis failed: {str(e)}"
+                    }), 
+                    status_code=500, 
+                    mimetype="application/json"
+                )
+        
         else:
             return func.HttpResponse(json.dumps({"error": "Endpoint not found or method not allowed."}), status_code=404, mimetype="application/json")
 
