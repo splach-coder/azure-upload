@@ -5,9 +5,8 @@ import os
 import openpyxl
 import base64
 
+from bbl.excel.create_excel import write_to_excel
 from bbl.helpers.functions import process_container_data, safe_float_conversion
-from bbl.helpers.sentEmail import json_to_xml
-
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
@@ -33,6 +32,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     extracted_data = []
+    processed_output = None
 
     for base64_file in base64_files:
         filename = base64_file.get('filename')
@@ -112,8 +112,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             processed_output = process_container_data(extracted_data)
 
-            xml_data = json_to_xml(processed_output)
-
             # Delete the temporary uploaded file
             os.remove(uploaded_file_path)
 
@@ -125,11 +123,25 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-    # Construct the JSON response with the extracted data
-    response_body = xml_data
+    try:
+        # Call writeExcel to generate the Excel file in memory
+        excel_file = write_to_excel(processed_output)
+        logging.error(json.dumps(processed_output, indent=4))
+        logging.info("Generated Excel file.")
+        
+        reference = processed_output.get("container", "")
 
-    return func.HttpResponse(
-        body=response_body,
-        status_code=200,
-        mimetype="application/xml"
-    )
+        # Set response headers for the Excel file download
+        headers = {
+            'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+
+        # Return the Excel file as an HTTP response
+        return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    
+    except Exception as e:
+        logging.error(f"Error: {e}")
+        return func.HttpResponse(
+            f"Error processing request: {e}", status_code=500
+        )
