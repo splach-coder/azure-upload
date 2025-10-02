@@ -220,7 +220,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 
                                 continue
 
-
                     cleaned_items = []
                     for item in result_dict.get("Items", []):
                         coo = item.get("COO", "")
@@ -270,33 +269,129 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         logging.error(f"Error cleaning up temp file {path}: {e}")
             
         elif 'extra' in filename.lower():
-            extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
-            
-            def fix_weight(value):
-                if isinstance(value, float):
-                    value_str = str(int(value))
-                    if value.is_integer() and len(value_str) > 4:
-                        return float(value_str[:-3] + '.' + value_str[-3:])
-                    return value
-                elif isinstance(value, int):
-                    value_str = str(value)
-                    if len(value_str) > 4:
-                        return float(value_str[:-3] + '.' + value_str[-3:])
+            # --- NEW: Test Azure Form Recognizer analysis on extra file ---
+            try:
+                if file_content_base64:
+                    extra_file_bytes = base64.b64decode(file_content_base64)
+                    
+                    logging.info(f"🧪 [TEST] Analyzing extra file with Azure Form Recognizer: {filename}")
+                    poller = doc_analysis_client.begin_analyze_document("vp-soudalExtra-model", extra_file_bytes)
+                    extra_result = poller.result()
+                    
+                    if extra_result.documents:
+                        extra_document = extra_result.documents[0]
+                        extra_result_dict = {}
+                        
+                        for key, value in extra_document.fields.items():
+                            if hasattr(value, 'value') and value.value is not None:
+                                if isinstance(value.value, list):
+                                    extra_result_dict[key] = []
+                                    for item in value.value:
+                                        if hasattr(item, 'value') and isinstance(item.value, dict):
+                                            obj = {k: v.value for k, v in item.value.items() if hasattr(v, 'value')}
+                                            extra_result_dict[key].append(obj)
+                                        else:
+                                            extra_result_dict[key].append(item.value if hasattr(item, 'value') else item)
+                                else:
+                                    extra_result_dict[key] = value.value
+                            elif hasattr(value, 'content'):
+                                extra_result_dict[key] = value.content
+                        
                     else:
-                        return float(value)
-                return value
+                        logging.warning(f"🧪 [TEST] No documents found in Azure Form Recognizer result for {filename}")
+                        
+            except Exception as e:
+                logging.error(f"🧪 [TEST] Error during Azure Form Recognizer analysis of extra file: {e}")
+            # --- END TEST CODE ---
+            
+            # Keep original extraction logic unchanged
+            #extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
+            extra_file_excel_data = extra_result_dict
+            
+            def fix_weight(value_str):
+                """
+                Parse numbers by detecting format from the first separator encountered.
 
-            for row in extra_file_excel_data.get("rows", []):
+                Examples:
+                - "1.234,56" -> detects dot first -> European format -> 1234.56
+                - "1,234.56" -> detects comma first -> US format -> 1234.56
+                - "1234.56" -> no ambiguity -> 1234.56
+                """
+                if not value_str:
+                    return 0.0
+
+                # Convert to string and clean
+                value_str = str(value_str).strip().replace(' ', '')
+
+                # Remove currency symbols
+                value_str = re.sub(r'[€$£¥]', '', value_str).strip()
+
+                if not value_str:
+                    return 0.0
+
+                # Find first occurrence of separator from left
+                first_dot_pos = value_str.find('.')
+                first_comma_pos = value_str.find(',')
+
+                try:
+                    # No separators at all
+                    if first_dot_pos == -1 and first_comma_pos == -1:
+                        return float(value_str)
+
+                    # Only dot present
+                    elif first_comma_pos == -1:
+                        # Could be "1234.56" or "1.234.567"
+                        if value_str.count('.') == 1:
+                            return float(value_str)  # Standard format
+                        else:
+                            # Multiple dots = thousand separators (European)
+                            return float(value_str.replace('.', ''))
+
+                    # Only comma present
+                    elif first_dot_pos == -1:
+                        # Could be "1234,56" or "1,234,567"
+                        if value_str.count(',') == 1:
+                            return float(value_str.replace(',', '.'))  # European decimal
+                        else:
+                            # Multiple commas = thousand separators (US)
+                            return float(value_str.replace(',', ''))
+
+                    # Both separators present - first one determines format
+                    elif first_dot_pos < first_comma_pos:
+                        # Dot appears first -> European format "1.234,56"
+                        # Dots are thousand separators, comma is decimal
+                        value_str = value_str.replace('.', '').replace(',', '.')
+                        return float(value_str)
+
+                    else:
+                        # Comma appears first -> US format "1,234.56"
+                        # Commas are thousand separators, dot is decimal
+                        value_str = value_str.replace(',', '')
+                        return float(value_str)
+
+                except (ValueError, AttributeError) as e:
+                    logging.warning(f"Failed to parse number '{value_str}': {e}")
+                    return 0.0
+
+            for row in extra_file_excel_data.get("items", []):
                 if "Gross" in row:
                     row["Gross"] = fix_weight(row["Gross"])
                 if "Net weight" in row:
                     row["Net weight"] = fix_weight(row["Net weight"])      
+                if "Net Value" in row:
+                    row["Net Value"] = fix_weight(row["Net Value"])      
 
-            extra_file_excel_data["rows"] = [
-                row for row in extra_file_excel_data.get("rows", [])
-                if not (('GrandTotal' in row and row.get('GrandTotal') == True) or ('SubTotal' in row and row.get('SubTotal') == True)) 
-                and row.get("Comm. Code", "").strip()
-            ]
+            if extra_file_excel_data and isinstance(extra_file_excel_data, dict):
+                items = extra_file_excel_data.get("items", [])
+                if items and isinstance(items, list):
+                    extra_file_excel_data["items"] = [
+                        item for item in items
+                        if item and isinstance(item, dict)
+                        and not (item.get('GrandTotal') == True or item.get('SubTotal') == True)
+                        and item.get("Comm. Code") and str(item.get("Comm. Code", "")).strip()
+                    ]
+                else:
+                    extra_file_excel_data["items"] = []
 
     if not factuur_results:
         return func.HttpResponse(body=json.dumps({"error": "No factuur files were successfully processed"}), status_code=400, mimetype="application/json")
@@ -321,7 +416,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         extra_file_excel = None
         if extra_file_excel_data:
             extra_result = merged_result.copy()
-            extra_result["Items"] = extra_file_excel_data.get("rows", [])
+            extra_result["Items"] = extra_file_excel_data.get("items", [])
             extra_file_excel = write_to_extra_excel(extra_result)
         
         reference = merged_result.get("Reference", "document")

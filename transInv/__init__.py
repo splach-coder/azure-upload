@@ -73,6 +73,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     "Proforma Facture", 
                     "Confirmation de commande",
                     "Facture proforma",
+                    "Commercial Invoice",
                 ])
         try:
             # Prepare the JSON response
