@@ -69,10 +69,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             for item in items :
                 #handle the value
                 Price = item.get("Amount", "")
-                Price = Price.replace(' ', '')
-                Price = normalize_numbers(Price)
-                Price = safe_float_conversion(Price)
-                item["Amount"] = Price
+                if Price is not None:
+                    Price = Price.replace(' ', '')
+                    Price = normalize_numbers(Price)
+                    Price = safe_float_conversion(Price)
+                    item["Amount"] = Price
                 
                 HsCode = item.get("HS CODE", "")
                 HsCode = extract_hs_code(HsCode)

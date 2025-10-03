@@ -5,7 +5,9 @@ from bs4 import BeautifulSoup
 
 
 def clean_incoterm(inco : str) -> list :
-    return inco.split(' ', maxsplit=1)
+    if inco is not None :
+        return inco.split(' ', maxsplit=1)
+    return ['', '']
 
 def clean_Origin(value : str) -> str :
     return value.replace("Origin:", "").replace("d'origine:", "")
