@@ -83,6 +83,8 @@ def write_to_extra_excel(json_string):
                         mini_row.append(data.get("Inv Number", ''))
                     elif ordered_key == "Invoice date":
                         mini_row.append(data.get("Inv Date", ''))
+                    elif ordered_key == "Customs code":
+                        mini_row.append(obj.get("Customs cd", ''))
                     else :    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)

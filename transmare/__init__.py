@@ -46,7 +46,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     else :
                         result[key] = value.get("content")
                          
-
             '''------------------   Clean the JSON response   ------------------ '''
             #clean and split the incoterm
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))

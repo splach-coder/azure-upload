@@ -7,15 +7,27 @@ def clean_incoterm(inco: Optional[Union[str, object]]) -> List[str]:
     """
     Splits an incoterm string into [term, location].
     Always returns exactly 2 elements, filling with '' if missing.
+    Handles splitting by space or newline.
     """
     if not isinstance(inco, str) or not inco.strip():
         return ["", ""]
     
+    # Try splitting by space first
     parts = inco.strip().split(" ", maxsplit=1)
+    
+    # If we got 2 parts from space split, return them
+    if len(parts) == 2:
+        return parts
+    
+    # If only 1 part, try splitting by newline as fallback
     if len(parts) == 1:
+        parts = inco.strip().split("\n", maxsplit=1)
+        if len(parts) == 2:
+            # Clean up any extra whitespace from newline split
+            return [parts[0].strip(), parts[1].strip()]
         return [parts[0], ""]
+    
     return parts
-
 
 def normalize_numbers(number_str : str) -> float:
     """

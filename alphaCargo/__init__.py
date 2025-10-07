@@ -3,7 +3,7 @@ import logging
 import json
 from collections import defaultdict
 
-from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl
+from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl, fix_hs_codes
 from alphaCargo.functions.functions import  clean_incoterm, clean_number_from_chars, extract_and_clean, normalize_numbers, safe_float_conversion, safe_int_conversion
 from alphaCargo.excel.create_excel import write_to_excel
 
@@ -169,6 +169,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Invoice Number"] = result.get("Invoice Number", "")
             
             PLs_result = result
+        
+        # Fix HS codes in the invoice items
+        Inv_result = fix_hs_codes(Inv_result)
         
         # Merge JSON objects
         merged_result = merge_invoice_and_pl(Inv_result, PLs_result)

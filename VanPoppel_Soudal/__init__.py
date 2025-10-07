@@ -308,6 +308,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             #extra_file_excel_data = extract_clean_excel_from_pdf(file_content_base64, filename)
             extra_file_excel_data = extra_result_dict
             
+            
+            
             def fix_weight(value_str):
                 """
                 Parse numbers by detecting format from the first separator encountered.
