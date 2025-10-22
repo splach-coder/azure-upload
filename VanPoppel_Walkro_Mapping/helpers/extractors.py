@@ -27,7 +27,7 @@ Extract only the invoice data and ignore other pages. Extract the following fiel
 - package: from the package details (Extract from invoice exp 52 PK)
 - date: from the invoice date
 - transport_fee: from any transport fee if available
-- address: The reciever address we need its always in the right (this one WALKRO HANDELSONDERNEMING BELGIË NV is the sender don't extract it ). [company name, street, city, postal code, country (in 2-letter ISO code)]
+- address: The reciever address we need its always in the right (extract the adress then parse it don't change anything or search for things stuck to whats in the pdf) (this one WALKRO HANDELSONDERNEMING BELGIË NV or Rohum Negrone is the sender don't extract it ). [company name, street, city, postal code, country (in 2-letter ISO code)]
 - Order number: from the order number if available
 - Relatie number: from the relatie number if available
 

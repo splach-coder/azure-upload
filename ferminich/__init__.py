@@ -161,6 +161,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     except Exception as e:
         logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
+    
+    
+    for item in result.get("items", []):
+        if item["Customs Tariff Code"] is None or item["Total Line Amount"] is None and item["Quantity"] is None and item["Net"] is None:
+            result.get("items").remove(item)
         
     if len(result.get("items")) > 1:
         # Sort items by Customs Tariff Code

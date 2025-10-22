@@ -1,4 +1,5 @@
 from io import BytesIO
+import json
 import logging
 import openpyxl
 
@@ -33,7 +34,13 @@ def write_to_extra_excel(json_string):
 
     address = data.get('Address', [])
     name, street, city, code_postal, country = address
-    term, place = data.get('Incoterm', ['', ''])
+    if data.get('Incoterm', ['', '']) and len(data.get('Incoterm', ['', ''])) == 2:
+        term, place = data.get('Incoterm', ['', ''])
+    elif data.get('Incoterm', ['', '']) and len(data.get('Incoterm', ['', ''])) == 1:
+        term = data.get('Incoterm', ['', ''])[0]
+        place = ''
+    else:
+        term, place = '', ''
     
     values1 = [
         data.get('VAT', ''),

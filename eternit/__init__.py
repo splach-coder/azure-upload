@@ -109,6 +109,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 
                 #handle the Pcs
                 Pcs = item.get("Pcs", "")
+                if not Pcs:
+                    Pcs = "0"
                 Pcs = Pcs.replace(",", "")
                 Pcs = safe_int_conversion(Pcs)
                 item["Pcs"] = Pcs
@@ -228,6 +230,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         merged_result["Total pallets"] = result.get("collis", 0)
         merged_result["Freight"] = result.get("freight_cost", 0.0)
         
+        logging.error(json.dumps(merged_result.get("Summary"), indent=4))
+        
+        if merged_result.get("Summary", ""):
+            # Extract and clean Customs Tariff Codes in Summary
+            for item in merged_result.get("Summary", []):
+                if item["HS"] is None:
+                    item["HS"] = ""
         
         if len(merged_result.get("Summary")) > 1:
             # Sort items by Customs Tariff Code

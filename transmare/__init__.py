@@ -55,6 +55,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
             #clean and convert the Gross weight
             gross_weight_total = result.get("Gross weight Total", "")
+            if not gross_weight_total:
+                gross_weight_total = "0"
             gross_weight_total = clean_number_from_chars(gross_weight_total)
             if '.' in gross_weight_total or ',' in gross_weight_total:
                 gross_weight_total = normalize_numbers(gross_weight_total)

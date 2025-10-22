@@ -191,9 +191,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         json_result["Exit Port BE"] = ""
         json_result["Reference"] = extract_id_from_string(subject_body)
         
+        Total_Net = 0
+        
         for item in json_result["Items"]:
             if item.get("Collis", "") == 0:
                 item["Collis"] = item.get("Pieces", 0)
+                
+            Total_Net += item.get("Gross Weight", 0)  
+        
+        json_result["Total Net"] = Total_Net
         
         try:
             # Get the ILS number
@@ -210,6 +216,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             
         try:
             # Call writeExcel to generate the Excel file in memory
+            logging.error(json.dumps(json_result, indent=4))
             excel_file = write_to_excel(json_result)
             logging.info("Generated Excel file.")
             
