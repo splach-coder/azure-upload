@@ -50,7 +50,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             result["Incoterm"] = clean_incoterm(result.get("Incoterm", ""))
             
             #clean the VAT number
-            result["Vat Number"] = result.get("Vat Number", "").replace(" ", "")
+            if result.get("Vat Number", "") is not None:
+                result["Vat Number"] = result.get("Vat Number", "").replace(" ", "")
+            else:
+                result["Vat Number"] = ""    
             
             #clean and convert the Gross weight
             gross_weight_total = result.get("Gross weight Total", "")
