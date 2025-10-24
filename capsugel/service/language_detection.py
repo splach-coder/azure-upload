@@ -10,15 +10,16 @@ def read_pdf(file_path):
             
     return text
 
-def detect_language(file_path):
+async def detect_language(file_path):
     text = read_pdf(file_path)
     if not text.strip():
         logging.error("No text found in the PDF.")
         return None
-    
+
     translator = Translator()
     try:
-        result = translator.detect(text)
+        result = await translator.detect(text)
         return result.lang
     except Exception as e:
+        logging.error(f"Language detection failed: {e}")
         return None

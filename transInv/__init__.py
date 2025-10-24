@@ -74,6 +74,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     "Confirmation de commande",
                     "Facture proforma",
                     "Commercial Invoice",
+                    "Order Confirmation"
                 ])
         try:
             # Prepare the JSON response

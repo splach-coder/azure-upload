@@ -4,6 +4,7 @@ import logging
 import json
 import os
 import base64
+import asyncio
 
 from AI_agents.Gemeni.adress_Parser import AddressParser
 from ILS_NUMBER.get_ils_number import call_logic_app
@@ -18,7 +19,7 @@ from capsugel.data.keys import invoice_keys, packing_list_keys, invoice_keys_de,
 
 from capsugel.service.language_detection import detect_language
 
-def main(req: func.HttpRequest) -> func.HttpResponse:
+async def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
 
     # Attempt to parse JSON body
@@ -83,8 +84,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
         
-        language = detect_language(uploaded_file_path)
-        logging.info(f"Detected PDF language for '{filename}': {language}")
+        
+        language = await detect_language(uploaded_file_path)
+        logging.error(f"Detected PDF language for '{uploaded_file_path}': {language}")
         
         pdf_type = detect_pdf_type(uploaded_file_path)
         logging.info(f"Detected PDF type for '{filename}': {pdf_type}")
@@ -131,14 +133,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 
                 pattern = re.compile(r'[\(]?(incoterms[:]? 2010|incoterms:|incoterms)[\)]?', re.IGNORECASE)
                 
+                
+                
                 if re.search(pattern, data_1["Inco"]):
                     data_1["Inco"] = re.sub(pattern, '', data_1["Inco"]).strip()
-                    data_1["Inco"] = data_1["Inco"].replace("Payment Terms:", "")
+                    data_1["Inco"] = data_1["Inco"].replace("Payment Terms:", "")   
 
                 data_1["Inco"] = data_1["Inco"].split(' ', 1)
                 
+                
                 if len(data_1["Inco"]) == 1:
-                    data_1["Inco"].append("") 
+                    data_1["Inco"].append("")
+                    
+                 
 
                 if language == "de":
                     lst_keywords=["Rechnungsbetrag", "MwSt", "Fälliger Rechnungsbetrag", "* Letzte Seite"]
@@ -155,6 +162,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 data_2 = json.loads(extract_text_from_last_page(uploaded_file_path, coords, page[0], ["invoice"]))
                 data_2['invoice'] = data_2['invoice'].replace('Invoice Total', '').replace('\n', '').replace('al conditions', "").replace('Net', '').replace('of', '').strip()
                 data_2 = clean_invoice_total(data_2)
+                
 
                 if language == "de":
                     items_inv_keywords_params = inv_keyword_params_de
@@ -176,14 +184,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     keyword_params={"Preferential Text:" : ((700, 30), -200)}
                     customs_code_key = "Preferential Text:"
                     keys_general_inv = invoice_keys 
-                    
+                
+                logging.error(f"Keyword params1: {keyword_params}")    
                 data_3 = another_version(uploaded_file_path, items_inv_keywords_params, fallback_inv_keywords)
+                logging.error(f"Keyword params2: {keyword_params}")
                 data_3 = merge_incomplete_objects_invoice(data_3)
+                logging.error(f"Keyword params3: {keyword_params}")
                 data_3 = clean_invoice_data(data_3, countries) 
                 
                 #clean the unwanted stuff
                 data_3 = [item for item in data_3 if item]
                 
+                logging.error(f"Keyword params: {keyword_params}")
                 data_4 = extract_customs_code_from_pdf_invoice(uploaded_file_path, keyword_params)
                 #customs_code = "Bevorzugter Text:" if language == "de" else "Preferential Text:"
                 data_4 = extract_customs_code_from_text(data_4, customs_code_key)
@@ -257,6 +269,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         except Exception as e:
             logging.exception(f"💥 Unexpected error while fetching ILS_NUMBER: {str(e)}")
             
+
+        logging.error("Final merged data:")
 
         # Call writeExcel to generate the Excel file in memory
         excel_file = write_to_excel(merged_data)
