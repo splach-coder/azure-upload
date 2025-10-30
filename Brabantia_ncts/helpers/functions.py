@@ -18,7 +18,6 @@ def safe_float_conversion(value):
         print(f"Error converting value: {value}")
         return 0.0  # Handle conversion error, default to 0 or other logic
     
-    
 def merge_items_with_mrn(data):
     header_lookup = {entry["Code"]: entry["Number"] for entry in data.get("header", [])}
    
@@ -26,13 +25,18 @@ def merge_items_with_mrn(data):
         key = item.get("merged_EX_A_D")
         if key and key in header_lookup:
             item["MRN_number"] = header_lookup[key]
-    
-    # Sort items by merged_EX_A_D in alphabetical order (A-Z)
-    # Handle None values by placing them at the end
-    data["items"] = sorted(
-        data.get("items", []), 
-        key=lambda x: x.get("merged_EX_A_D") or ""
-    )
+
+    def sort_key(x):
+        val = x.get("merged_EX_A_D") or ""
+        match = re.match(r"(\d+)([A-Za-z]*)", val)
+        if match:
+            num_part = int(match.group(1))
+            letter_part = match.group(2) or ""
+            # Prioritize letter first, then number
+            return (letter_part, num_part)
+        return ("", float("inf"))
+
+    data["items"] = sorted(data.get("items", []), key=sort_key)
    
     return data
 
