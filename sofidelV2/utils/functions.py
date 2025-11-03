@@ -150,9 +150,9 @@ def extract_and_clean(html_content):
         # Combine both matched numbers if there are two parts, separated by a space
         result['Freight cost'] = f"{freight_cost_match.group(1)}{freight_cost_match.group(2)}"
 
-    parking_trailer_pattern_exact = r"Parking trailer:\s*(\w+)"
-    parking_trailer_pattern_fallback = r"[Pp]arking.*?(\w+)"
-    parking_trailer_pattern_fallback2 = r"[Pp]arking*?(\w+)"
+    parking_trailer_pattern_exact = r"Parking trailer:\s*([A-Z]+[0-9]+)"
+    parking_trailer_pattern_fallback = r"[Pp]arking.*?\s*([A-Z]+[0-9]+)"
+    parking_trailer_pattern_fallback2 = r"[Pp]arking*?\s*([A-Z]+[0-9]+)"
 
     exit_port_value = exit_port_match.group(1).strip() if exit_port_match else None
 

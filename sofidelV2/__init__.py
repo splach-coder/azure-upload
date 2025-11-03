@@ -185,6 +185,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         body = handle_body_request(email_body)
         
+        logging.error(json.dumps(body, indent=4))
+        
         json_result = {**json_result, **body}
 
         json_result["Export office"] = json_result.get("Exit Port BE", "")
