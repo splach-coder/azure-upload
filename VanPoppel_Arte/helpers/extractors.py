@@ -371,7 +371,7 @@ def extract_products_from_text(text):
                 reference = block[3].split(":", 1)[1].strip()
                 
                 # Find the line with Customs Tariff (might be combined with Gross)
-                customs_line_idx = next((i for i, line in enumerate(block) if "• Customs Tariff:" in line), None)
+                customs_line_idx = next((i for i, line in enumerate(block) if "Customs Tariff:" in line), None)
                 if not customs_line_idx:
                     raise ValueError("Cannot find Customs Tariff line")
                 
@@ -380,17 +380,17 @@ def extract_products_from_text(text):
                 customs_match = re.search(r"Customs Tariff:\s*(\S+)", customs_line)
                 customs_tariff = customs_match.group(1) if customs_match else ""
                 
-                # Net is on the next line in new format
-                net_line_idx = customs_line_idx + 1
-                if net_line_idx < len(block) and "• Net:" in block[net_line_idx]:
+                # 🔧 FIX: Look for Net line more flexibly (check for "Net:" anywhere in the line)
+                net_line_idx = next((i for i, line in enumerate(block) if "Net:" in line), None)
+                if net_line_idx is not None:
                     net_match = re.search(r"Net:\s*([\d.,]+\s*[A-Z]+)", block[net_line_idx])
                     net_weight = net_match.group(1).strip() if net_match else ""
                 else:
                     net_weight = ""
                 
                 # Find Surface and Origin
-                surface_idx = next((i for i, line in enumerate(block) if "• Surface:" in line), None)
-                origin_idx = next((i for i, line in enumerate(block) if "• Country of origin:" in line), None)
+                surface_idx = next((i for i, line in enumerate(block) if "Surface:" in line), None)
+                origin_idx = next((i for i, line in enumerate(block) if "Country of origin:" in line), None)
                 
                 if not surface_idx or not origin_idx:
                     raise ValueError("Cannot find Surface or Origin")
@@ -428,7 +428,6 @@ def extract_products_from_text(text):
             continue
 
     return results
-
 
 
 def is_currency_amount(line):

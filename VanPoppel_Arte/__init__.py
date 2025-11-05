@@ -101,6 +101,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         for page in doc:
             page_text = page.get_text()
             page_items = extract_products_from_text(page_text)
+            logging.error(json.dumps(page_items, indent=4))
             all_items.extend(page_items)
         
         # ----------------------------------------
@@ -109,8 +110,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         page = find_page_in_invoice(doc)
         last_page_text = doc[page[0]-1].get_text()
         footer_inv_data = extract_totals_and_incoterm(last_page_text)
-        
-        
         
         # ----------------------------------------
         # 🔹 Extract Customs Code info from last page
