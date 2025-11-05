@@ -29,6 +29,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             text = extract_text_from_pdf(content)
             try:
                 proforma_info = extract_info_from_proforma(text)
+                proforma_info = proforma_info.replace("```", "").replace("json", "").strip()
                 if isinstance(proforma_info, str):
                     proforma_info = json.loads(proforma_info)
                 elif isinstance(proforma_info, dict):
@@ -52,6 +53,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     # Handle email body parsing
     try:
         email_data = extract_info_from_email(email_body)
+        email_data = email_data.replace("```", "").replace("json", "").strip()
         if isinstance(email_data, str):
             email_data = json.loads(email_data)
         elif isinstance(email_data, dict):
@@ -69,8 +71,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         result["Freight"] = freight
         result["VAT"] = vat
     elif company == 'coolsolutions':
-        result["Freight"] = result.get("TransportCosts").get("UK", 0)
-        result["VAT"] = result.get("TransportCosts").get("Belgium", 0)    
+        transport_costs = result.get("TransportCosts") or {}
+        result["Freight"] = transport_costs.get("UK", 0)
+        result["VAT"] = transport_costs.get("Belgium", 0)    
     
     # Build items array from the result
     result = build_items(result)

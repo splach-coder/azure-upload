@@ -269,7 +269,7 @@ def extract_customs_code(text_content):
         return "EXTRACTION_FAILED"
     
     
-import re
+
 
 def extract_products_from_text(text):
     lines = text.strip().splitlines()
@@ -294,7 +294,7 @@ def extract_products_from_text(text):
             # 🧼 CLEAN unexpected lines
             expected_prefixes = [
                 "• (", "• Order number:", "• Your reference:", "• Customs Tariff:",
-                "• Net:", "• Surface:", "• Country of origin:"
+                "• Net:", "• Surface:", "• Country of origin:", "• Gross:"
             ]
             cleaned_block = [block[0]]  # keep product code
 
@@ -305,7 +305,7 @@ def extract_products_from_text(text):
                     cleaned_block.append(line)
                 elif is_currency_amount(line):
                     cleaned_block.append(line)
-                elif re.match(r"^[\d.,]+$", line):  # just numbers
+                elif re.match(r"^[\d.,]+$", line):  # just numbers (including variant codes like 4112025)
                     cleaned_block.append(line)
                 elif is_currency_only(line):
                     cleaned_block.append(line)
@@ -332,29 +332,80 @@ def extract_products_from_text(text):
 
             block = fixed_block
 
-            # Validate length
-            if len(block) < 11:
-                raise ValueError("Block too short after cleaning")
+            # 🆕 TRY ORIGINAL FORMAT FIRST
+            try:
+                # Validate length for original format
+                if len(block) < 11:
+                    raise ValueError("Block too short for original format")
 
-            product_code = block[0]
-            product_name_match = re.search(r"\((.*?)\)\s*(.*)", block[1])
-            if product_name_match:
-                product_name = product_name_match.group(2).strip()
-            else:
-                product_name = block[1].strip()
+                product_code = block[0]
+                product_name_match = re.search(r"\((.*?)\)\s*(.*)", block[1])
+                if product_name_match:
+                    product_name = product_name_match.group(2).strip()
+                else:
+                    product_name = block[1].strip()
 
-            order_number = block[2].split(":", 1)[1].strip()
-            reference = block[3].split(":", 1)[1].strip()
-            customs_tariff = block[4].split(":", 1)[1].strip()
-            net_weight = block[5].split(":", 1)[1].strip()
-            surface = block[6].split(":", 1)[1].strip()
-            origin = block[7].split(":", 1)[1].strip()
+                order_number = block[2].split(":", 1)[1].strip()
+                reference = block[3].split(":", 1)[1].strip()
+                customs_tariff = block[4].split(":", 1)[1].strip()
+                net_weight = block[5].split(":", 1)[1].strip()
+                surface = block[6].split(":", 1)[1].strip()
+                origin = block[7].split(":", 1)[1].strip()
 
-            quantity, unit = block[8].split(" ")
-            unit_price = block[9].strip()
-            
-            # Enhanced amount handling
-            amount, currency = extract_amount_and_currency(block[10:12])
+                quantity, unit = block[8].split(" ")
+                unit_price = block[9].strip()
+                amount, currency = extract_amount_and_currency(block[10:12])
+                
+            except (ValueError, IndexError, AttributeError):
+                # 🆕 FALLBACK TO NEW FORMAT
+                logging.info(f"Trying new format for block starting with {block[0]}")
+                
+                product_code = block[0]
+                product_name_match = re.search(r"\((.*?)\)\s*(.*)", block[1])
+                if product_name_match:
+                    product_name = product_name_match.group(2).strip()
+                else:
+                    product_name = block[1].strip()
+
+                order_number = block[2].split(":", 1)[1].strip()
+                reference = block[3].split(":", 1)[1].strip()
+                
+                # Find the line with Customs Tariff (might be combined with Gross)
+                customs_line_idx = next((i for i, line in enumerate(block) if "• Customs Tariff:" in line), None)
+                if not customs_line_idx:
+                    raise ValueError("Cannot find Customs Tariff line")
+                
+                # Parse Customs Tariff (might have Gross on same line)
+                customs_line = block[customs_line_idx]
+                customs_match = re.search(r"Customs Tariff:\s*(\S+)", customs_line)
+                customs_tariff = customs_match.group(1) if customs_match else ""
+                
+                # Net is on the next line in new format
+                net_line_idx = customs_line_idx + 1
+                if net_line_idx < len(block) and "• Net:" in block[net_line_idx]:
+                    net_match = re.search(r"Net:\s*([\d.,]+\s*[A-Z]+)", block[net_line_idx])
+                    net_weight = net_match.group(1).strip() if net_match else ""
+                else:
+                    net_weight = ""
+                
+                # Find Surface and Origin
+                surface_idx = next((i for i, line in enumerate(block) if "• Surface:" in line), None)
+                origin_idx = next((i for i, line in enumerate(block) if "• Country of origin:" in line), None)
+                
+                if not surface_idx or not origin_idx:
+                    raise ValueError("Cannot find Surface or Origin")
+                
+                surface = block[surface_idx].split(":", 1)[1].strip()
+                origin = block[origin_idx].split(":", 1)[1].strip()
+                
+                # Find quantity/unit line after origin
+                qty_idx = origin_idx + 1
+                if qty_idx < len(block) and re.match(r"^[\d.,]+\s+[A-Z]{1,3}$", block[qty_idx]):
+                    quantity, unit = block[qty_idx].split()
+                    unit_price = block[qty_idx + 1].strip() if qty_idx + 1 < len(block) else ""
+                    amount, currency = extract_amount_and_currency(block[qty_idx + 2:min(qty_idx + 4, len(block))])
+                else:
+                    raise ValueError("Cannot find quantity/unit in new format")
 
             results.append({
                 "product_code": product_code,
@@ -377,6 +428,7 @@ def extract_products_from_text(text):
             continue
 
     return results
+
 
 
 def is_currency_amount(line):

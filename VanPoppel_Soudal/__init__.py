@@ -217,7 +217,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                                 result_dict["Inv Date"] = datetime.datetime.strptime(invoice_date_str, fmt).date()
                                 break
                             except ValueError:
-                                
                                 continue
 
                     cleaned_items = []
