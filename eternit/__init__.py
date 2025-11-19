@@ -32,6 +32,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     if key in ["Items", "Summary"]:
                         arr = value.get("valueArray")
                         result[key] = []
+                        if arr is None:
+                            continue
                         for item in arr:
                             valueObject = item.get("valueObject")
                             obj = {}

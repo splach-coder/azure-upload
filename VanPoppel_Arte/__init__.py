@@ -101,7 +101,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         for page in doc:
             page_text = page.get_text()
             page_items = extract_products_from_text(page_text)
-            logging.error(json.dumps(page_items, indent=4))
             all_items.extend(page_items)
         
         # ----------------------------------------

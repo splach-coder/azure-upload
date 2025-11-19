@@ -244,7 +244,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     logging.error("Cher me here")
 
                     doc_type = "export" if "uitvoer" in subject.lower() else "import" if "invoer" in subject.lower() else "unknown"
-                    match = re.search(r'(uitvoer|invoer):\s*(\d+)', subject, re.IGNORECASE)
+                    match = re.search(r'\b(uitvoer|invoer)\b[:\s]+(\d+)', subject, re.IGNORECASE)
                     reference = match.group(2) if match else None
 
                     result_dict["File Type"] = doc_type      
