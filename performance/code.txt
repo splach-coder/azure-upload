@@ -1,0 +1,884 @@
+The following is a digest of the repository "performance".
+This digest is designed to be easily parsed by Large Language Models.
+
+--- SUMMARY ---
+Repository: performance
+Files Analyzed: 5
+Total Text Size: 37.81 KB
+Estimated Tokens (text only): ~8,814
+
+--- DIRECTORY STRUCTURE ---
+performance/
+├── functions/
+│   └── functions.py
+├── __init__.py
+├── dms_functions.py
+├── function.json
+└── test.py
+
+
+--- FILE CONTENTS ---
+============================================================
+FILE: functions/functions.py
+============================================================
+#-----------------------------------------------------------------------------
+from collections import defaultdict, Counter
+from datetime import datetime, timedelta
+import pandas as pd
+
+def count_user_file_creations_last_10_days(df):
+    import_users = [
+        'FADWA.ERRAZIKI', 'AYOUB.SOURISTE', 'AYMANE.BERRIOUA', 'SANA.IDRISSI', 'AMINA.SAISS',
+        'KHADIJA.OUFKIR', 'ZOHRA.HMOUDOU', 'SIMO.ONSI', 'YOUSSEF.ASSABIR', 'ABOULHASSAN.AMINA',
+        'MEHDI.OUAZIR', 'OUMAIMA.EL.OUTMANI', 'HAMZA.ALLALI', 'MUSTAPHA.BOUJALA', 'HIND.EZZAOUI',
+        'MOHAMED.BOUIDAR', 'HOUDA.EZZAOUI', 'YAHYA.ANEJARN'
+    ]
+
+    export_users = [
+        'IKRAM.OULHIANE', 'MOURAD.ELBAHAZ', 'MOHSINE.SABIL', 'AYA.HANNI',
+        'ZAHIRA.OUHADDA', 'CHAIMAAE.EJJARI', 'HAFIDA.BOOHADDOU', 'KHADIJA.HICHAMI', 'FATIMA.ZAHRA.BOUGSIM'
+    ]
+
+    users = import_users + export_users
+
+    # --- CHANGE 1: "INTERFACE" is no longer considered a manual status ---
+    manual_statuses = {"COPIED", "COPY", "NEW"}
+
+    # Clean columns like in calculate_single_user_metrics_fast
+    for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS"]:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+    df["HISTORYDATETIME"] = pd.to_datetime(df["HISTORYDATETIME"], errors="coerce", format="mixed")
+    df = df.dropna(subset=["HISTORYDATETIME"])
+    df["HISTORYDATETIME"] = df["HISTORYDATETIME"].dt.tz_localize(None)
+
+    # Last 10 working days (Mon-Fri)
+    today = datetime.now().date()
+    working_days = []
+    curr = today
+    while len(working_days) < 10:
+        if curr.weekday() < 5:
+            working_days.insert(0, curr)
+        curr -= timedelta(days=1)
+
+    results = []
+
+    for user in users:
+        user_daily = {day.strftime("%d/%m"): 0 for day in working_days}
+
+        cutoff = datetime.now() - timedelta(days=90)
+        recent_df = df[df["HISTORYDATETIME"] >= cutoff]
+        user_decls = recent_df[recent_df["USERCODE"] == user]["DECLARATIONID"].unique()
+
+        # Work on all declarations this user touched
+        user_scope_df = df[df["DECLARATIONID"].isin(user_decls)].copy()
+
+        grouped = user_scope_df.groupby("DECLARATIONID")
+
+        for decl_id, group in grouped:
+            group = group.sort_values("HISTORYDATETIME")
+            if group.empty:
+                continue
+
+            user_rows = group[group["USERCODE"] == user]
+            if user_rows.empty:
+                continue
+
+            first_action_date = user_rows["HISTORYDATETIME"].min().date()
+            if first_action_date not in working_days:
+                continue
+
+            # --- CHANGE 2: Simplified automatic/manual classification logic ---
+            # A file is AUTOMATIC if "INTERFACE" exists anywhere in its history for any user.
+            is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+            
+            # A file is MANUAL if the user performed a manual action AND it's not automatic.
+            user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
+            is_manual = bool(manual_statuses.intersection(user_statuses)) and not is_automatic
+            # --- END OF CHANGES ---
+
+            if is_manual or is_automatic:
+                key = first_action_date.strftime("%d/%m")
+                user_daily[key] += 1
+
+        results.append({
+            "user": user,
+            "team": "import" if user in import_users else "export",
+            "daily_file_creations": user_daily
+        })
+
+    return results
+
+def calculate_single_user_metrics_fast(df_all, username):
+    df = df_all.copy()
+
+    for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS"]:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+
+    df["HISTORYDATETIME"] = pd.to_datetime(df["HISTORYDATETIME"], errors="coerce", format="mixed")
+    df = df.dropna(subset=["HISTORYDATETIME"])
+    df["HISTORYDATETIME"] = df["HISTORYDATETIME"].dt.tz_localize(None)
+
+    username = username.upper()
+    cutoff = datetime.now() - timedelta(days=90)
+    recent_df = df[df["HISTORYDATETIME"] >= cutoff]
+
+    user_decls = recent_df[recent_df["USERCODE"] == username]["DECLARATIONID"].unique()
+    if len(user_decls) == 0:
+        return {
+            "user": username,
+            "daily_metrics": [],
+            "summary": {}
+        }
+
+    user_scope_df = df[df["DECLARATIONID"].isin(user_decls)].copy()
+    
+    # --- CHANGE 1: "INTERFACE" is no longer considered a manual status ---
+    manual_statuses = {"COPIED", "COPY", "NEW"}
+
+    daily_summary = defaultdict(lambda: {
+        "manual_files_created": 0,
+        "automatic_files_created": 0,
+        "modification_count": 0,
+        "modification_file_ids": set(),
+        "total_files_handled": set(),
+        "file_creation_times": [],
+        "manual_file_ids": [],
+        "automatic_file_ids": []
+    })
+
+    grouped = user_scope_df.groupby("DECLARATIONID")
+
+    for decl_id, group in grouped:
+        group = group.sort_values("HISTORYDATETIME")
+        if group.empty:
+            continue
+        
+        user_rows = group[group["USERCODE"] == username]
+        if user_rows.empty:
+            continue
+
+        first_action_date = user_rows["HISTORYDATETIME"].min().date().isoformat()
+        
+        # --- CHANGE 2: Simplified automatic/manual classification logic ---
+        # A file is AUTOMATIC if "INTERFACE" exists anywhere in its history for any user.
+        is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+        
+        # A file is MANUAL if the user performed a manual action AND it's not automatic.
+        user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
+        is_manual = manual_statuses.intersection(user_statuses) and not is_automatic
+        # --- END OF CHANGES ---
+
+        if is_manual:
+            daily_summary[first_action_date]["manual_files_created"] += 1
+            daily_summary[first_action_date]["total_files_handled"].add(decl_id)
+            daily_summary[first_action_date]["manual_file_ids"].append(decl_id)
+        elif is_automatic:
+            # Credit for the automatic file is given if the user has interacted with it.
+            daily_summary[first_action_date]["automatic_files_created"] += 1
+            daily_summary[first_action_date]["total_files_handled"].add(decl_id)
+            daily_summary[first_action_date]["automatic_file_ids"].append(decl_id)
+
+        mods = group[group["USERCODE"] == username]
+        daily_summary[first_action_date]["modification_count"] += len(mods[mods["HISTORY_STATUS"] == "MODIFIED"])
+        daily_summary[first_action_date]["total_files_handled"].update(mods["DECLARATIONID"].tolist())
+        daily_summary[first_action_date]["modification_file_ids"].update(mods["DECLARATIONID"].tolist())
+
+        # File lifecycle logic
+        session_start = None
+        for _, row in mods.sort_values("HISTORYDATETIME").iterrows():
+            if row["HISTORY_STATUS"] == "MODIFIED" and session_start is None:
+                session_start = row["HISTORYDATETIME"]
+            elif row["HISTORY_STATUS"] == "WRT_ENT" and session_start:
+                duration = (row["HISTORYDATETIME"] - session_start).total_seconds() / 3600
+                daily_summary[first_action_date]["file_creation_times"].append(duration)
+                session_start = None
+
+    # Build daily metrics
+    daily_metrics = []
+    for date in sorted(daily_summary.keys()):
+        data = daily_summary[date]
+        avg_creation_time = (sum(data["file_creation_times"]) / len(data["file_creation_times"])) if data["file_creation_times"] else None
+        daily_metrics.append({
+            "date": date,
+            "manual_files_created": data["manual_files_created"],
+            "automatic_files_created": data["automatic_files_created"],
+            "modification_count": data["modification_count"],
+            "modification_file_ids": list(data["modification_file_ids"]),
+            "total_files_handled": len(data["total_files_handled"]),
+            "avg_creation_time": round(avg_creation_time, 2) if avg_creation_time else None,
+            "manual_file_ids": data["manual_file_ids"],
+            "automatic_file_ids": data["automatic_file_ids"]
+        })
+
+    total_manual = sum(d["manual_files_created"] for d in daily_metrics)
+    total_auto = sum(d["automatic_files_created"] for d in daily_metrics)
+    total_mods = sum(d["modification_count"] for d in daily_metrics)
+    total_handled = sum(d["total_files_handled"] for d in daily_metrics)
+
+    all_creation_times = [t for d in daily_summary.values() for t in d["file_creation_times"]]
+    avg_creation_time_total = (sum(all_creation_times) / len(all_creation_times)) if all_creation_times else None
+
+    df_user_summary = user_scope_df[user_scope_df["USERCODE"] == username]
+    file_type_counts = df_user_summary["TYPEDECLARATIONSSW"].value_counts().to_dict()
+    activity_by_hour = df_user_summary["HISTORYDATETIME"].dt.hour.value_counts().sort_index().to_dict()
+    company_specialization = df_user_summary["ACTIVECOMPANY"].value_counts().to_dict()
+
+    most_productive_day = max(daily_metrics, key=lambda d: d["total_files_handled"], default={"date": None})["date"] if daily_metrics else None
+
+    # Smart avg per day (only weekdays + at least 1 file created)
+    valid_days = [
+        d for d in daily_metrics
+        if (datetime.strptime(d["date"], "%Y-%m-%d").weekday() < 5) and
+        ((d["manual_files_created"] + d["automatic_files_created"]) > 0)
+    ]
+    total_created = sum(d["manual_files_created"] + d["automatic_files_created"] for d in valid_days)
+    avg_files_per_day = round(total_created / len(valid_days), 2) if valid_days else 0
+
+    days_active = len(valid_days)
+    modification_file_ids = set()
+    for d in daily_metrics:
+        modification_file_ids.update(d["modification_file_ids"])
+    modifications_per_file = round(total_mods / len(modification_file_ids), 2) if modification_file_ids else 0
+
+    manual_vs_auto_ratio = {
+        "manual_percent": round((total_manual / total_handled) * 100, 2) if total_handled else 0,
+        "automatic_percent": round((total_auto / total_handled) * 100, 2) if total_handled else 0,
+    }
+
+    activity_days = df_user_summary["HISTORYDATETIME"].dt.date.value_counts().to_dict()
+    all_days = set((datetime.now() - timedelta(days=i)).date() for i in range(90))
+    inactive_days = sorted([d.isoformat() for d in all_days if d not in activity_days])
+
+    hour_with_most_activity = max(activity_by_hour.items(), key=lambda x: x[1], default=(None, None))[0]
+
+    return {
+        "user": username,
+        "daily_metrics": daily_metrics,
+        "summary": {
+            "total_manual_files": total_manual,
+            "total_automatic_files": total_auto,
+            "total_files_handled": total_handled,
+            "total_modifications": total_mods,
+            "avg_files_per_day": avg_files_per_day,
+            "avg_creation_time": round(avg_creation_time_total, 2) if avg_creation_time_total else None,
+            "most_productive_day": most_productive_day,
+            "file_type_counts": file_type_counts,
+            "activity_by_hour": activity_by_hour,
+            "company_specialization": company_specialization,
+            "days_active": days_active,
+            "modifications_per_file": modifications_per_file,
+            "manual_vs_auto_ratio": manual_vs_auto_ratio,
+            "activity_days": {str(k): int(v) for k, v in activity_days.items()},
+            "inactivity_days": inactive_days,
+            "hour_with_most_activity": hour_with_most_activity
+        }
+    }
+
+def calculate_all_users_monthly_metrics(df_all):
+    """
+    Calculate file creation metrics for a specific list of users in the last month (30 days)
+    Returns summary of files created and daily averages per user
+    """
+    df = df_all.copy()
+    
+    # --- NEW: Hardcoded list of users to include in the report ---
+    target_users = [
+        'FADWA.ERRAZIKI', 'AYOUB.SOURISTE', 'AYMANE.BERRIOUA', 'SANA.IDRISSI', 'AMINA.SAISS',
+        'KHADIJA.OUFKIR', 'ZOHRA.HMOUDOU', 'SIMO.ONSI', 'YOUSSEF.ASSABIR', 'ABOULHASSAN.AMINA',
+        'MEHDI.OUAZIR', 'OUMAIMA.EL.OUTMANI', 'HAMZA.ALLALI', 'MUSTAPHA.BOUJALA', 'HIND.EZZAOUI',
+        'IKRAM.OULHIANE', 'MOURAD.ELBAHAZ', 'MOHSINE.SABIL', 'AYA.HANNI',
+        'ZAHIRA.OUHADDA', 'CHAIMAAE.EJJARI', 'HAFIDA.BOOHADDOU', 'KHADIJA.HICHAMI', 'FATIMA.ZAHRA.BOUGSIM',
+        'MOHAMED.BOUIDAR', 'HOUDA.EZZAOUI', 'YAHYA.ANERJARN'
+    ]
+
+    
+    # Data preprocessing
+    for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS"]:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+    
+    df["HISTORYDATETIME"] = pd.to_datetime(df["HISTORYDATETIME"], errors="coerce", format="mixed")
+    df = df.dropna(subset=["HISTORYDATETIME"])
+    df["HISTORYDATETIME"] = df["HISTORYDATETIME"].dt.tz_localize(None)
+    
+    # Filter for last 30 days
+    cutoff = datetime.now() - timedelta(days=30)
+    recent_df = df[df["HISTORYDATETIME"] >= cutoff]
+    
+    if recent_df.empty:
+        return {}
+    
+    manual_statuses = {"COPIED", "COPY", "NEW"}
+    
+    user_results = {}
+    
+    # --- CHANGE: Loop through the target_users list instead of all active users ---
+    for username in target_users:
+        # Get declarations this user worked on
+        user_decls = recent_df[recent_df["USERCODE"] == username]["DECLARATIONID"].unique()
+        if len(user_decls) == 0:
+            # If user has no activity, you might want to skip them or return a zero-value entry.
+            # Here we skip them to match the previous logic.
+            continue
+        
+        # Get all activity for these declarations
+        user_scope_df = df[df["DECLARATIONID"].isin(user_decls)].copy()
+        
+        # Track daily file creation
+        daily_files = defaultdict(lambda: {
+            "manual_files": 0,
+            "automatic_files": 0,
+            "total_files": set()
+        })
+        
+        # Group by declaration to analyze file creation logic
+        grouped = user_scope_df.groupby("DECLARATIONID")
+        
+        for decl_id, group in grouped:
+            group = group.sort_values("HISTORYDATETIME")
+            if group.empty:
+                continue
+            
+            user_rows = group[group["USERCODE"] == username]
+            if user_rows.empty:
+                continue
+            
+            user_actions_in_period = user_rows[user_rows["HISTORYDATETIME"] >= cutoff]
+            if user_actions_in_period.empty:
+                continue
+                
+            first_action_date = user_actions_in_period["HISTORYDATETIME"].min().date().isoformat()
+            
+            is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+            user_statuses = set(user_rows["HISTORY_STATUS"].tolist())
+            is_manual = bool(manual_statuses.intersection(user_statuses)) and not is_automatic
+            
+            if is_manual:
+                daily_files[first_action_date]["manual_files"] += 1
+                daily_files[first_action_date]["total_files"].add(decl_id)
+            elif is_automatic:
+                daily_files[first_action_date]["automatic_files"] += 1
+                daily_files[first_action_date]["total_files"].add(decl_id)
+        
+        # Calculate totals and averages
+        total_manual = sum(day_data["manual_files"] for day_data in daily_files.values())
+        total_automatic = sum(day_data["automatic_files"] for day_data in daily_files.values())
+        total_files = total_manual + total_automatic
+        
+        valid_days = []
+        for date_str, day_data in daily_files.items():
+            date_obj = datetime.strptime(date_str, "%Y-%m-%d")
+            files_created = day_data["manual_files"] + day_data["automatic_files"]
+            
+            if date_obj.weekday() < 5 and files_created > 0:
+                valid_days.append(files_created)
+        
+        avg_files_per_day = round(sum(valid_days) / len(valid_days), 2) if valid_days else 0
+        days_with_creation = len(valid_days)
+        
+        user_results[username] = {
+            "total_files_created": total_files,
+            "manual_files": total_manual,
+            "automatic_files": total_automatic,
+            "days_with_file_creation": days_with_creation,
+            "avg_files_per_active_day": avg_files_per_day,
+            "manual_vs_auto_ratio": {
+                "manual_percent": round((total_manual / total_files) * 100, 2) if total_files else 0,
+                "automatic_percent": round((total_automatic / total_files) * 100, 2) if total_files else 0
+            }
+        }
+    
+    return user_results
+
+
+============================================================
+FILE: __init__.py
+============================================================
+from collections import defaultdict
+from datetime import datetime, timedelta
+import azure.functions as func
+import logging
+import json
+import pandas as pd
+import io
+from azure.storage.blob import BlobServiceClient
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+# Make sure this import path is correct for your project structure
+from performance.dms_functions import count_dms_import_files_created, get_dms_import_summary
+from performance.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days, calculate_all_users_monthly_metrics
+
+# --- Configuration ---
+KEY_VAULT_URL = "https://kv-functions-python.vault.azure.net"
+SECRET_NAME = "azure-storage-account-access-key2"
+
+# --- Azure Services Initialization ---
+try:
+    credential = DefaultAzureCredential()
+    kv_client = SecretClient(vault_url=KEY_VAULT_URL, credential=credential)
+    connection_string = kv_client.get_secret(SECRET_NAME).value
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+except Exception as e:
+    logging.critical(f"Failed to initialize Azure services: {e}")
+    connection_string = None 
+    blob_service_client = None
+
+# --- Blob Storage Constants ---
+CONTAINER_NAME = "document-intelligence"
+PARQUET_BLOB_PATH = "logs/all_data.parquet"
+SUMMARY_BLOB_PATH = "Dashboard/cache/users_summary.json"
+MONTHLY_SUMMARY_BLOB_PATH = "Dashboard/cache/monthly_report_cache.json"
+# --- NEW: Path for individual user performance caches ---
+USER_CACHE_PATH_PREFIX = "Dashboard/cache/users/"
+
+
+# --- Helper Functions ---
+def load_parquet_from_blob():
+    """Loads the main Parquet file from blob storage into a pandas DataFrame."""
+    if not blob_service_client: raise ConnectionError("Blob service not initialized.")
+    try:
+        blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, PARQUET_BLOB_PATH)
+        if not blob_client.exists():
+             logging.warning("Parquet file not found at specified path.")
+             return pd.DataFrame()
+        return pd.read_parquet(io.BytesIO(blob_client.download_blob().readall()))
+    except Exception as e:
+        logging.error(f"Could not load Parquet file. Error: {e}")
+        return pd.DataFrame()
+
+def save_parquet_to_blob(df):
+    """Saves a pandas DataFrame to a Parquet file in blob storage."""
+    if not blob_service_client: raise ConnectionError("Blob service not initialized.")
+    blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, PARQUET_BLOB_PATH)
+    buffer = io.BytesIO()
+    df.to_parquet(buffer, index=False)
+    blob_client.upload_blob(buffer.getvalue(), overwrite=True)
+    logging.info(f"Successfully saved Parquet to {PARQUET_BLOB_PATH}")
+
+
+def save_json_to_blob(data, blob_path):
+    """Saves a dictionary as a JSON file in blob storage."""
+    if not blob_service_client: raise ConnectionError("Blob service not initialized.")
+    blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, blob_path)
+    blob_client.upload_blob(json.dumps(data, indent=2), overwrite=True)
+    logging.info(f"Successfully saved JSON to {blob_path}")
+
+
+# --- Main Function App ---
+def main(req: func.HttpRequest) -> func.HttpResponse:
+    if not connection_string:
+        return func.HttpResponse(json.dumps({"error": "Backend service not configured."}), status_code=503, mimetype="application/json")
+
+    try:
+        method = req.method
+        action = req.route_params.get('action')
+        user_param = req.params.get('user')
+        all_users_param = req.params.get('all_users', 'false').lower() == 'true'
+
+        # --- Endpoint to add new raw data ---
+        if method == "POST" and not action:
+            body = req.get_json()
+            new_df = pd.DataFrame(body.get("data", {}).get("Table1", []))
+            if new_df.empty:
+                return func.HttpResponse(json.dumps({"error": "No data provided in request body."}), status_code=400, mimetype="application/json")
+            
+            existing_df = load_parquet_from_blob()
+            combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+            save_parquet_to_blob(combined_df)
+            return func.HttpResponse(json.dumps({"status": "success", "message": "Data stored successfully."}), status_code=200, mimetype="application/json")
+
+        # --- NEW: Endpoint to refresh ALL individual user caches ---
+        # This is the slow, heavy-lifting endpoint. Trigger it in the background.
+        elif method == "POST" and action == "refresh-users":
+            logging.info("Starting full cache refresh for all individual users.")
+            
+            # --- ADDED: List of specific users to generate caches for ---
+            target_users = [
+                'FADWA.ERRAZIKI', 'AYOUB.SOURISTE', 'AYMANE.BERRIOUA', 'SANA.IDRISSI', 'AMINA.SAISS',
+                'KHADIJA.OUFKIR', 'ZOHRA.HMOUDOU', 'SIMO.ONSI', 'YOUSSEF.ASSABIR', 'ABOULHASSAN.AMINA',
+                'MEHDI.OUAZIR', 'OUMAIMA.EL.OUTMANI', 'HAMZA.ALLALI', 'MUSTAPHA.BOUJALA', 'HIND.EZZAOUI',
+                'MOHAMED.BOUIDAR', 'HOUDA.EZZAOUI', 'YAHYA.ANEJARN', 
+                'IKRAM.OULHIANE', 'MOURAD.ELBAHAZ', 'MOHSINE.SABIL', 'AYA.HANNI',
+                'ZAHIRA.OUHADDA', 'CHAIMAAE.EJJARI', 'HAFIDA.BOOHADDOU', 'KHADIJA.HICHAMI', 'FATIMA.ZAHRA.BOUGSIM'
+            ]
+            
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse(json.dumps({"status": "skipped", "message": "Source data is empty."}), status_code=200, mimetype="application/json")
+
+            if 'USERCODE' not in df.columns:
+                 return func.HttpResponse(json.dumps({"error": "'USERCODE' column not found in data."}), status_code=400, mimetype="application/json")
+            
+            # --- MODIFIED: Filter the users from the dataframe to only include target users ---
+            all_users_in_df = df['USERCODE'].dropna().unique()
+            # Case-insensitive comparison to be safe
+            target_users_upper = [tu.upper() for tu in target_users]
+            users_to_process = [user for user in all_users_in_df if user.upper() in target_users_upper]
+
+            logging.info(f"Found {len(users_to_process)} target users to process out of {len(all_users_in_df)} unique users in the data.")
+            processed_count = 0
+
+            for user in users_to_process:
+                try:
+                    user_metrics = calculate_single_user_metrics_fast(df, user)
+                    user_blob_path = f"{USER_CACHE_PATH_PREFIX}{user}.json"
+                    save_json_to_blob(user_metrics, user_blob_path)
+                    logging.info(f"Successfully cached data for user: {user}")
+                    processed_count += 1
+                except Exception as e:
+                    logging.error(f"Failed to process and cache data for user {user}: {e}")
+            
+            return func.HttpResponse(json.dumps({"status": "success", "message": f"Cache refreshed for {processed_count}/{len(users_to_process)} target users."}), status_code=200, mimetype="application/json")
+
+        # --- Endpoint to refresh the monthly report cache ---
+        elif method == "POST" and action == "refresh-monthly":
+            logging.info("Monthly report cache refresh process started.")
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse(json.dumps({"status": "skipped", "message": "No data available."}), status_code=200, mimetype="application/json")
+            
+            metrics = calculate_all_users_monthly_metrics(df)
+            save_json_to_blob(metrics, MONTHLY_SUMMARY_BLOB_PATH)
+            
+            return func.HttpResponse(json.dumps({"status": "success", "message": "Monthly report cache refreshed."}), status_code=200, mimetype="application/json")
+
+        # --- Endpoint for 10-day summary cache refresh ---
+        elif method == "POST" and action == "refresh":
+            logging.info("10-day summary cache refresh started.")
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse(json.dumps({"status": "skipped", "message": "No data available."}), status_code=200, mimetype="application/json")
+
+            metrics = count_user_file_creations_last_10_days(df)
+            save_json_to_blob(metrics, SUMMARY_BLOB_PATH)
+            return func.HttpResponse(json.dumps({"status": "success", "message": "10-day summary cache refreshed."}), status_code=200, mimetype="application/json")
+
+        # --- MODIFIED: GET for single user (Now reads from cache) ---
+        # This is the endpoint your frontend calls. It is now extremely fast.
+        elif method == "GET" and user_param:
+            user_blob_path = f"{USER_CACHE_PATH_PREFIX}{user_param}.json"
+            logging.info(f"Request for cached user data from '{user_blob_path}'.")
+            try:
+                blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, user_blob_path)
+                if not blob_client.exists():
+                    return func.HttpResponse(json.dumps({"error": f"Cache for user '{user_param}' not found. Please trigger a user cache refresh."}), status_code=404, mimetype="application/json")
+                
+                # Directly stream the content of the small JSON file
+                blob_content = blob_client.download_blob().readall()
+                return func.HttpResponse(body=blob_content, status_code=200, mimetype="application/json")
+            except Exception as e:
+                logging.error(f"Could not read cache file for {user_param}: {e}")
+                return func.HttpResponse(json.dumps({"error": f"Could not read cache file: {e}"}), status_code=500, mimetype="application/json")
+
+        # --- GET all_users reads from its own cache ---
+        elif method == "GET" and all_users_param:
+            logging.info(f"Request for cached monthly report from '{MONTHLY_SUMMARY_BLOB_PATH}'.")
+            try:
+                blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, MONTHLY_SUMMARY_BLOB_PATH)
+                if not blob_client.exists():
+                    return func.HttpResponse(json.dumps({"error": "Monthly report cache not found. Please trigger a refresh."}), status_code=404, mimetype="application/json")
+                
+                return func.HttpResponse(blob_client.download_blob().readall(), mimetype="application/json", status_code=200)
+            except Exception as e:
+                return func.HttpResponse(json.dumps({"error": f"Could not read monthly cache file: {e}"}), status_code=500, mimetype="application/json")
+
+        # --- GET for 10-day summary cache ---
+        elif method == "GET" and not action:
+            try:
+                blob_client = blob_service_client.get_blob_client(CONTAINER_NAME, SUMMARY_BLOB_PATH)
+                if not blob_client.exists():
+                    return func.HttpResponse(json.dumps({"error": "Cache file not found. Please trigger a refresh."}), status_code=404, mimetype="application/json")
+                
+                return func.HttpResponse(blob_client.download_blob().readall(), mimetype="application/json", status_code=200)
+            except Exception as e:
+                return func.HttpResponse(json.dumps({"error": f"Could not read cache file: {e}"}), status_code=500, mimetype="application/json")
+        
+        elif method == "PUT":
+            logging.info("DMS import analysis request started.")
+            
+            # Load the dataframe from blob storage
+            df = load_parquet_from_blob()
+            if df.empty:
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": "No data available for analysis."
+                    }), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            try:
+                # Get the days parameter from query string, default to 30
+                days_back = int(req.params.get('days', 30))
+                
+                # Run the DMS import analysis
+                result = count_dms_import_files_created(df, days_back)
+                
+                # Optionally get the summary as well
+                summary = get_dms_import_summary(df, days_back)
+                
+                logging.info(f"DMS import analysis completed. Found {result['total_dms_import_files']} files.")
+                
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "success", 
+                        "message": "DMS import analysis completed.", 
+                        "data": result,
+                        "summary": summary
+                    }), 
+                    status_code=200, 
+                    mimetype="application/json"
+                )
+                
+            except ValueError:
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": "Invalid 'days' parameter. Must be a valid integer."
+                    }), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            except Exception as e:
+                logging.error(f"Error during DMS import analysis: {e}")
+                return func.HttpResponse(
+                    json.dumps({
+                        "status": "error", 
+                        "message": f"Analysis failed: {str(e)}"
+                    }), 
+                    status_code=500, 
+                    mimetype="application/json"
+                )
+        
+        else:
+            return func.HttpResponse(json.dumps({"error": "Endpoint not found or method not allowed."}), status_code=404, mimetype="application/json")
+
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+        return func.HttpResponse(json.dumps({"error": "An internal server error occurred."}), status_code=500, mimetype="application/json")
+
+
+============================================================
+FILE: dms_functions.py
+============================================================
+from collections import defaultdict, Counter
+from datetime import datetime, timedelta
+import pandas as pd
+
+def count_dms_import_files_created(df_all, days_back=30):
+    """
+    Count all files created with file type 'DMS_IMPORT' and track which users created them.
+    
+    Parameters:
+    - df_all: DataFrame containing all the data
+    - days_back: Number of days to look back (default: 30)
+    
+    Returns:
+    - Dictionary with total count, user breakdown, and daily breakdown
+    """
+    df = df_all.copy()
+    
+    # Clean and preprocess data
+    for col in ["USERCREATE", "USERCODE", "HISTORY_STATUS", "TYPEDECLARATIONSSW"]:
+        df[col] = df[col].astype(str).str.strip().str.upper()
+    
+    df["HISTORYDATETIME"] = pd.to_datetime(df["HISTORYDATETIME"], errors="coerce", format="mixed")
+    df = df.dropna(subset=["HISTORYDATETIME"])
+    df["HISTORYDATETIME"] = df["HISTORYDATETIME"].dt.tz_localize(None)
+    
+    # Filter for the specified time period
+    cutoff = datetime.now() - timedelta(days=days_back)
+    recent_df = df[df["HISTORYDATETIME"] >= cutoff]
+    
+    # Filter for DMS_IMPORT file type only
+    dms_import_df = recent_df[recent_df["TYPEDECLARATIONSSW"] == "DMS_IMPORT"]
+    
+    if dms_import_df.empty:
+        return {
+            "total_dms_import_files": 0,
+            "users_breakdown": {},
+            "daily_breakdown": {},
+            "period_days": days_back,
+            "file_details": []
+        }
+    
+    manual_statuses = {"COPIED", "COPY", "NEW"}
+    
+    # Track file creation by user and date
+    user_files_count = defaultdict(lambda: {
+        "manual_files": 0,
+        "automatic_files": 0,
+        "total_files": 0,
+        "file_ids": []
+    })
+    
+    daily_breakdown = defaultdict(lambda: {
+        "manual_files": 0,
+        "automatic_files": 0,
+        "total_files": 0,
+        "users": set(),
+        "file_ids": []
+    })
+    
+    file_details = []
+    
+    # Group by declaration to analyze file creation
+    grouped = dms_import_df.groupby("DECLARATIONID")
+    
+    for decl_id, group in grouped:
+        group = group.sort_values("HISTORYDATETIME")
+        if group.empty:
+            continue
+        
+        # Find the first user action on this file
+        first_action = group.iloc[0]
+        creation_date = first_action["HISTORYDATETIME"].date().isoformat()
+        creator_user = first_action["USERCODE"]
+        
+        # Determine if file is automatic or manual
+        is_automatic = 'INTERFACE' in group['HISTORY_STATUS'].values
+        
+        # Check if any user performed manual actions on this file
+        all_statuses = set(group["HISTORY_STATUS"].tolist())
+        has_manual_actions = bool(manual_statuses.intersection(all_statuses))
+        is_manual = has_manual_actions and not is_automatic
+        
+        # Count the file for the creator
+        if is_manual:
+            user_files_count[creator_user]["manual_files"] += 1
+            daily_breakdown[creation_date]["manual_files"] += 1
+        elif is_automatic:
+            user_files_count[creator_user]["automatic_files"] += 1
+            daily_breakdown[creation_date]["automatic_files"] += 1
+        
+        user_files_count[creator_user]["total_files"] += 1
+        user_files_count[creator_user]["file_ids"].append(decl_id)
+        
+        daily_breakdown[creation_date]["total_files"] += 1
+        daily_breakdown[creation_date]["users"].add(creator_user)
+        daily_breakdown[creation_date]["file_ids"].append(decl_id)
+        
+        # Store file details
+        file_details.append({
+            "declaration_id": decl_id,
+            "creator": creator_user,
+            "creation_date": creation_date,
+            "creation_datetime": first_action["HISTORYDATETIME"].isoformat(),
+            "file_type": "manual" if is_manual else "automatic",
+            "company": first_action.get("ACTIVECOMPANY", "N/A")
+        })
+    
+    # Convert defaultdicts to regular dicts and clean up
+    users_breakdown = {}
+    for user, data in user_files_count.items():
+        users_breakdown[user] = {
+            "total_files": data["total_files"],
+            "manual_files": data["manual_files"],
+            "automatic_files": data["automatic_files"],
+            "manual_percentage": round((data["manual_files"] / data["total_files"]) * 100, 2) if data["total_files"] > 0 else 0,
+            "file_ids": data["file_ids"]
+        }
+    
+    daily_breakdown_clean = {}
+    for date, data in daily_breakdown.items():
+        daily_breakdown_clean[date] = {
+            "total_files": data["total_files"],
+            "manual_files": data["manual_files"],
+            "automatic_files": data["automatic_files"],
+            "unique_users": len(data["users"]),
+            "users": list(data["users"]),
+            "file_ids": data["file_ids"]
+        }
+    
+    total_files = sum(data["total_files"] for data in users_breakdown.values())
+    total_manual = sum(data["manual_files"] for data in users_breakdown.values())
+    total_automatic = sum(data["automatic_files"] for data in users_breakdown.values())
+    
+    return {
+        "total_dms_import_files": total_files,
+        "total_manual_files": total_manual,
+        "total_automatic_files": total_automatic,
+        "manual_vs_auto_ratio": {
+            "manual_percent": round((total_manual / total_files) * 100, 2) if total_files > 0 else 0,
+            "automatic_percent": round((total_automatic / total_files) * 100, 2) if total_files > 0 else 0
+        },
+        "users_breakdown": users_breakdown,
+        "daily_breakdown": daily_breakdown_clean,
+        "period_days": days_back,
+        "unique_users_count": len(users_breakdown),
+        "file_details": sorted(file_details, key=lambda x: x["creation_datetime"], reverse=True)
+    }
+
+def get_dms_import_summary(df_all, days_back=30):
+    """
+    Get a quick summary of DMS_IMPORT file creation statistics.
+    
+    Parameters:
+    - df_all: DataFrame containing all the data
+    - days_back: Number of days to look back (default: 30)
+    
+    Returns:
+    - Simplified summary dictionary
+    """
+    result = count_dms_import_files_created(df_all, days_back)
+    
+    # Get top users by file count
+    top_users = sorted(
+        result["users_breakdown"].items(), 
+        key=lambda x: x[1]["total_files"], 
+        reverse=True
+    )[:5]
+    
+    return {
+        "period": f"Last {days_back} days",
+        "total_dms_import_files": result["total_dms_import_files"],
+        "total_users_involved": result["unique_users_count"],
+        "manual_vs_automatic": result["manual_vs_auto_ratio"],
+        "top_5_users": [
+            {
+                "user": user,
+                "files_created": data["total_files"],
+                "manual_files": data["manual_files"],
+                "automatic_files": data["automatic_files"]
+            }
+            for user, data in top_users
+        ],
+        "daily_average": round(result["total_dms_import_files"] / days_back, 2) if days_back > 0 else 0
+    }
+
+============================================================
+FILE: function.json
+============================================================
+{
+    "bindings": [
+        {
+            "authLevel": "function",
+            "type": "httpTrigger",
+            "direction": "in",
+            "name": "req",
+            "methods": ["post", "get", "delete", "put"],
+            "route": "performance/{action?}"
+        },
+        {
+            "type": "http",
+            "direction": "out",
+            "name": "$return"
+        }
+    ]
+}
+
+============================================================
+FILE: test.py
+============================================================
+# Get detailed breakdown for last 30 days
+from performance.dms_functions import count_dms_import_files_created, get_dms_import_summary
+
+
+result = count_dms_import_files_created(df, 30)
+print(f"Total DMS_IMPORT files: {result['total_dms_import_files']}")
+print(f"Users involved: {result['unique_users_count']}")
+
+# Get quick summary for last 7 days
+summary = get_dms_import_summary(df, 7)
+print(f"Top user: {summary['top_5_users'][0]['user']} with {summary['top_5_users'][0]['files_created']} files")
