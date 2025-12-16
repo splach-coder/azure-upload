@@ -26,10 +26,12 @@ def call_logic_app(principal: str, company = "DKM") -> dict:
         # Decode the string inside 'data'
         inner_data = json.loads(raw_data["data"])
         
-        logging.error(inner_data)
+        table1 = inner_data.get("ResultSets", {}).get("Table1", [])
 
-        # Extract DOSS_NR
-        doss_nr = inner_data["ResultSets"]["Table1"][0]["DOSS_NR"]
+        if not table1:
+            doss_nr = 0
+        else:
+            doss_nr = max(item.get("DOSS_NR", 0) for item in table1)   
 
         return {
             "success": True,
