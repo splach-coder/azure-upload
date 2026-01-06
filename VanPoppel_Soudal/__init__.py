@@ -420,6 +420,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         reference = merged_result.get("Reference", "document")
         
+        
         if extra_file_excel is not None:
             zip_file = zip_excels(None, extra_file_excel, None, f"extra_{reference}.xlsx")
         else:
