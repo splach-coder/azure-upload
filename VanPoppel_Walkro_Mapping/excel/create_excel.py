@@ -49,7 +49,7 @@ def write_to_excel(json_string):
         data.get('Exit office', ''),
         data.get('Exit office', ''),
         data.get('Container'),
-        data.get('Truck Nbr', ''),
+        data.get('Truck number', ''),
         data.get("Customs Code", ''),
         data.get("ILS_NUMBER", ''),
         data.get("License plate", ''),

@@ -17,7 +17,7 @@ Ensure the following:
 Note:
 In the source documents, commas (,) are used as decimal separators. For example, "23,32" means 23.32 — parse accordingly.
 
-Extract only the invoice data and ignore other pages. Extract the following fields:
+Extract only the invoice data. Extract the following fields:
 - net_weight_kg: from the invoice weight in ton (convert to kg)
 - invoice_date: from the invoice date
 - license_plate: from Kenteken/Pasnr.
@@ -30,6 +30,7 @@ Extract only the invoice data and ignore other pages. Extract the following fiel
 - address: The reciever address we need its always in the right (extract the adress then parse it don't change anything or search for things stuck to whats in the pdf) (this one WALKRO HANDELSONDERNEMING BELGIË NV or Rohum Negrone is the sender don't extract it ). [company name, street, city, postal code, country (in 2-letter ISO code)]
 - Order number: from the order number if available
 - Relatie number: from the relatie number if available
+- Truck number: this value is in the table of the first page example : '70 BTS 8' format: (2 numbers + three letters + number) it's under bezeichnung value.
 
 Dictionary Structure:
 invoice_data = {
@@ -38,6 +39,7 @@ invoice_data = {
     "Order number": "< Order number fee if available> (always extract it from the second page)",
     "Relatie number": "< Relatie number fee if available> (always extract it from the second page) (only number if a letter or special case is present remove it)",
     "License plate": "<license plate or pass number>",
+    "Truck number": "<Truck number if available> (always extract it from the first page)",
     "Address": {
         "Company name": "<name of the company>",
         "Street": "<street and number>",
@@ -63,6 +65,7 @@ Instructions:
 - Address: Extract Company name, street, postcode, city, and country (as ISO code).
 - Transport fee: Extract transport fee if available
 - License plate: Kenteken/Pasnr.
+- Truck number: Truck number if available (always extract it from the first page) 
 - Items: Extract the commodity data:
   - Description: Commodity description
   - Net weight: Convert weight from ton to kg

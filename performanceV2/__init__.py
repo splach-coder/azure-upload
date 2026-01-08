@@ -11,6 +11,8 @@ from azure.keyvault.secrets import SecretClient
 # Make sure this import path is correct for your project structure
 from performanceV2.dms_functions import count_dms_import_files_created, get_dms_import_summary
 from performanceV2.functions.functions import calculate_single_user_metrics_fast, count_user_file_creations_last_10_days, calculate_all_users_monthly_metrics
+from performanceV2.functions.file_lifecycle import get_file_lifecycle
+from performanceV2.functions.debug_monthly_count import debug_count_files_by_month, debug_total_files_for_user
 from performanceV2.common import TARGET_USERS
 
 # --- Configuration ---
@@ -132,7 +134,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         # --- Endpoint to refresh the monthly report cache ---
         elif method == "POST" and action == "refresh-monthly":
             logging.info("Monthly report cache refresh process started.")
-            cols_needed = ['USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME', 'DECLARATIONID', 'USERCREATE']
+            cols_needed = ['USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME', 'DECLARATIONID', 'USERCREATE', 'TYPEDECLARATIONSSW', 'ACTIVECOMPANY']
             df = load_parquet_from_blob(columns=cols_needed)
             if df.empty:
                 return func.HttpResponse(json.dumps({"status": "skipped", "message": "No data available."}), status_code=200, mimetype="application/json")
@@ -153,6 +155,79 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             metrics = count_user_file_creations_last_10_days(df)
             save_json_to_blob(metrics, SUMMARY_BLOB_PATH)
             return func.HttpResponse(json.dumps({"status": "success", "message": "10-day summary cache refreshed."}), status_code=200, mimetype="application/json")
+
+        # --- DEBUG MONTHLY COUNT ENDPOINT ---
+        # MUST come BEFORE the general user GET handler to avoid being caught by it
+        elif method == "GET" and action == "debug-monthly-count":
+            username = req.params.get('user')
+            month_year = req.params.get('month')  # Format: "11/2024"
+            
+            if not username or not month_year:
+                return func.HttpResponse(
+                    json.dumps({"error": "Missing 'user' or 'month' parameter. Use format: ?user=USERNAME&month=11/2024"}), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            try:
+                month, year = month_year.split('/')
+                month = int(month)
+                year = int(year)
+            except (ValueError, AttributeError):
+                return func.HttpResponse(
+                    json.dumps({"error": "Invalid month format. Use MM/YYYY (e.g., 11/2024)"}), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            logging.info(f"Debug monthly count for {username} in {month}/{year}")
+            cols_needed = ['DECLARATIONID', 'USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME']
+            df = load_parquet_from_blob(columns=cols_needed)
+            
+            if df.empty:
+                return func.HttpResponse(
+                    json.dumps({"error": "No data available"}), 
+                    status_code=500, 
+                    mimetype="application/json"
+                )
+            
+            result = debug_count_files_by_month(df, username, month, year)
+            
+            return func.HttpResponse(
+                json.dumps(result, default=str),
+                status_code=200, 
+                mimetype="application/json"
+            )
+
+        # --- DEBUG TOTAL FILES ENDPOINT ---
+        elif method == "GET" and action == "debug-total-files":
+            username = req.params.get('user')
+            
+            if not username:
+                return func.HttpResponse(
+                    json.dumps({"error": "Missing 'user' parameter. Use format: ?user=USERNAME"}), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            logging.info(f"Debug total files for {username}")
+            cols_needed = ['DECLARATIONID', 'USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME']
+            df = load_parquet_from_blob(columns=cols_needed)
+            
+            if df.empty:
+                return func.HttpResponse(
+                    json.dumps({"error": "No data available"}), 
+                    status_code=500, 
+                    mimetype="application/json"
+                )
+            
+            result = debug_total_files_for_user(df, username)
+            
+            return func.HttpResponse(
+                json.dumps(result, default=str),
+                status_code=200, 
+                mimetype="application/json"
+            )
 
         # --- MODIFIED: GET for single user (Now reads from cache) ---
         # This is the endpoint your frontend calls. It is now extremely fast.
@@ -253,6 +328,60 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     mimetype="application/json"
                 )
         
+        # --- FILE LIFECYCLE ENDPOINT ---
+        elif method == "GET" and action == "file-lifecycle":
+            declaration_id = req.params.get('id')
+            if not declaration_id:
+                return func.HttpResponse(
+                    json.dumps({"error": "Missing 'id' parameter"}), 
+                    status_code=400, 
+                    mimetype="application/json"
+                )
+            
+            logging.info(f"File lifecycle request for ID: {declaration_id}")
+            cols_needed = ['DECLARATIONID', 'USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME', 'ACTIVECOMPANY', 'TYPEDECLARATIONSSW']
+            df = load_parquet_from_blob(columns=cols_needed)
+            
+            if df.empty:
+                return func.HttpResponse(
+                    json.dumps({"error": "No data available"}), 
+                    status_code=500, 
+                    mimetype="application/json"
+                )
+            
+            result = get_file_lifecycle(df, declaration_id)
+            
+            return func.HttpResponse(
+                json.dumps(result, default=str),
+                status_code=200, 
+                mimetype="application/json"
+            )
+        
+        # --- DEBUG ENDPOINT ---
+        elif method == "GET" and action == "debug-data":
+            logging.info("Debug data request.")
+            cols_needed = ['USERCODE', 'HISTORY_STATUS', 'HISTORYDATETIME', 'DECLARATIONID', 'USERCREATE', 'ACTIVECOMPANY', 'TYPEDECLARATIONSSW']
+            df = load_parquet_from_blob(columns=cols_needed)
+            
+            if df.empty:
+                return func.HttpResponse(json.dumps({"message": "Dataframe is empty"}), status_code=200, mimetype="application/json")
+            
+            # Convert first 20 rows to dict
+            sample = df.head(50).to_dict(orient='records')
+            
+            # Also get unique statuses
+            statuses = df['HISTORY_STATUS'].unique().tolist()
+            
+            return func.HttpResponse(
+                json.dumps({
+                    "column_types": str(df.dtypes),
+                    "unique_statuses": statuses,
+                    "sample_data": sample
+                }, default=str), # default=str to handle datetime objects
+                status_code=200, 
+                mimetype="application/json"
+            )
+
         else:
             return func.HttpResponse(json.dumps({"error": "Endpoint not found or method not allowed."}), status_code=404, mimetype="application/json")
 
