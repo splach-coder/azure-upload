@@ -135,6 +135,7 @@ async def process_page_with_openai_a(client, text_content, page_num, total_pages
                 - **Vak 37**: Extract and return as is (e.g., "4500").
                 - **Vak 44**: Extract and return as is (e.g., "BEVALA00011").
                 - **cost center**: Extract and return as is (e.g., "HBN5046").
+                - **C670**: Extract the code found after "Afvalstoffenreglementering" at the bottom of the page. Only return the code or number (e.g., "BE001014800", "VII-C672", "CA715086", "OVAM-Y923"). If "GEEN" is found, return "Geen".
                 
 
                 ### **JSON Output Format:**  
@@ -157,7 +158,8 @@ async def process_page_with_openai_a(client, text_content, page_num, total_pages
                   "Vak 24" : ,
                   "Vak 37" : ,
                   "Vak 44" : ,
-                  "cost center" : 
+                  "cost center" : ,
+                  "C670" : 
                 }}```"""}
             ],
             temperature=0.3,
@@ -215,8 +217,9 @@ Cost Centers: A list of extracted KP sections, each containing relevant details.
 For Each Cost Center (KP Section):
 For every section starting with KP:, extract:
 - KP: The cost center code (e.g., "HBN5101").
+- Invoice Number: The numerical value following the KP code on the same line (e.g., "137622000").
 - Contract number : The contract number that follows the KP code (e.g., "HBN5101").
-- Company: The company name that follows the KP code (e.g., "YOKOHAMA METAL CO LTD").
+- Company: The company name that follows the cost center information (e.g., "YOKOHAMA METAL CO LTD").
 - Description: The text describing the goods, which follows the company name (e.g., "SWEEPS FROM MIXED ELECTRONIC COMPONENTS").
 - Items: A list containing container-specific data.
 
@@ -239,6 +242,7 @@ Return the extracted data in the following JSON format:
     "cost_centers": [
         {{
             "kp": "",
+            "invoice_number": "",
             "contract_number": "",
             "company": "",
             "description": "",
@@ -273,6 +277,8 @@ Return the extracted data in the following JSON format:
         
         # Parse the JSON content
         page_data = json.loads(result)
+        
+        logging.error(json.dumps(page_data, indent=4))
         
         return {
             "page_number": page_num + 1,
@@ -427,8 +433,6 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
         # Transform extracted data
         afschrijfgegevens_data = {}
         inklaringsdocument_data = {}
-        
-        logging.info(processed_results)
 
         for result in processed_results:
             if result.get("type") == "afschrijfgegevens":
@@ -437,8 +441,10 @@ async def main_async(req: func.HttpRequest) -> func.HttpResponse:
                 inklaringsdocument_data = transform_inklaringsdocument(result)
 
         # Process and merge data
-        afschrijfgegevens_data = split_cost_centers(afschrijfgegevens_data)   
+        afschrijfgegevens_data = split_cost_centers(afschrijfgegevens_data)
+        logging.error(json.dumps(afschrijfgegevens_data, indent=2))
         result = merge_into_items(inklaringsdocument_data, afschrijfgegevens_data)
+        logging.error(json.dumps(result, indent=2))
         
         # Calculate totals
         result["Total packages"] = sum(item.get("packages", 0) for item in result.get("Items", []))

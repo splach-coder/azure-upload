@@ -1,5 +1,7 @@
+import json
 from io import BytesIO
 import openpyxl
+import logging
 
 def write_to_excel(json_string):
     # Create a new workbook and select the active sheet
@@ -80,7 +82,8 @@ def write_to_excel(json_string):
         "article",
         "Item",
         "BL",
-        "Kostenplaats"
+        "Kostenplaats",
+        "C670"
     ]
     
     rows_data = []  # To store the processed rows for "items"
@@ -107,6 +110,8 @@ def write_to_excel(json_string):
                         mini_row.append(obj.get("origin", ''))
                     elif ordered_key == "Invoice value":
                         mini_row.append(obj.get("invoice_value", ''))
+                    elif ordered_key == "Invoicenumber":
+                        mini_row.append(obj.get("invoice_number", ''))
                     elif ordered_key == "Container":
                         mini_row.append(obj.get("container", ''))
                     elif ordered_key == "Loyds":
@@ -123,6 +128,8 @@ def write_to_excel(json_string):
                         mini_row.append(obj.get("bl", ''))
                     elif ordered_key == "Kostenplaats":
                         mini_row.append(obj.get("kp", ''))
+                    elif ordered_key == "C670":
+                        mini_row.append(obj.get("C670", ''))
                     else:    
                         mini_row.append(obj.get(ordered_key, ''))
                 rows_data.append(mini_row)

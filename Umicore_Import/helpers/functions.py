@@ -1,69 +1,121 @@
 import json
 
 def merge_into_items(first_json_str, second_json_str):
-    # Parse the input JSON
+    # first_json_str is already a dict (inklaringsdocument_data)
+    # second_json_str is a JSON string (afschrijfgegevens_data)
     first_data = first_json_str
     second_data = json.loads(second_json_str)
     
-    # Create a lookup dictionary for the second JSON using contract_number as the key
-    contract_to_data = {obj["contract_number"]: obj for obj in second_data}
+    # Group the second JSON data by invoice_number (the long numeric reference)
+    # One invoice_number can have multiple containers/entries
+    contract_to_data_list = {}
+    for obj in second_data:
+        # Using invoice_number as the join key because it matches other_reference
+        match_key = str(obj.get("invoice_number", ""))
+        if match_key not in contract_to_data_list:
+            contract_to_data_list[match_key] = []
+        contract_to_data_list[match_key].append(obj)
+    
+    new_items_list = []
     
     # Iterate through each item in the first JSON's Items array
     for item in first_data.get("Items", []):
-        other_ref = item.get("other_reference")
-        # If a matching contract_number exists, merge the data into the item
-        if other_ref in contract_to_data:
-            matched_data = contract_to_data[other_ref]
-            # Merge matched_data into the item (overwriting existing keys if conflicts occur)
-            item.update(matched_data)
+        other_ref = str(item.get("other_reference", ""))
+        original_value = item.get("invoice_value", 0)
+        
+        # If matching contract_numbers exist, create a new entry for each match
+        if other_ref in contract_to_data_list:
+            matches = contract_to_data_list[other_ref]
+            
+            # Calculate total net weight for all matching containers to use for splitting
+            total_net_weight = sum(float(m.get("net_weight", 0)) for m in matches)
+            
+            for matched_data in matches:
+                # Create a fresh copy of the item
+                enriched_item = item.copy()
+                
+                # Proportional Split by Net Weight
+                # Formula: (Container Net Weight / Total Net Weight) * Total Invoice Value
+                try:
+                    container_net = float(matched_data.get("net_weight", 0))
+                    if total_net_weight > 0:
+                        allocated_value = (container_net / total_net_weight) * original_value
+                        enriched_item["invoice_value"] = round(allocated_value, 2)
+                    else:
+                        # Fallback: split equally if weights are missing or zero
+                        enriched_item["invoice_value"] = round(original_value / len(matches), 2)
+                except (ValueError, TypeError):
+                    # Fallback to equal split on conversion error
+                    enriched_item["invoice_value"] = round(original_value / len(matches), 2)
+
+                # Merge other container data
+                enriched_item.update(matched_data)
+                new_items_list.append(enriched_item)
+        else:
+            # If no match found, keep the original item
+            new_items_list.append(item)
     
-    # Return the modified first JSON with enriched Items
+    # Update the Items array with the expanded list
+    first_data["Items"] = new_items_list
+    
+    # Return the modified first JSON with enriched and expanded Items
     return first_data
 
 def transform_afschrijfgegevens(input_data):
     """
-    Transform the input data structure by flattening the items array within cost_centers.
+    Transform the input data structure by:
+    1. Aggregating all cost_centers from all pages.
+    2. Flattening the items array within each cost_center.
     
     Args:
         input_data (dict): The original nested data structure
         
     Returns:
-        dict: The transformed data structure
+        dict: The transformed data structure with all cost_centers
     """
-    # Create a deep copy to avoid modifying the original data
-    import copy
-    result = copy.deepcopy(input_data)
+    # Check if we have pages data
+    if "data" not in input_data or "pages" not in input_data["data"] or not input_data["data"]["pages"]:
+        return {}
     
-    # Check if 'data' and 'pages' exist in the input data
-    if 'data' not in result or 'pages' not in result['data']:
-        return result
+    pages = input_data["data"]["pages"]
+    
+    # Fields considered general/common in afschrijfgegevens
+    general_fields = ["kaai", "agent", "lloydsnummer", "verblijfsnummer", "bl", "artikel_nummer", "item"]
+    
+    # Extract baseline common data from the first page
+    first_page_data = pages[0].get("extracted_data", {})
+    result = {k: v for k, v in first_page_data.items() if k in general_fields}
+    
+    all_cost_centers = []
     
     # Process each page
-    for page in result['data']['pages']:
-        # Check if 'extracted_data' exists in the page
-        if 'extracted_data' not in page:
+    for page in pages:
+        page_data = page.get("extracted_data", {})
+        
+        # Get cost centers from this page
+        cost_centers = page_data.get("cost_centers", [])
+        if not isinstance(cost_centers, list):
             continue
-        
-        extracted_data = page['extracted_data']
-        
-        # Check if 'cost_centers' exists in the extracted data
-        if 'cost_centers' not in extracted_data:
-            continue
-        
-        # Process each cost center
-        for cost_center in extracted_data['cost_centers']:
+            
+        for cost_center in cost_centers:
             # Check if the cost center has items
-            if 'items' in cost_center and isinstance(cost_center['items'], list) and cost_center['items']:
-                # Flatten the items array
-                for item in cost_center['items']:
-                    # Move item properties up to the cost_center level
-                    for key, value in item.items():
-                        cost_center[key] = value
+            items = cost_center.get('items', [])
+            if isinstance(items, list) and items:
+                # Create a copy of the cost center info without the items array
+                cc_base = {k: v for k, v in cost_center.items() if k != 'items'}
                 
-                # Remove the items array
-                del cost_center['items']
+                # Create a new cost center entry for each container item
+                for item in items:
+                    new_cc_entry = cc_base.copy()
+                    for key, value in item.items():
+                        new_cc_entry[key] = value
+                    all_cost_centers.append(new_cc_entry)
+            else:
+                # If no items, still keep the cost center
+                all_cost_centers.append(cost_center)
     
-    return extracted_data
+    result["cost_centers"] = all_cost_centers
+    return result
 
 def transform_inklaringsdocument(input_data):
     """
