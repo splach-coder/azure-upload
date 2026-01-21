@@ -1,0 +1,3990 @@
+The following is a digest of the repository "donna".
+This digest is designed to be easily parsed by Large Language Models.
+
+--- SUMMARY ---
+Repository: donna
+Files Analyzed: 32
+Total Text Size: 124.29 KB
+Estimated Tokens (text only): ~26,955
+
+--- DIRECTORY STRUCTURE ---
+donna/
+├── ai/
+│   ├── __init__.py
+│   ├── pdf_processor.py
+│   ├── prompt_router.py
+│   ├── prompts.py
+│   └── text_processor.py
+├── core/
+│   ├── __init__.py
+│   ├── brain.py
+│   └── router.py
+├── handlers/
+│   ├── __init__.py
+│   ├── automation_handler.py
+│   ├── base_handler.py
+│   └── interface_handler.py
+├── odoo/
+│   ├── __init__.py
+│   ├── client.py
+│   ├── project_service.py
+│   └── tag_service.py
+├── openai_api/
+│   ├── __init__.py
+│   ├── custom_call_with_image.py
+│   ├── custom_call_with_pdf.py
+│   └── custom_call.py
+├── schema/
+│   ├── __init__.py
+│   ├── description_formatter.py
+│   ├── email_payload.py
+│   ├── odoo_fields.py
+│   └── project_context.py
+├── triage/
+│   ├── __init__.py
+│   ├── attachment_analyzer.py
+│   └── classifier.py
+├── __init__.py
+├── config.py
+├── function.json
+└── OVERVIEW.md
+
+
+--- FILE CONTENTS ---
+============================================================
+FILE: ai/__init__.py
+============================================================
+"""
+Donna AI Module
+LLM integrations for text and PDF processing.
+"""
+from .prompt_router import PromptRouter
+from .text_processor import TextProcessor
+from .pdf_processor import PdfProcessor
+from .prompts import (
+    PROMPTS,
+    TRIAGE_CLASSIFIER,
+    INTERFACE_EXTRACTOR,
+    AUTOMATION_EXTRACTOR,
+    EMAIL_TO_FLOW,
+    get_prompt
+)
+
+__all__ = [
+    "PromptRouter", 
+    "TextProcessor", 
+    "PdfProcessor",
+    "PROMPTS",
+    "TRIAGE_CLASSIFIER",
+    "INTERFACE_EXTRACTOR", 
+    "AUTOMATION_EXTRACTOR",
+    "EMAIL_TO_FLOW",
+    "get_prompt"
+]
+
+
+============================================================
+FILE: ai/pdf_processor.py
+============================================================
+"""
+Donna AI - PDF Processor
+Wrapper for CustomCallWithPdf to process PDF attachments.
+"""
+import json
+import logging
+import os
+import sys
+import tempfile
+import base64
+from typing import Dict, Any, Optional, List
+
+from .prompt_router import PromptRouter
+
+logger = logging.getLogger(__name__)
+
+
+class PdfProcessor:
+    """
+    Processes PDF attachments using CustomCallWithPdf (OpenAI Assistants API).
+    
+    Used when:
+    - Email contains PDF attachments
+    - PDF content analysis is needed
+    """
+    
+    def __init__(self, pdf_client=None, prompt_router: Optional[PromptRouter] = None):
+        """
+        Initialize PDF processor.
+        
+        Args:
+            pdf_client: Optional PDF client (PDFInvoiceExtractor)
+            prompt_router: Optional prompt router
+        """
+        self.pdf_client = pdf_client
+        self.prompt_router = prompt_router or PromptRouter()
+        self._init_client()
+    
+    def _init_client(self):
+        """Initialize PDF client if not provided."""
+        if self.pdf_client is None:
+            try:
+                from ..openai_api import PDFInvoiceExtractor
+                self.pdf_client = PDFInvoiceExtractor()
+                logger.info("✅ PdfProcessor client initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize PDF client: {e}")
+                self.pdf_client = None
+    
+    def extract_from_base64(
+        self, 
+        content_bytes: str, 
+        filename: str,
+        instructions: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract data from a Base64-encoded PDF.
+        
+        Args:
+            content_bytes: Base64-encoded PDF content
+            filename: Original filename for temp file
+            instructions: Optional custom extraction instructions
+            
+        Returns:
+            Extracted data as dictionary
+        """
+        if not self.pdf_client:
+            logger.error("PDF client not available")
+            return {"error": "pdf_client_unavailable"}
+        
+        try:
+            # Save to temp file
+            with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
+                pdf_bytes = base64.b64decode(content_bytes)
+                tmp.write(pdf_bytes)
+                tmp_path = tmp.name
+            
+            logger.info(f"📄 Processing PDF: {filename} ({len(pdf_bytes)} bytes)")
+            
+            # Extract using PDF client
+            result = self.pdf_client.extract_items_from_pdf(
+                pdf_path=tmp_path,
+                instructions=instructions
+            )
+            
+            # Cleanup temp file
+            try:
+                os.unlink(tmp_path)
+            except:
+                pass
+            
+            if result:
+                logger.info(f"✅ PDF extraction successful")
+                return result
+            else:
+                logger.warning("PDF extraction returned None")
+                return {"error": "extraction_failed", "filename": filename}
+                
+        except Exception as e:
+            logger.error(f"PDF extraction error: {e}")
+            return {"error": str(e), "filename": filename}
+    
+    def extract_from_file(
+        self, 
+        file_path: str,
+        instructions: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Extract data from a PDF file path.
+        
+        Args:
+            file_path: Path to PDF file
+            instructions: Optional custom extraction instructions
+            
+        Returns:
+            Extracted data as dictionary
+        """
+        if not self.pdf_client:
+            logger.error("PDF client not available")
+            return {"error": "pdf_client_unavailable"}
+        
+        if not os.path.exists(file_path):
+            logger.error(f"PDF file not found: {file_path}")
+            return {"error": "file_not_found", "path": file_path}
+        
+        try:
+            logger.info(f"📄 Processing PDF: {file_path}")
+            
+            result = self.pdf_client.extract_items_from_pdf(
+                pdf_path=file_path,
+                instructions=instructions
+            )
+            
+            if result:
+                logger.info(f"✅ PDF extraction successful")
+                return result
+            else:
+                return {"error": "extraction_failed", "path": file_path}
+                
+        except Exception as e:
+            logger.error(f"PDF extraction error: {e}")
+            return {"error": str(e), "path": file_path}
+    
+    def extract_project_info(
+        self, 
+        content_bytes: str, 
+        filename: str
+    ) -> Dict[str, Any]:
+        """
+        Extract project-relevant information from PDF.
+        Uses a custom prompt for project extraction rather than invoice extraction.
+        
+        Args:
+            content_bytes: Base64-encoded PDF content
+            filename: Original filename
+            
+        Returns:
+            Project-relevant extracted data
+        """
+        instructions = """
+Analyze this PDF document and extract project-relevant information.
+
+Return JSON with:
+{
+    "document_type": "invoice" | "specification" | "template" | "other",
+    "client_hints": "Any company names or client references found",
+    "data_fields": ["List of data fields/columns found"],
+    "format_type": "Excel-like table" | "Form" | "Free text" | "Mixed",
+    "complexity": "simple" | "medium" | "complex",
+    "notes": "Any relevant observations for project planning"
+}
+
+Return ONLY valid JSON.
+"""
+        return self.extract_from_base64(content_bytes, filename, instructions)
+    
+    def process_multiple(
+        self, 
+        attachments: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """
+        Process multiple PDF attachments.
+        
+        Args:
+            attachments: List of attachment dicts with 'name' and 'content_bytes'
+            
+        Returns:
+            List of extraction results
+        """
+        results = []
+        
+        for att in attachments:
+            if att.get('content_bytes') and att.get('name', '').lower().endswith('.pdf'):
+                result = self.extract_project_info(
+                    att['content_bytes'],
+                    att['name']
+                )
+                result['filename'] = att['name']
+                results.append(result)
+        
+        return results
+
+
+============================================================
+FILE: ai/prompt_router.py
+============================================================
+"""
+Donna AI - Prompt Router
+Selects appropriate prompts based on processing context.
+"""
+import logging
+from typing import Dict
+
+from .prompts import PROMPTS, get_prompt
+
+logger = logging.getLogger(__name__)
+
+
+class PromptRouter:
+    """
+    Routes to the correct prompt based on processing context.
+    
+    Available prompts:
+    - classify: Classifies project type (INTERFACE vs AUTOMATION)
+    - interface: Extracts interface project details
+    - automation: Extracts automation project details
+    - email_to_flow: General email parsing
+    """
+    
+    def __init__(self):
+        """Initialize prompt router."""
+        self._prompt_cache: Dict[str, str] = {}
+    
+    def get_prompt(self, purpose: str) -> str:
+        """
+        Get prompt content for a specific purpose.
+        
+        Args:
+            purpose: One of 'classify', 'interface', 'automation', 'email_to_flow'
+            
+        Returns:
+            Prompt text content
+            
+        Raises:
+            ValueError: If purpose is unknown
+        """
+        # Check cache
+        if purpose in self._prompt_cache:
+            return self._prompt_cache[purpose]
+        
+        # Get from prompts module
+        prompt = get_prompt(purpose)
+        
+        # Cache it
+        self._prompt_cache[purpose] = prompt
+        logger.info(f"📝 Loaded prompt: {purpose}")
+        
+        return prompt
+    
+    def clear_cache(self):
+        """Clear the prompt cache."""
+        self._prompt_cache.clear()
+        logger.info("Prompt cache cleared")
+    
+    def list_available_prompts(self) -> Dict[str, str]:
+        """List all available prompts."""
+        return {purpose: f"{len(content)} chars" for purpose, content in PROMPTS.items()}
+
+
+============================================================
+FILE: ai/prompts.py
+============================================================
+"""
+Donna AI - Prompts Module
+All prompts stored as Python constants.
+"""
+
+
+TRIAGE_CLASSIFIER = """You are a project classifier for DKM, a logistics software company.
+Analyze the email and classify as INTERFACE or AUTOMATION.
+
+INTERFACE - Data mapping and document processing:
+- Excel template processing
+- Invoice/document parsing  
+- PDF to Excel extraction
+- File format conversions
+Keywords: excel, template, invoice, data, mapping, pdf, extraction
+
+AUTOMATION - Process automation and development:
+- Script development
+- Logic Apps, Azure Functions
+- API integrations
+- Workflow automation
+Keywords: script, automate, workflow, api, code, logic app
+
+RULES:
+- Excel/PDF processing for clients = INTERFACE
+- Building new automations = AUTOMATION
+- Default to INTERFACE if unclear
+
+OUTPUT (JSON only):
+{
+    "project_type": "INTERFACE" or "AUTOMATION",
+    "confidence": 0.0 to 1.0,
+    "reasoning": "explanation"
+}
+
+Return ONLY valid JSON."""
+
+
+INTERFACE_EXTRACTOR = """You are a data extraction agent for DKM logistics software projects.
+This is an INTERFACE project - data mapping, document processing, or Excel transformation.
+
+EXTRACT:
+1. Client Name - Company requesting the work
+2. Flow Type - Brief description (2-4 words)
+3. Source - Where data comes from (Email, SFTP, API)
+4. Attachments - File types (PDF, Excel, CSV)
+5. Output Format - Expected output (Excel, JSON, API)
+
+OUTPUT (JSON only):
+{
+    "client": "Company name or Unknown",
+    "flow_type": "Invoice Processing",
+    "source": "Email",
+    "subject_used": true,
+    "attachments": ["PDF", "Excel"],
+    "input_format": "PDF invoices",
+    "output_format": "Excel",
+    "logic_app": "la-dkm-client-purpose",
+    "azure_function": "func-dkm-client-purpose",
+    "pdf_extraction": "Azure Document Intelligence",
+    "excel_processing": "Pandas",
+    "llm_usage": null,
+    "keywords": ["invoice", "pdf", "excel"],
+    "task_name": "Client - Flow Type",
+    "description": "Detailed task description"
+}
+
+RULES:
+- Extract actual info from email
+- Client from signature or domain
+- Flow type should be concise
+- List all attachment types
+
+Return ONLY valid JSON."""
+
+
+AUTOMATION_EXTRACTOR = """You are a data extraction agent for DKM software automation projects.
+This is an AUTOMATION project - scripts, workflows, or system integrations.
+
+EXTRACT:
+1. Requester - Who is asking for this automation
+2. Automation Type - Logic App, Azure Function, Script
+3. Trigger - What starts it (email, schedule, API call)
+4. Actions - What it should do step by step
+5. Integrations - Systems to connect (Odoo, APIs, Azure)
+
+OUTPUT (JSON only):
+{
+    "client": "Requester name or company",
+    "flow_type": "Container Tracking Automation",
+    "source": "Email trigger",
+    "attachments": [],
+    "automation_type": "Logic App",
+    "triggers": ["Email arrival", "Daily at 8AM"],
+    "actions": ["Parse email", "Extract data", "Update Odoo", "Send notification"],
+    "integrations": ["Odoo", "Teams", "Azure Blob"],
+    "logic_app": "la-dkm-projectname",
+    "azure_function": "func-dkm-projectname",
+    "api_endpoints": ["Odoo XML-RPC"],
+    "schedule": null,
+    "notifications": "Teams",
+    "keywords": ["automation", "container", "tracking"],
+    "task_name": "Client - Automation Description",
+    "description": "Detailed automation requirements"
+}
+
+NAMING CONVENTIONS:
+- Logic Apps: la-dkm-{client}-{purpose}
+- Azure Functions: func-dkm-{client}-{purpose}
+
+Return ONLY valid JSON."""
+
+
+EMAIL_TO_FLOW = """You are a data extraction agent for DKM, a logistics software company.
+Extract project information from incoming emails and return structured JSON.
+
+REQUIRED OUTPUT FORMAT:
+{
+    "client": "Company name from signature/domain",
+    "flow_type": "Brief 2-4 word description",
+    "source": "Email",
+    "subject_used": true,
+    "attachments": ["PDF", "Excel"],
+    "logic_app": "la-dkm-client-purpose",
+    "azure_function": "func-dkm-client-purpose",
+    "pdf_extraction": "Azure Document Intelligence",
+    "excel_processing": "Pandas",
+    "llm_usage": null,
+    "output_format": "Excel",
+    "keywords": ["relevant", "keywords"],
+    "task_name": "Client - Flow Type",
+    "description": "Detailed task description"
+}
+
+EXTRACTION RULES:
+1. Client: Check email signature, From domain, or body mentions
+2. Flow Type: Summarize main task in 2-4 words
+3. Attachments: List file types (PDF, Excel, CSV)
+4. Processing Tools:
+   - PDF documents -> pdf_extraction: "Azure Document Intelligence"
+   - Excel/CSV -> excel_processing: "Pandas"
+   - Complex docs -> llm_usage: "LLM for extraction"
+
+NAMING CONVENTIONS:
+- Logic Apps: la-dkm-{client}-{purpose}
+- Functions: func-dkm-{client}-{purpose}
+
+Return ONLY valid JSON."""
+
+
+# Prompt mapping for easy access
+PROMPTS = {
+    "classify": TRIAGE_CLASSIFIER,
+    "interface": INTERFACE_EXTRACTOR,
+    "automation": AUTOMATION_EXTRACTOR,
+    "email_to_flow": EMAIL_TO_FLOW,
+}
+
+
+def get_prompt(purpose: str) -> str:
+    """
+    Get a prompt by purpose.
+    
+    Args:
+        purpose: One of 'classify', 'interface', 'automation', 'email_to_flow'
+        
+    Returns:
+        Prompt string
+        
+    Raises:
+        ValueError: If purpose is unknown
+    """
+    if purpose not in PROMPTS:
+        raise ValueError(f"Unknown prompt purpose: {purpose}. Valid: {list(PROMPTS.keys())}")
+    return PROMPTS[purpose]
+
+
+============================================================
+FILE: ai/text_processor.py
+============================================================
+"""
+Donna AI - Text Processor
+Wrapper for CustomCall to process text-only emails.
+"""
+import json
+import logging
+import os
+import sys
+from typing import Dict, Any, Optional
+
+from .prompt_router import PromptRouter
+
+logger = logging.getLogger(__name__)
+
+
+class TextProcessor:
+    """
+    Processes text-only emails using CustomCall (OpenAI).
+    
+    Used when:
+    - Email has no attachments
+    - Attachments are not PDF/Excel
+    - Fallback for other processing failures
+    """
+    
+    def __init__(self, llm_client=None, prompt_router: Optional[PromptRouter] = None):
+        """
+        Initialize text processor.
+        
+        Args:
+            llm_client: Optional LLM client (CustomCall)
+            prompt_router: Optional prompt router
+        """
+        self.llm = llm_client
+        self.prompt_router = prompt_router or PromptRouter()
+        self._init_llm()
+    
+    def _init_llm(self):
+        """Initialize LLM client if not provided."""
+        if self.llm is None:
+            try:
+                from ..openai_api import CustomCall
+                self.llm = CustomCall()
+                logger.info("✅ TextProcessor LLM initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize LLM: {e}")
+                self.llm = None
+    
+    def extract(self, email_text: str, prompt_purpose: str = "email_to_flow") -> Dict[str, Any]:
+        """
+        Extract structured data from email text.
+        
+        Args:
+            email_text: The enriched email text
+            prompt_purpose: Which prompt to use ('email_to_flow', 'interface', 'automation')
+            
+        Returns:
+            Extracted data as dictionary
+        """
+        if not self.llm:
+            logger.error("LLM not available")
+            return self._fallback_extraction(email_text)
+        
+        try:
+            # Get appropriate prompt
+            prompt = self.prompt_router.get_prompt(prompt_purpose)
+            
+            logger.info(f"📝 Using prompt: {prompt_purpose}")
+            logger.info(f"📧 Processing text ({len(email_text)} chars)")
+            
+            # Call LLM
+            response = self.llm.send_request(prompt, email_text)
+            
+            if not response:
+                logger.warning("Empty LLM response, using fallback")
+                return self._fallback_extraction(email_text)
+            
+            logger.info(f"🤖 LLM Response: {response[:200]}...")
+            
+            # Parse JSON response
+            return self._parse_response(response)
+            
+        except Exception as e:
+            logger.error(f"Text extraction failed: {e}")
+            return self._fallback_extraction(email_text)
+    
+    def _parse_response(self, response: str) -> Dict[str, Any]:
+        """Parse LLM response as JSON."""
+        # Clean potential markdown
+        cleaned = response.replace("```json", "").replace("```", "").strip()
+        
+        try:
+            data = json.loads(cleaned)
+            logger.info(f"✅ Parsed response: {list(data.keys())}")
+            return data
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}")
+            logger.error(f"Raw response: {cleaned[:500]}")
+            return {"error": "parse_failed", "raw": cleaned}
+    
+    def _fallback_extraction(self, email_text: str) -> Dict[str, Any]:
+        """
+        Fallback extraction when LLM is unavailable.
+        Uses simple heuristics.
+        """
+        logger.info("🔄 Using fallback extraction")
+        
+        lines = email_text.split('\n')
+        result = {
+            "client": "Unknown",
+            "flow_type": "Unknown",
+            "source": "Email",
+            "subject_used": True,
+            "attachments": [],
+            "output_format": "Excel"
+        }
+        
+        # Try to extract basic info from structured email
+        for line in lines:
+            if line.startswith("FROM:"):
+                sender = line.replace("FROM:", "").strip()
+                # Try to extract company from email domain
+                if "@" in sender:
+                    domain = sender.split("@")[1].split(".")[0]
+                    result["client"] = domain.title()
+            elif line.startswith("SUBJECT:"):
+                subject = line.replace("SUBJECT:", "").strip()
+                result["flow_type"] = subject[:50] if subject else "Unknown"
+            elif line.startswith("ATTACHMENT TYPES:"):
+                types = line.replace("ATTACHMENT TYPES:", "").strip()
+                if types and types != "None":
+                    result["attachments"] = [t.strip() for t in types.split(",")]
+        
+        return result
+
+
+============================================================
+FILE: core/__init__.py
+============================================================
+"""
+Donna Core Module
+Contains the brain (central orchestrator) and router.
+"""
+from .brain import DonnaBrain
+from .router import Router
+
+__all__ = ["DonnaBrain", "Router"]
+
+
+============================================================
+FILE: core/brain.py
+============================================================
+"""
+Donna Core - Brain
+The central decision engine that orchestrates all processing.
+"""
+import logging
+from typing import Optional, Dict, Any
+
+from ..schema.email_payload import EmailPayload
+from ..schema.project_context import ProjectContext, ExtractedData
+from ..schema.odoo_fields import ProjectType, DataSource, Priority
+from ..triage.attachment_analyzer import AttachmentAnalyzer, ProcessingStrategy
+from ..triage.classifier import ProjectClassifier
+from ..ai.text_processor import TextProcessor
+from ..ai.pdf_processor import PdfProcessor
+from ..handlers.base_handler import BaseHandler, OdooResult
+from .router import Router
+
+logger = logging.getLogger(__name__)
+
+
+class DonnaBrain:
+    """
+    Central decision engine - THE brain of Donna.
+    
+    Responsibilities:
+    1. Receive email payload from Azure Function
+    2. Analyze: Does it have attachments?
+    3. Route to appropriate processor (text-only vs PDF/Excel)
+    4. Classify project type (INTERFACE vs AUTOMATION)
+    5. Build complete project context
+    6. Delegate to the correct handler
+    
+    Flow:
+    ┌─────────────┐
+    │ EmailPayload │
+    └──────┬──────┘
+           │
+    ┌──────▼──────┐
+    │ Attachment  │
+    │  Analyzer   │
+    └──────┬──────┘
+           │
+    ┌──────▼──────┐
+    │ AI Processor │─── TextProcessor or PdfProcessor
+    └──────┬──────┘
+           │
+    ┌──────▼──────┐
+    │ Classifier  │
+    └──────┬──────┘
+           │
+    ┌──────▼──────┐
+    │ Handler     │─── InterfaceHandler or AutomationHandler
+    └──────┬──────┘
+           │
+    ┌──────▼──────┐
+    │ OdooResult  │
+    └─────────────┘
+    """
+    
+    def __init__(
+        self,
+        attachment_analyzer: Optional[AttachmentAnalyzer] = None,
+        classifier: Optional[ProjectClassifier] = None,
+        text_processor: Optional[TextProcessor] = None,
+        pdf_processor: Optional[PdfProcessor] = None,
+        router: Optional[Router] = None
+    ):
+        """
+        Initialize the brain with all components.
+        
+        Args:
+            attachment_analyzer: Optional custom analyzer
+            classifier: Optional custom classifier
+            text_processor: Optional custom text processor
+            pdf_processor: Optional custom PDF processor
+            router: Optional custom router
+        """
+        self.attachment_analyzer = attachment_analyzer or AttachmentAnalyzer()
+        self.classifier = classifier or ProjectClassifier()
+        self.text_processor = text_processor or TextProcessor()
+        self.pdf_processor = pdf_processor or PdfProcessor()
+        self.router = router or Router()
+        
+        logger.info("🧠 Donna Brain initialized")
+    
+    def process(self, email: EmailPayload) -> ProjectContext:
+        """
+        Process an email and build complete project context.
+        
+        This is the THINKING phase - no Odoo operations yet.
+        
+        Args:
+            email: Parsed email payload
+            
+        Returns:
+            Complete ProjectContext ready for handler
+        """
+        logger.info("🧠 Donna is thinking...")
+        logger.info(f"📧 Processing email from: {email.from_address}")
+        logger.info(f"📋 Subject: {email.subject}")
+        
+        # Step 1: Analyze attachments to determine processing strategy
+        strategy = self.attachment_analyzer.analyze(email)
+        logger.info(f"📊 Processing strategy: {strategy.value}")
+        
+        # Step 2: Extract information using appropriate AI processor
+        extracted_data = self._extract_data(email, strategy)
+        logger.info(f"✅ Extracted: client={extracted_data.client}, flow_type={extracted_data.flow_type}")
+        
+        # Step 3: Classify project type
+        project_type = self.classifier.classify(email, extracted_data)
+        logger.info(f"🎯 Classification: {project_type.value}")
+        
+        # Step 4: Determine tags
+        tags = self._determine_tags(email, extracted_data, project_type)
+        logger.info(f"🏷️ Tags: {tags}")
+        
+        # Step 5: Determine data sources
+        data_sources = self._determine_data_sources(email)
+        logger.info(f"📊 Data sources: {[ds.value for ds in data_sources]}")
+        
+        # Step 6: Determine priority
+        priority = Priority.from_importance(email.importance)
+        logger.info(f"⚡ Priority: {priority.value}")
+        
+        # Build complete context
+        context = ProjectContext(
+            email=email,
+            extracted_data=extracted_data,
+            project_type=project_type,
+            tags=tags,
+            data_sources=data_sources,
+            priority=priority
+        )
+        
+        logger.info(f"🧠 Donna finished thinking. Task: '{context.task_name}'")
+        return context
+    
+    def _extract_data(
+        self, 
+        email: EmailPayload, 
+        strategy: ProcessingStrategy
+    ) -> ExtractedData:
+        """
+        Extract data using the appropriate AI processor.
+        
+        Args:
+            email: Email payload
+            strategy: Processing strategy from analyzer
+            
+        Returns:
+            Extracted data
+        """
+        # Get enriched text for LLM
+        enriched_text = email.get_enriched_text()
+        
+        # Choose processor based on strategy
+        if strategy == ProcessingStrategy.PDF:
+            # Process PDF attachments
+            pdf_results = self._process_pdfs(email)
+            
+            # Also process text for context
+            text_result = self.text_processor.extract(enriched_text)
+            
+            # Merge results (text extraction provides client/flow, PDF provides details)
+            merged = {**text_result, 'pdf_analysis': pdf_results}
+            return ExtractedData.from_dict(merged)
+        
+        elif strategy == ProcessingStrategy.EXCEL:
+            # For Excel, we mainly use text processing
+            # Excel content analysis could be added here
+            text_result = self.text_processor.extract(enriched_text)
+            return ExtractedData.from_dict(text_result)
+        
+        elif strategy == ProcessingStrategy.MIXED:
+            # Process both PDFs and text
+            pdf_results = self._process_pdfs(email)
+            text_result = self.text_processor.extract(enriched_text)
+            merged = {**text_result, 'pdf_analysis': pdf_results}
+            return ExtractedData.from_dict(merged)
+        
+        else:  # TEXT_ONLY
+            text_result = self.text_processor.extract(enriched_text)
+            return ExtractedData.from_dict(text_result)
+    
+    def _process_pdfs(self, email: EmailPayload) -> list:
+        """Process PDF attachments."""
+        results = []
+        
+        for att in email.attachments:
+            if att.is_pdf and att.content_bytes:
+                result = self.pdf_processor.extract_project_info(
+                    att.content_bytes,
+                    att.name
+                )
+                results.append(result)
+        
+        return results
+    
+    def _determine_tags(
+        self, 
+        email: EmailPayload, 
+        extracted: ExtractedData,
+        project_type: ProjectType
+    ) -> list:
+        """
+        Determine tags based on all available information.
+        
+        Args:
+            email: Email payload
+            extracted: Extracted data
+            project_type: Classified project type
+            
+        Returns:
+            List of tag names
+        """
+        tags = []
+        
+        # Add project type tag
+        tags.append(project_type.value)
+        
+        # Add client tag
+        if extracted.client and extracted.client != "Unknown":
+            clean_client = extracted.client.strip().replace(" ", "_")
+            tags.append(clean_client)
+        
+        # Check for known senders
+        sender_tags = self._get_sender_tags(email.from_address)
+        tags.extend(sender_tags)
+        
+        return list(set(tags))  # Remove duplicates
+    
+    def _get_sender_tags(self, from_address: str) -> list:
+        """Get tags based on known senders."""
+        sender_lower = from_address.lower()
+        tags = []
+        
+        # Known sender patterns
+        patterns = {
+            'vanpoppel': 'VanPoppel',
+            'luc': 'Luc',
+            # Add more known patterns here
+        }
+        
+        for pattern, tag in patterns.items():
+            if pattern in sender_lower:
+                tags.append(tag)
+        
+        return tags
+    
+    def _determine_data_sources(self, email: EmailPayload) -> list:
+        """
+        Determine data sources from email.
+        
+        Args:
+            email: Email payload
+            
+        Returns:
+            List of DataSource enums
+        """
+        sources = [DataSource.EMAIL]  # Always from email
+        
+        if email.has_pdf:
+            sources.append(DataSource.PDF)
+        
+        if email.has_excel:
+            sources.append(DataSource.EXCEL)
+        
+        return sources
+    
+    def get_handler(self, project_type: ProjectType) -> BaseHandler:
+        """
+        Get the appropriate handler for the project type.
+        
+        Args:
+            project_type: Classified project type
+            
+        Returns:
+            Handler instance
+        """
+        return self.router.get_handler(project_type)
+    
+    def execute(self, context: ProjectContext) -> OdooResult:
+        """
+        Execute the project context - create Odoo task.
+        
+        This is the ACTION phase.
+        
+        Args:
+            context: Complete project context
+            
+        Returns:
+            OdooResult from handler
+        """
+        logger.info("🚀 Donna is executing...")
+        
+        # Get appropriate handler
+        handler = self.get_handler(context.project_type)
+        
+        # Execute
+        result = handler.handle(context)
+        
+        if result.success:
+            logger.info(f"✅ Success! Task ID: {result.task_id} in '{result.project_name}'")
+        else:
+            logger.error(f"❌ Failed: {result.error}")
+        
+        return result
+    
+    def process_and_execute(self, email: EmailPayload) -> OdooResult:
+        """
+        Complete pipeline: process email and execute.
+        
+        Convenience method that combines process() and execute().
+        
+        Args:
+            email: Raw email payload
+            
+        Returns:
+            OdooResult
+        """
+        # Think
+        context = self.process(email)
+        
+        # Act
+        return self.execute(context)
+
+
+============================================================
+FILE: core/router.py
+============================================================
+"""
+Donna Core - Router
+Routes to appropriate handlers based on project type.
+"""
+import logging
+from typing import Dict, Type, Optional
+
+from ..schema.odoo_fields import ProjectType
+from ..handlers.base_handler import BaseHandler
+from ..handlers.interface_handler import InterfaceHandler
+from ..handlers.automation_handler import AutomationHandler
+
+logger = logging.getLogger(__name__)
+
+
+class Router:
+    """
+    Routes requests to the appropriate handler based on project type.
+    
+    Supports:
+    - INTERFACE -> InterfaceHandler
+    - AUTOMATION -> AutomationHandler
+    - UNKNOWN -> InterfaceHandler (fallback)
+    """
+    
+    # Handler mapping
+    HANDLERS: Dict[ProjectType, Type[BaseHandler]] = {
+        ProjectType.INTERFACE: InterfaceHandler,
+        ProjectType.AUTOMATION: AutomationHandler,
+        ProjectType.UNKNOWN: InterfaceHandler,  # Fallback
+    }
+    
+    def __init__(self):
+        """Initialize router with handler instances."""
+        self._handler_cache: Dict[ProjectType, BaseHandler] = {}
+    
+    def get_handler(self, project_type: ProjectType) -> BaseHandler:
+        """
+        Get the appropriate handler for the project type.
+        
+        Args:
+            project_type: The classified project type
+            
+        Returns:
+            Handler instance
+        """
+        # Check cache
+        if project_type in self._handler_cache:
+            return self._handler_cache[project_type]
+        
+        # Get handler class
+        handler_class = self.HANDLERS.get(project_type)
+        
+        if not handler_class:
+            logger.warning(f"No handler for {project_type}, using InterfaceHandler")
+            handler_class = InterfaceHandler
+        
+        # Instantiate and cache
+        handler = handler_class()
+        self._handler_cache[project_type] = handler
+        
+        logger.info(f"🚦 Routed to {handler_class.__name__}")
+        return handler
+    
+    def register_handler(
+        self, 
+        project_type: ProjectType, 
+        handler_class: Type[BaseHandler]
+    ):
+        """
+        Register a custom handler for a project type.
+        
+        Args:
+            project_type: Project type to handle
+            handler_class: Handler class (not instance)
+        """
+        self.HANDLERS[project_type] = handler_class
+        # Clear cache for this type
+        if project_type in self._handler_cache:
+            del self._handler_cache[project_type]
+        
+        logger.info(f"Registered {handler_class.__name__} for {project_type}")
+    
+    def clear_cache(self):
+        """Clear handler cache (useful for testing)."""
+        self._handler_cache.clear()
+
+
+============================================================
+FILE: handlers/__init__.py
+============================================================
+"""
+Donna Handlers Module
+Project-specific handlers for INTERFACE and AUTOMATION projects.
+"""
+from .base_handler import BaseHandler
+from .interface_handler import InterfaceHandler
+from .automation_handler import AutomationHandler
+
+__all__ = ["BaseHandler", "InterfaceHandler", "AutomationHandler"]
+
+
+============================================================
+FILE: handlers/automation_handler.py
+============================================================
+"""
+Donna Handlers - Automation Handler
+Handles AUTOMATION type projects (scripts, workflows, integrations).
+"""
+import logging
+from typing import List, Optional
+
+from .base_handler import BaseHandler, OdooResult
+from ..schema.project_context import ProjectContext
+from ..schema.odoo_fields import DataSource, Priority
+from ..schema import format_automation_description, get_subtasks_for_type
+from ..odoo.client import OdooClient
+from ..odoo.project_service import ProjectService
+from ..config import Config
+
+logger = logging.getLogger(__name__)
+
+
+class AutomationHandler(BaseHandler):
+    """
+    Handles AUTOMATION type projects.
+    
+    These are typically:
+    - Script development
+    - Workflow automation
+    - API integrations
+    - Scheduled tasks
+    - Logic App/Azure Function development
+    
+    Default Tags: AUTOMATION, [Client Name]
+    Project: Automation (fallback to Interface if not exists)
+    """
+    
+    def __init__(self, project_service: Optional[ProjectService] = None):
+        """
+        Initialize automation handler.
+        
+        Args:
+            project_service: Optional ProjectService (will create if not provided)
+        """
+        self.project_service = project_service
+        self._init_service()
+    
+    def _init_service(self):
+        """Initialize Odoo service if not provided."""
+        if self.project_service is None:
+            try:
+                client = OdooClient(
+                    url=Config.ODOO_URL,
+                    db=Config.ODOO_DB,
+                    username=Config.ODOO_USERNAME,
+                    api_key=Config.ODOO_API_KEY
+                )
+                self.project_service = ProjectService(client)
+                logger.info("✅ AutomationHandler initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize Odoo service: {e}")
+                self.project_service = None
+    
+    def handle(self, context: ProjectContext) -> OdooResult:
+        """
+        Handle AUTOMATION project and create Odoo task.
+        
+        Args:
+            context: Complete project context
+            
+        Returns:
+            OdooResult with task creation details
+        """
+        if not self.project_service:
+            return OdooResult(
+                success=False,
+                error="Odoo service not initialized"
+            )
+        
+        try:
+            # Get tags
+            tags = self.get_default_tags(context)
+            
+            # Get data sources
+            data_sources = self._get_data_sources(context)
+            
+            # Get project name
+            project_name = self.get_project_name(context)
+            
+            # Create task
+            logger.info(f"⚙️ AutomationHandler creating task in '{project_name}'")
+            logger.info(f"   Tags: {tags}")
+            logger.info(f"   Data Sources: {[ds.value for ds in data_sources]}")
+            
+            # Generate markdown description
+            description = format_automation_description(
+                client=context.extracted_data.client,
+                flow_type=context.extracted_data.flow_type,
+                summary=context.task_description,
+                from_address=context.email.from_address,
+                subject=context.email.subject,
+                received_at=context.email.received_at, # Using property
+                triggers=context.extracted_data.triggers,
+                actions=context.extracted_data.actions,
+                integrations=context.extracted_data.integrations,
+                logic_app_name=context.extracted_data.logic_app,
+                azure_function_name=context.extracted_data.azure_function,
+                schedule=context.extracted_data.schedule,
+                keywords=context.extracted_data.keywords
+            )
+
+            task_id, project_id = self.project_service.create_task(
+                project_name=project_name,
+                task_name=context.task_name,
+                description=description,
+                tags=tags,
+                data_sources=data_sources,
+                priority=context.priority
+            )
+            
+            # Create subtasks
+            subtasks = get_subtasks_for_type("AUTOMATION")
+            self.project_service.create_subtasks(task_id, project_id, subtasks)
+            
+            # Upload attachments
+            self.project_service.upload_task_attachments(task_id, context.email.attachments)
+            
+            return OdooResult(
+                success=True,
+                task_id=task_id,
+                project_id=project_id,
+                project_name=project_name,
+                task_name=context.task_name
+            )
+            
+        except Exception as e:
+            # If Automation project doesn't exist, try Interface as fallback
+            if "not found" in str(e).lower():
+                logger.warning("Automation project not found, falling back to Interface")
+                try:
+                    task_id, project_id = self.project_service.create_task(
+                        project_name="Interface",
+                        task_name=context.task_name,
+                        description=context.task_description + "\n\n[Originally: AUTOMATION project]",
+                        tags=tags,
+                        data_sources=data_sources,
+                        priority=context.priority
+                    )
+                    return OdooResult(
+                        success=True,
+                        task_id=task_id,
+                        project_id=project_id,
+                        project_name="Interface",
+                        task_name=context.task_name
+                    )
+                except Exception as e2:
+                    logger.error(f"Fallback also failed: {e2}")
+                    return OdooResult(success=False, error=str(e2))
+            
+            logger.error(f"AutomationHandler failed: {e}")
+            return OdooResult(
+                success=False,
+                task_name=context.task_name,
+                error=str(e)
+            )
+    
+    def get_default_tags(self, context: ProjectContext) -> List[str]:
+        """
+        Get default tags for AUTOMATION projects.
+        Strict Rules:
+        1. Always include 'AUTOMATION'
+        2. Check for subsidiary companies (Van Poppel, Vermaas)
+        3. No client names or person names
+        """
+        tags = ["AUTOMATION"]
+        
+        # Check text for company identification
+        full_text = f"{context.email.subject} {context.email.body} {context.email.from_address}".lower()
+        
+        is_subsidiary = False
+        if "vanpoppel" in full_text or "van poppel" in full_text:
+            tags.append("VanPoppel")
+            is_subsidiary = True
+        elif "vermaas" in full_text:
+            tags.append("Vermaas")
+            is_subsidiary = True
+            
+        # If no subsidiary detected, it implies DKM (Mother Company)
+        if not is_subsidiary:
+            tags.append("DKM")
+        
+        return list(set(tags))
+    
+    def get_project_name(self, context: ProjectContext) -> str:
+        """
+        Get project name for AUTOMATION projects.
+        
+        Returns:
+            'Automation' if exists, else will fallback in handle()
+        """
+        return "Automation"
+    
+    def _get_data_sources(self, context: ProjectContext) -> List[DataSource]:
+        """
+        Determine data sources from context.
+        Automation projects often involve API integrations.
+        
+        Args:
+            context: Project context
+            
+        Returns:
+            List of DataSource enums
+        """
+        data_sources = [DataSource.EMAIL]  # Always from email
+        
+        # Check for API mentions in email
+        email_text = f"{context.email.subject} {context.email.body}".lower()
+        if any(kw in email_text for kw in ['api', 'integration', 'endpoint', 'webhook']):
+            data_sources.append(DataSource.API)
+        
+        if any(kw in email_text for kw in ['sftp', 'ftp', 'file transfer']):
+            data_sources.append(DataSource.SFTP)
+        
+        # Add based on attachments
+        if context.email.has_excel:
+            data_sources.append(DataSource.EXCEL)
+        
+        if context.email.has_pdf:
+            data_sources.append(DataSource.PDF)
+        
+        return data_sources
+
+
+============================================================
+FILE: handlers/base_handler.py
+============================================================
+"""
+Donna Handlers - Base Handler
+Abstract base class for project handlers.
+"""
+from abc import ABC, abstractmethod
+from typing import Dict, Any, Tuple
+from dataclasses import dataclass
+
+from ..schema.project_context import ProjectContext
+
+
+@dataclass
+class OdooResult:
+    """Result of an Odoo operation."""
+    success: bool
+    task_id: int = 0
+    project_id: int = 0
+    project_name: str = ""
+    task_name: str = ""
+    error: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON response."""
+        return {
+            "success": self.success,
+            "task_id": self.task_id,
+            "project_id": self.project_id,
+            "project_name": self.project_name,
+            "task_name": self.task_name,
+            "error": self.error if not self.success else None
+        }
+
+
+class BaseHandler(ABC):
+    """
+    Abstract base class for project handlers.
+    
+    Each handler is responsible for:
+    1. Processing a specific project type
+    2. Determining appropriate tags
+    3. Creating the Odoo task
+    """
+    
+    @abstractmethod
+    def handle(self, context: ProjectContext) -> OdooResult:
+        """
+        Handle the project context and create Odoo task.
+        
+        Args:
+            context: Complete project context from the Brain
+            
+        Returns:
+            OdooResult with success status and task details
+        """
+        pass
+    
+    @abstractmethod
+    def get_default_tags(self, context: ProjectContext) -> list:
+        """
+        Get default tags for this handler type.
+        
+        Args:
+            context: Project context
+            
+        Returns:
+            List of tag names
+        """
+        pass
+    
+    @abstractmethod
+    def get_project_name(self, context: ProjectContext) -> str:
+        """
+        Get the Odoo project name for this handler.
+        
+        Args:
+            context: Project context
+            
+        Returns:
+            Project name string
+        """
+        pass
+
+
+============================================================
+FILE: handlers/interface_handler.py
+============================================================
+"""
+Donna Handlers - Interface Handler
+Handles INTERFACE type projects (logistics, data mapping, Excel).
+"""
+import logging
+from typing import List, Optional
+
+from .base_handler import BaseHandler, OdooResult
+from ..schema.project_context import ProjectContext
+from ..schema.odoo_fields import DataSource, Priority
+from ..schema import format_interface_description, get_subtasks_for_type
+from ..odoo.client import OdooClient
+from ..odoo.project_service import ProjectService
+from ..config import Config
+
+logger = logging.getLogger(__name__)
+
+
+class InterfaceHandler(BaseHandler):
+    """
+    Handles INTERFACE type projects.
+    
+    These are typically:
+    - Data mapping projects (Excel → Custom format)
+    - Invoice processing interfaces
+    - Logistics document handling
+    - File format conversions
+    
+    Default Tags: INTERFACE, [Client Name]
+    Project: Interface
+    """
+    
+    def __init__(self, project_service: Optional[ProjectService] = None):
+        """
+        Initialize interface handler.
+        
+        Args:
+            project_service: Optional ProjectService (will create if not provided)
+        """
+        self.project_service = project_service
+        self._init_service()
+    
+    def _init_service(self):
+        """Initialize Odoo service if not provided."""
+        if self.project_service is None:
+            try:
+                client = OdooClient(
+                    url=Config.ODOO_URL,
+                    db=Config.ODOO_DB,
+                    username=Config.ODOO_USERNAME,
+                    api_key=Config.ODOO_API_KEY
+                )
+                self.project_service = ProjectService(client)
+                logger.info("✅ InterfaceHandler initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize Odoo service: {e}")
+                self.project_service = None
+    
+    def handle(self, context: ProjectContext) -> OdooResult:
+        """
+        Handle INTERFACE project and create Odoo task.
+        
+        Args:
+            context: Complete project context
+            
+        Returns:
+            OdooResult with task creation details
+        """
+        if not self.project_service:
+            return OdooResult(
+                success=False,
+                error="Odoo service not initialized"
+            )
+        
+        try:
+            # Get tags
+            tags = self.get_default_tags(context)
+            
+            # Get data sources
+            data_sources = self._get_data_sources(context)
+            
+            # Get project name
+            project_name = self.get_project_name(context)
+            
+            # Create task
+            logger.info(f"🔧 InterfaceHandler creating task in '{project_name}'")
+            logger.info(f"   Tags: {tags}")
+            logger.info(f"   Data Sources: {[ds.value for ds in data_sources]}")
+            
+            # Generate markdown description
+            description = format_interface_description(
+                client=context.extracted_data.client,
+                flow_type=context.extracted_data.flow_type,
+                summary=context.task_description,
+                from_address=context.email.from_address,
+                subject=context.email.subject,
+                received_at=context.email.received_at, # Note: using received_at property from EmailPayload
+                attachments=context.email.attachment_names,
+                logic_app_name=context.extracted_data.logic_app,
+                azure_function_name=context.extracted_data.azure_function,
+                input_format=context.extracted_data.input_format,
+                output_format=context.extracted_data.output_format,
+                keywords=context.extracted_data.keywords
+            )
+
+            task_id, project_id = self.project_service.create_task(
+                project_name=project_name,
+                task_name=context.task_name,
+                description=description,
+                tags=tags,
+                data_sources=data_sources,
+                priority=context.priority
+            )
+            
+            # Create standard sub-tasks
+            subtasks = get_subtasks_for_type("INTERFACE")
+            self.project_service.create_subtasks(task_id, project_id, subtasks)
+            
+            # Upload attachments
+            self.project_service.upload_task_attachments(task_id, context.email.attachments)
+            
+            return OdooResult(
+                success=True,
+                task_id=task_id,
+                project_id=project_id,
+                project_name=project_name,
+                task_name=context.task_name
+            )
+            
+        except Exception as e:
+            logger.error(f"InterfaceHandler failed: {e}")
+            return OdooResult(
+                success=False,
+                task_name=context.task_name,
+                error=str(e)
+            )
+    
+    def get_default_tags(self, context: ProjectContext) -> List[str]:
+        """
+        Get default tags for INTERFACE projects.
+        Strict Rules:
+        1. Always include 'INTERFACE'
+        2. Check for subsidiary companies (Van Poppel, Vermaas)
+        3. No client names or person names
+        """
+        tags = ["INTERFACE"]
+        
+        # Check text for company identification
+        full_text = f"{context.email.subject} {context.email.body} {context.email.from_address}".lower()
+        
+        is_subsidiary = False
+        if "vanpoppel" in full_text or "van poppel" in full_text:
+            tags.append("VanPoppel")
+            is_subsidiary = True
+        elif "vermaas" in full_text:
+            tags.append("Vermaas")
+            is_subsidiary = True
+            
+        # If no subsidiary detected, it implies DKM (Mother Company)
+        if not is_subsidiary:
+            tags.append("DKM")
+        
+        return list(set(tags))
+    
+    def get_project_name(self, context: ProjectContext) -> str:
+        """
+        Get project name for INTERFACE projects.
+        
+        Returns:
+            'Interface' by default
+        """
+        return "Interface"
+    
+    def _get_data_sources(self, context: ProjectContext) -> List[DataSource]:
+        """
+        Determine data sources from context.
+        
+        Args:
+            context: Project context
+            
+        Returns:
+            List of DataSource enums
+        """
+        data_sources = [DataSource.EMAIL]  # Always from email
+        
+        # Add based on attachments
+        if context.email.has_excel:
+            data_sources.append(DataSource.EXCEL)
+        
+        if context.email.has_pdf:
+            data_sources.append(DataSource.PDF)
+        
+        # Add context-specified sources
+        if context.data_sources:
+            for ds in context.data_sources:
+                if ds not in data_sources:
+                    data_sources.append(ds)
+        
+        return data_sources
+
+
+============================================================
+FILE: odoo/__init__.py
+============================================================
+"""
+Donna Odoo Module
+Odoo integration for projects, tasks, tags, and attachments.
+"""
+from .client import OdooClient
+from .tag_service import TagService
+from .project_service import ProjectService
+
+__all__ = ["OdooClient", "TagService", "ProjectService"]
+
+
+============================================================
+FILE: odoo/client.py
+============================================================
+"""
+Donna Odoo - Enhanced Client
+XML-RPC client for Odoo with extended operations.
+"""
+import xmlrpc.client
+import logging
+from typing import List, Dict, Any, Optional, Tuple
+
+logger = logging.getLogger(__name__)
+
+
+class OdooClient:
+    """
+    Enhanced Odoo XML-RPC client.
+    
+    Provides:
+    - Authentication
+    - CRUD operations
+    - Search operations
+    - Many2many field handling
+    """
+    
+    def __init__(self, url: str, db: str, username: str, api_key: str):
+        """
+        Initialize Odoo client.
+        
+        Args:
+            url: Odoo instance URL
+            db: Database name
+            username: Username/email
+            api_key: API key or password
+        """
+        self.url = url.rstrip('/')
+        self.db = db
+        self.username = username
+        self.api_key = api_key
+        self.uid = None
+        self.models = None
+    
+    def authenticate(self) -> int:
+        """
+        Authenticate with Odoo.
+        
+        Returns:
+            User ID (uid)
+            
+        Raises:
+            Exception: If authentication fails
+        """
+        logger.info(f"🔐 Authenticating with Odoo: {self.url}")
+        
+        common = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/common")
+        self.uid = common.authenticate(self.db, self.username, self.api_key, {})
+        
+        if not self.uid:
+            raise Exception("Odoo Authentication Failed")
+        
+        self.models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
+        logger.info(f"✅ Authenticated as user {self.uid}")
+        
+        return self.uid
+    
+    def _ensure_authenticated(self):
+        """Ensure client is authenticated."""
+        if not self.uid or not self.models:
+            self.authenticate()
+    
+    def create(self, model: str, values: Dict[str, Any]) -> int:
+        """
+        Create a new record.
+        
+        Args:
+            model: Odoo model name (e.g., 'project.task')
+            values: Field values dictionary
+            
+        Returns:
+            Created record ID
+        """
+        self._ensure_authenticated()
+        
+        logger.info(f"📝 Creating {model}: {list(values.keys())}")
+        
+        record_id = self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'create', [values]
+        )
+        
+        logger.info(f"✅ Created {model} ID: {record_id}")
+        return record_id
+    
+    def search(
+        self, 
+        model: str, 
+        domain: List, 
+        limit: Optional[int] = None
+    ) -> List[int]:
+        """
+        Search for records.
+        
+        Args:
+            model: Odoo model name
+            domain: Search domain (list of conditions)
+            limit: Optional max records to return
+            
+        Returns:
+            List of record IDs
+        """
+        self._ensure_authenticated()
+        
+        kwargs = {}
+        if limit:
+            kwargs['limit'] = limit
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'search', [domain], kwargs
+        )
+    
+    def read(
+        self, 
+        model: str, 
+        ids: List[int], 
+        fields: Optional[List[str]] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Read records by ID.
+        
+        Args:
+            model: Odoo model name
+            ids: List of record IDs
+            fields: Optional list of fields to read
+            
+        Returns:
+            List of record dictionaries
+        """
+        self._ensure_authenticated()
+        
+        kwargs = {}
+        if fields:
+            kwargs['fields'] = fields
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'read', [ids], kwargs
+        )
+    
+    def search_read(
+        self, 
+        model: str, 
+        domain: List, 
+        fields: Optional[List[str]] = None,
+        limit: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Search and read in one call.
+        
+        Args:
+            model: Odoo model name
+            domain: Search domain
+            fields: Optional fields to read
+            limit: Optional max records
+            
+        Returns:
+            List of record dictionaries
+        """
+        self._ensure_authenticated()
+        
+        kwargs = {}
+        if fields:
+            kwargs['fields'] = fields
+        if limit:
+            kwargs['limit'] = limit
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'search_read', [domain], kwargs
+        )
+    
+    def write(self, model: str, ids: List[int], values: Dict[str, Any]) -> bool:
+        """
+        Update records.
+        
+        Args:
+            model: Odoo model name
+            ids: List of record IDs to update
+            values: New field values
+            
+        Returns:
+            True if successful
+        """
+        self._ensure_authenticated()
+        
+        logger.info(f"✏️ Updating {model} IDs {ids}: {list(values.keys())}")
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'write', [ids, values]
+        )
+    
+    def unlink(self, model: str, ids: List[int]) -> bool:
+        """
+        Delete records.
+        
+        Args:
+            model: Odoo model name
+            ids: List of record IDs to delete
+            
+        Returns:
+            True if successful
+        """
+        self._ensure_authenticated()
+        
+        logger.warning(f"🗑️ Deleting {model} IDs {ids}")
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'unlink', [ids]
+        )
+    
+    def fields_get(
+        self, 
+        model: str, 
+        attributes: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Get model field definitions.
+        
+        Args:
+            model: Odoo model name
+            attributes: Optional list of attributes to return
+            
+        Returns:
+            Dictionary of field definitions
+        """
+        self._ensure_authenticated()
+        
+        kwargs = {}
+        if attributes:
+            kwargs['attributes'] = attributes
+        
+        return self.models.execute_kw(
+            self.db, self.uid, self.api_key,
+            model, 'fields_get', [], kwargs
+        )
+
+
+============================================================
+FILE: odoo/project_service.py
+============================================================
+"""
+Donna Odoo - Project Service
+Handles project and task creation with full metadata.
+"""
+import logging
+from typing import List, Dict, Any, Optional, Tuple
+
+from .client import OdooClient
+from .tag_service import TagService
+from ..schema.odoo_fields import Priority, DataSource
+
+logger = logging.getLogger(__name__)
+
+
+class ProjectService:
+    """
+    Handles Odoo project.project and project.task operations.
+    
+    Provides:
+    - Find project by name
+    - Create task with full metadata (tags, data sources, priority)
+    - Update existing tasks
+    """
+    
+    PROJECT_MODEL = "project.project"
+    TASK_MODEL = "project.task"
+    
+    def __init__(self, client: OdooClient, tag_service: Optional[TagService] = None):
+        """
+        Initialize project service.
+        
+        Args:
+            client: Authenticated OdooClient
+            tag_service: Optional TagService (will create if not provided)
+        """
+        self.client = client
+        self.tag_service = tag_service or TagService(client)
+        self._project_cache: Dict[str, int] = {}
+    
+    def find_project(self, project_name: str) -> Optional[int]:
+        """
+        Find a project by name.
+        
+        Args:
+            project_name: Project name to find
+            
+        Returns:
+            Project ID or None if not found
+        """
+        # Check cache first
+        if project_name in self._project_cache:
+            return self._project_cache[project_name]
+        
+        project_ids = self.client.search(
+            self.PROJECT_MODEL, 
+            [['name', '=', project_name]], 
+            limit=1
+        )
+        
+        if project_ids:
+            project_id = project_ids[0]
+            self._project_cache[project_name] = project_id
+            logger.info(f"📁 Found project: {project_name} (ID: {project_id})")
+            return project_id
+        
+        logger.warning(f"📁 Project not found: {project_name}")
+        return None
+    
+    def create_task(
+        self,
+        project_name: str,
+        task_name: str,
+        description: str,
+        tags: Optional[List[str]] = None,
+        data_sources: Optional[List[DataSource]] = None,
+        priority: Priority = Priority.MEDIUM,
+        assignee_id: Optional[int] = None
+    ) -> Tuple[int, int]:
+        """
+        Create a task in the specified project with full metadata.
+        
+        Args:
+            project_name: Name of the project (e.g., 'Interface')
+            task_name: Task name
+            description: Task description
+            tags: List of tag names to apply
+            data_sources: List of DataSource enums
+            priority: Task priority
+            assignee_id: Optional user ID to assign
+            
+        Returns:
+            Tuple of (task_id, project_id)
+            
+        Raises:
+            Exception: If project not found
+        """
+        # Find project
+        project_id = self.find_project(project_name)
+        
+        if not project_id:
+            raise Exception(f"Project '{project_name}' not found in Odoo")
+        
+        # Build task data
+        task_data = {
+            'project_id': project_id,
+            'name': task_name,
+            'description': description,
+            'priority': priority.value
+        }
+        
+        # Add tags if provided
+        if tags:
+            task_data['tag_ids'] = self.tag_service.get_tag_command(tags)
+            logger.info(f"🏷️ Adding tags: {tags}")
+        
+        # Add assignee if provided
+        if assignee_id:
+            task_data['user_ids'] = [(4, assignee_id, 0)]
+        
+        # Note: data_sources might be a custom field (x_data_sources)
+        # Check if the field exists before setting
+        if data_sources:
+            data_source_values = [ds.value for ds in data_sources]
+            # Try setting custom field - this may need adjustment based on actual field type
+            # If it's a Many2many to a custom model, we'd need similar logic to tags
+            # For now, store as comma-separated string in a text field if available
+            task_data['x_data_sources'] = ', '.join(data_source_values)
+            logger.info(f"📊 Data sources: {data_source_values}")
+        
+        # Create the task
+        logger.info(f"📋 Creating task: {task_name} in project {project_name}")
+        
+        try:
+            task_id = self.client.create(self.TASK_MODEL, task_data)
+            logger.info(f"✅ Task created: ID {task_id}")
+            return task_id, project_id
+        except Exception as e:
+            # If x_data_sources field doesn't exist, retry without it
+            if 'x_data_sources' in str(e):
+                logger.warning("x_data_sources field not available, creating without it")
+                del task_data['x_data_sources']
+                task_id = self.client.create(self.TASK_MODEL, task_data)
+                return task_id, project_id
+
+            raise
+
+    def create_subtasks(self, parent_task_id: int, project_id: int, subtasks: List[Any]):
+        """
+        Create sub-tasks linked to a parent task.
+        
+        Args:
+            parent_task_id: Parent task ID
+            project_id: Project ID
+            subtasks: List of SubTask objects
+        """
+        if not subtasks:
+            return
+
+        logger.info(f"📋 Creating {len(subtasks)} sub-tasks for task {parent_task_id}")
+        
+        for sub in subtasks:
+            task_data = {
+                'name': sub.name,
+                'description': sub.description,
+                'project_id': project_id,
+                'parent_id': parent_task_id,
+                'sequence': getattr(sub, 'order', 10)
+            }
+            
+            try:
+                self.client.create(self.TASK_MODEL, task_data)
+            except Exception as e:
+                logger.warning(f"Failed to create sub-task '{sub.name}': {e}")
+
+    def upload_task_attachments(self, task_id: int, attachments: List[Any]):
+        """
+        Upload attachments and link them to the task.
+        
+        Args:
+            task_id: ID of the task
+            attachments: List of Attachment objects (from schema.email_payload)
+        """
+        if not attachments:
+            return
+            
+        logger.info(f"📎 Uploading {len(attachments)} attachments for task {task_id}")
+        
+        for att in attachments:
+            if not att.content_bytes:
+                logger.warning(f"Skipping attachment '{att.name}' (no content)")
+                continue
+                
+            try:
+                values = {
+                    'name': att.name,
+                    'type': 'binary',
+                    'datas': att.content_bytes,
+                    'res_model': 'project.task',
+                    'res_id': task_id,
+                    'mimetype': att.content_type
+                }
+                
+                att_id = self.client.create('ir.attachment', values)
+                logger.info(f"✅ Uploaded attachment '{att.name}' (ID: {att_id})")
+                
+            except Exception as e:
+                logger.error(f"Failed to upload attachment '{att.name}': {e}")
+    
+    def create_task_in_interface(
+        self, 
+        task_name: str, 
+        task_description: str,
+        tags: Optional[List[str]] = None,
+        data_sources: Optional[List[DataSource]] = None,
+        priority: Priority = Priority.MEDIUM
+    ) -> Tuple[int, int]:
+        """
+        Convenience method to create a task in the 'Interface' project.
+        
+        Args:
+            task_name: Task name
+            task_description: Task description
+            tags: Optional list of tag names
+            data_sources: Optional list of DataSource enums
+            priority: Task priority
+            
+        Returns:
+            Tuple of (task_id, project_id)
+        """
+        return self.create_task(
+            project_name="Interface",
+            task_name=task_name,
+            description=task_description,
+            tags=tags,
+            data_sources=data_sources,
+            priority=priority
+        )
+    
+    def update_task(
+        self,
+        task_id: int,
+        **kwargs
+    ) -> bool:
+        """
+        Update an existing task.
+        
+        Args:
+            task_id: ID of the task to update
+            **kwargs: Field values to update
+            
+        Returns:
+            True if successful
+        """
+        # Handle tags specially
+        if 'tags' in kwargs:
+            kwargs['tag_ids'] = self.tag_service.get_tag_command(kwargs.pop('tags'))
+        
+        # Handle priority
+        if 'priority' in kwargs and isinstance(kwargs['priority'], Priority):
+            kwargs['priority'] = kwargs['priority'].value
+        
+        # Handle data_sources
+        if 'data_sources' in kwargs:
+            ds = kwargs.pop('data_sources')
+            if ds:
+                kwargs['x_data_sources'] = ', '.join([d.value for d in ds])
+        
+        return self.client.write(self.TASK_MODEL, [task_id], kwargs)
+    
+    def find_task_by_name(
+        self, 
+        task_name: str, 
+        project_name: Optional[str] = None
+    ) -> Optional[int]:
+        """
+        Find a task by name, optionally within a specific project.
+        
+        Args:
+            task_name: Task name to find
+            project_name: Optional project name to filter by
+            
+        Returns:
+            Task ID or None
+        """
+        domain = [['name', '=', task_name]]
+        
+        if project_name:
+            project_id = self.find_project(project_name)
+            if project_id:
+                domain.append(['project_id', '=', project_id])
+        
+        task_ids = self.client.search(self.TASK_MODEL, domain, limit=1)
+        
+        return task_ids[0] if task_ids else None
+    
+    def get_task_fields(self) -> Dict[str, Any]:
+        """
+        Get available fields on project.task model.
+        Useful for discovering custom fields.
+        
+        Returns:
+            Dictionary of field definitions
+        """
+        return self.client.fields_get(
+            self.TASK_MODEL, 
+            attributes=['string', 'type', 'required']
+        )
+
+
+============================================================
+FILE: odoo/tag_service.py
+============================================================
+"""
+Donna Odoo - Tag Service
+Manages Odoo project tags (create, find, assign).
+"""
+import logging
+from typing import List, Optional, Dict, Any
+
+from .client import OdooClient
+
+logger = logging.getLogger(__name__)
+
+
+class TagService:
+    """
+    Handles Odoo project.tags operations.
+    
+    Provides:
+    - Find or create tags by name
+    - Get tag IDs for a list of names
+    - Cache for performance
+    """
+    
+    # Tag model name in Odoo
+    TAG_MODEL = "project.tags"
+    
+    def __init__(self, client: OdooClient):
+        """
+        Initialize tag service.
+        
+        Args:
+            client: Authenticated OdooClient
+        """
+        self.client = client
+        self._tag_cache: Dict[str, int] = {}
+    
+    def find_or_create(self, tag_name: str) -> int:
+        """
+        Find a tag by name, or create it if it doesn't exist.
+        
+        Args:
+            tag_name: Tag name to find/create
+            
+        Returns:
+            Tag ID
+        """
+        # Check cache first
+        if tag_name in self._tag_cache:
+            logger.debug(f"🏷️ Tag from cache: {tag_name} -> {self._tag_cache[tag_name]}")
+            return self._tag_cache[tag_name]
+        
+        # Search in Odoo
+        tag_ids = self.client.search(self.TAG_MODEL, [['name', '=', tag_name]], limit=1)
+        
+        if tag_ids:
+            tag_id = tag_ids[0]
+            logger.info(f"🏷️ Found existing tag: {tag_name} (ID: {tag_id})")
+        else:
+            # Create new tag
+            tag_id = self.client.create(self.TAG_MODEL, {'name': tag_name})
+            logger.info(f"🏷️ Created new tag: {tag_name} (ID: {tag_id})")
+        
+        # Cache it
+        self._tag_cache[tag_name] = tag_id
+        
+        return tag_id
+    
+    def get_tag_ids(self, tag_names: List[str]) -> List[int]:
+        """
+        Get tag IDs for a list of tag names.
+        Creates any missing tags.
+        
+        Args:
+            tag_names: List of tag names
+            
+        Returns:
+            List of tag IDs
+        """
+        if not tag_names:
+            return []
+        
+        tag_ids = []
+        for name in tag_names:
+            if name:  # Skip empty names
+                tag_id = self.find_or_create(name)
+                tag_ids.append(tag_id)
+        
+        return tag_ids
+    
+    def get_tag_command(self, tag_names: List[str]) -> List:
+        """
+        Get Odoo Many2many command for setting tags.
+        
+        Args:
+            tag_names: List of tag names
+            
+        Returns:
+            Odoo command: [(6, 0, [tag_ids])]
+        """
+        tag_ids = self.get_tag_ids(tag_names)
+        return [(6, 0, tag_ids)]
+    
+    def add_tags_to_record(
+        self, 
+        model: str, 
+        record_id: int, 
+        tag_names: List[str],
+        tag_field: str = "tag_ids"
+    ) -> bool:
+        """
+        Add tags to an existing record.
+        
+        Args:
+            model: Odoo model (e.g., 'project.task')
+            record_id: Record ID to update
+            tag_names: List of tag names to add
+            tag_field: Field name for tags (default: 'tag_ids')
+            
+        Returns:
+            True if successful
+        """
+        tag_ids = self.get_tag_ids(tag_names)
+        
+        if not tag_ids:
+            logger.warning("No tags to add")
+            return True
+        
+        # Use command (4, id, 0) to add each tag without replacing existing
+        commands = [(4, tag_id, 0) for tag_id in tag_ids]
+        
+        return self.client.write(model, [record_id], {tag_field: commands})
+    
+    def list_all_tags(self) -> List[Dict[str, Any]]:
+        """
+        List all available tags.
+        
+        Returns:
+            List of tag records with 'id' and 'name'
+        """
+        return self.client.search_read(
+            self.TAG_MODEL, 
+            [], 
+            fields=['id', 'name', 'color']
+        )
+    
+    def clear_cache(self):
+        """Clear the tag cache."""
+        self._tag_cache.clear()
+        logger.info("Tag cache cleared")
+    
+    def preload_cache(self):
+        """Preload all tags into cache for performance."""
+        all_tags = self.list_all_tags()
+        for tag in all_tags:
+            self._tag_cache[tag['name']] = tag['id']
+        logger.info(f"Preloaded {len(all_tags)} tags into cache")
+
+
+============================================================
+FILE: openai_api/__init__.py
+============================================================
+"""
+Donna OpenAI API Module
+Provides OpenAI integrations for text, image, and PDF processing.
+"""
+from .custom_call import CustomCall
+from .custom_call_with_image import CustomCallWithImage
+from .custom_call_with_pdf import PDFInvoiceExtractor
+
+__all__ = [
+    "CustomCall",
+    "CustomCallWithImage", 
+    "PDFInvoiceExtractor"
+]
+
+
+============================================================
+FILE: openai_api/custom_call_with_image.py
+============================================================
+"""
+Donna OpenAI API - Custom Call With Image
+OpenAI API calls with image input (vision).
+"""
+from openai import OpenAI
+import logging
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+
+class CustomCallWithImage:
+    def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="OPENAI-API-KEY"):
+        self.key_vault_url = key_vault_url
+        self.secret_name = secret_name
+        self.api_key = None
+        self.client = None
+        self.initialize_api_key()
+
+    def initialize_api_key(self):
+        try:
+            credential = DefaultAzureCredential()
+            client = SecretClient(vault_url=self.key_vault_url, credential=credential)
+            self.api_key = client.get_secret(self.secret_name).value
+            self.client = OpenAI(api_key=self.api_key)
+            return True
+        except Exception as e:
+            logging.error(f"🔐 Failed to get API key: {str(e)}")
+            return False
+
+    def send_image_prompt(self, image_base64: str, prompt: str) -> str:
+        if not self.client:
+            logging.error("🚫 OpenAI client not initialized.")
+            return None
+    
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4.1",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/png;base64,{image_base64}"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": prompt
+                            }
+                        ]
+                    }
+                ],
+                temperature=1,
+                max_tokens=2048,
+                top_p=1
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            logging.error(f"🔥 Error calling OpenAI with image: {e}")
+            return None
+
+
+============================================================
+FILE: openai_api/custom_call_with_pdf.py
+============================================================
+"""
+Donna OpenAI API - PDF Invoice Extractor
+OpenAI Assistants API for PDF processing.
+"""
+import time
+import json
+import logging
+import re
+from openai import OpenAI
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+# --- Configuration ---
+ASSISTANT_ID = "asst_kEakqjQ22hzMVcuhToFvgMqq"
+
+
+class PDFInvoiceExtractor:
+    def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="OPENAI-API-KEY"):
+        self.key_vault_url = key_vault_url
+        self.secret_name = secret_name
+        self.api_key = None
+        self.client = None
+        self.assistant_id = ASSISTANT_ID
+        self.initialize_api_key()
+
+    def initialize_api_key(self):
+        """Fetch API key from Azure Key Vault and initialize OpenAI client."""
+        try:
+            credential = DefaultAzureCredential()
+            secret_client = SecretClient(vault_url=self.key_vault_url, credential=credential)
+            self.api_key = secret_client.get_secret(self.secret_name).value
+            self.client = OpenAI(api_key=self.api_key)
+            logging.info("✅ OpenAI client initialized")
+            return True
+        except Exception as e:
+            logging.error(f"🔐 Failed to initialize OpenAI client: {str(e)}")
+            return False
+
+    def extract_items_from_pdf(self, pdf_path: str, instructions: str = None, timeout: int = 90):
+        """Extract items from PDF using the reusable assistant.
+
+        Args:
+            pdf_path (str): Path to the PDF file.
+            instructions (str, optional): Custom extraction instructions. Defaults to None.
+            timeout (int, optional): Max seconds to wait for assistant response. Defaults to 90.
+        """
+
+        if not self.client:
+            logging.error("🚫 OpenAI client not initialized.")
+            return None
+
+        if not instructions:
+            instructions = (
+                "Your task is to extract *every* invoice item from the attached PDF without skipping or limiting the number of rows.\n"
+                "Do not stop after a fixed number of items (like 19). Keep extracting until ALL items from ALL invoice pages are included.\n\n"
+                "Output must strictly follow this JSON structure:\n"
+                "{\n"
+                "  \"Items\": [\n"
+                "    {\n"
+                "      \"InvoiceNumber\": \"string\",\n"
+                "      \"InvoiceDate\": \"dd-mm-yyyy\",\n"
+                "      \"Description\": \"string\",\n"
+                "      \"HSCode\": \"string\",\n"
+                "      \"Origin\": \"string\",\n"
+                "      \"NetWeight\": number,\n"
+                "      \"Quantity\": number,\n"
+                "      \"Amount\": number,\n"
+                "      \"Currency\": \"string\"\n"
+                "    }\n"
+                "  ]\n"
+                "}\n\n"
+                "Rules:\n"
+                "- Dates: dd-mm-yyyy\n"
+                "- Numbers: numeric only, dot as decimal separator\n"
+                "- Amount must include currency\n"
+                "- Extract and combine ALL invoice items from the entire PDF (no omissions, no truncation)\n"
+                "- If there are more than 50, 100, or even 1000 items, include them all\n"
+                "- Do not summarize or cut off the output\n"
+                "- Return ONLY valid JSON with the full list of items."
+            )
+
+        # --- Upload PDF ---
+        with open(pdf_path, "rb") as f:
+            uploaded_file = self.client.files.create(file=f, purpose="assistants")
+
+        # --- Create thread ---
+        thread = self.client.beta.threads.create()
+
+        # --- Send user message with PDF attachment ---
+        self.client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=instructions,
+            attachments=[{"file_id": uploaded_file.id, "tools": [{"type": "file_search"}]}]
+        )
+
+        # --- Run assistant ---
+        run = self.client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=self.assistant_id
+        )
+
+        # --- Poll until run is finished (with timeout) ---
+        start_time = time.time()
+        while run.status in ["queued", "in_progress"]:
+            if time.time() - start_time > timeout:
+                logging.error("⏳ Run timed out after %s seconds", timeout)
+                self.client.files.delete(uploaded_file.id)
+                return None
+            time.sleep(1)
+            run = self.client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+
+        # --- Get response ---
+        raw = None
+        if run.status == "completed":
+            messages = self.client.beta.threads.messages.list(thread_id=thread.id)
+            for message in messages.data:
+                if message.role == "assistant":
+                    raw = message.content[0].text.value
+                    logging.info("✅ Assistant response received")
+                    break
+        else:
+            logging.error(f"❌ Run failed with status: {run.status}")
+
+        # --- Cleanup (delete uploaded file) ---
+        self.client.files.delete(uploaded_file.id)
+
+        if not raw:
+            logging.error("❌ No response text available")
+            return None
+
+        # --- Extract JSON from response ---
+        if "```json" in raw:
+            match = re.search(r"```json\n(.*?)\n```", raw, re.DOTALL)
+            if match:
+                raw = match.group(1)
+
+        try:
+            data = json.loads(raw)
+        except Exception:
+            logging.error("❌ Failed to parse JSON")
+            return None
+
+        return data
+
+
+============================================================
+FILE: openai_api/custom_call.py
+============================================================
+"""
+Donna OpenAI API - Custom Call
+Basic text-to-text OpenAI API calls.
+"""
+from openai import OpenAI
+import logging
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+
+class CustomCall:
+    def __init__(self, key_vault_url="https://kv-functions-python.vault.azure.net", secret_name="OPENAI-API-KEY"):
+        self.key_vault_url = key_vault_url
+        self.secret_name = secret_name
+        self.api_key = None
+        self.client = None
+        self.initialize_api_key()
+
+    def initialize_api_key(self):
+        try:
+            credential = DefaultAzureCredential()
+            client = SecretClient(vault_url=self.key_vault_url, credential=credential)
+            self.api_key = client.get_secret(self.secret_name).value
+            self.client = OpenAI(api_key=self.api_key)
+            return True
+        except Exception as e:
+            logging.error(f"Failed to retrieve OpenAI API key: {str(e)}")
+            return False
+
+    def send_request(self, role, prompt_text):
+        if not self.api_key or not self.client:
+            logging.error("OpenAI API client is not initialized")
+            return None
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-2024-08-06",
+                messages=[
+                    {"role": "system", "content": role},
+                    {"role": "user", "content": prompt_text}
+                ],
+                temperature=0,
+                max_tokens=10000
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            logging.error(f"Error while calling OpenAI API: {e}")
+            return None
+
+
+============================================================
+FILE: schema/__init__.py
+============================================================
+"""
+Donna Schema Module
+Data models for email payloads, project context, and Odoo fields.
+"""
+from .email_payload import EmailPayload, Attachment
+from .project_context import ProjectContext
+from .odoo_fields import ProjectType, Tag, DataSource, Priority, OdooProject
+from .description_formatter import (
+    format_interface_description, 
+    format_automation_description,
+    get_subtasks_for_type,
+    SubTask
+)
+
+__all__ = [
+    "EmailPayload", 
+    "Attachment", 
+    "ProjectContext",
+    "ProjectType", 
+    "Tag", 
+    "DataSource", 
+    "Priority",
+    "OdooProject",
+    "format_interface_description",
+    "format_automation_description",
+    "get_subtasks_for_type",
+    "SubTask"
+]
+
+
+============================================================
+FILE: schema/description_formatter.py
+============================================================
+"""
+Donna Schema - Description Formatter
+Generates properly formatted Markdown descriptions for Odoo tasks.
+"""
+from typing import List, Optional, Dict, Any
+from dataclasses import dataclass
+
+
+@dataclass
+class SubTask:
+    """Standard sub-task definition."""
+    name: str
+    description: str
+    order: int
+
+
+# Standard Interface Project Sub-Tasks
+INTERFACE_SUBTASKS = [
+    SubTask("Create Logic App", "Set up the Logic App trigger and email processing flow", 1),
+    SubTask("Create Azure Function", "Develop the Azure Function for data processing", 2),
+    SubTask("Create Document Intelligence Model", "Configure Azure Document Intelligence for extraction", 3),
+    SubTask("Add LLM Layer", "Integrate OpenAI/LLM for intelligent extraction", 4),
+    SubTask("Create Excel Mapping", "Develop the Excel/data transformation logic", 5),
+    SubTask("Testing & Validation", "End-to-end testing with sample documents", 6),
+    SubTask("Deploy to Production", "Deploy and configure production environment", 7),
+]
+
+# Standard Automation Project Sub-Tasks
+AUTOMATION_SUBTASKS = [
+    SubTask("Design Workflow", "Document the automation workflow steps", 1),
+    SubTask("Create Logic App", "Build the Logic App automation", 2),
+    SubTask("Create Azure Function", "Develop supporting Azure Functions", 3),
+    SubTask("API Integration", "Connect to external APIs and services", 4),
+    SubTask("Error Handling", "Implement retry logic and error notifications", 5),
+    SubTask("Testing", "Test with real scenarios", 6),
+    SubTask("Deploy & Monitor", "Deploy and set up monitoring/alerts", 7),
+]
+
+
+def format_interface_description(
+    client: str,
+    flow_type: str,
+    summary: str,
+    from_address: str,
+    subject: str,
+    received_at: str,
+    attachments: List[str],
+    logic_app_name: Optional[str] = None,
+    azure_function_name: Optional[str] = None,
+    input_format: Optional[str] = None,
+    output_format: str = "Excel",
+    keywords: Optional[List[str]] = None,
+    extra_notes: Optional[str] = None
+) -> str:
+    """
+    Generate properly formatted HTML description for Odoo tasks.
+    """
+    # Build Logic App name
+    if not logic_app_name:
+        client_slug = client.lower().replace(' ', '-').replace('_', '-')
+        flow_slug = flow_type.lower().replace(' ', '-')[:20]
+        logic_app_name = f"la-dkm-{client_slug}-{flow_slug}"
+    
+    # Build Azure Function name
+    if not azure_function_name:
+        client_slug = client.lower().replace(' ', '-').replace('_', '-')
+        azure_function_name = f"func-dkm-{client_slug}"
+    
+    atts_str = ", ".join(attachments) if attachments else "None"
+    keywords_str = ", ".join(keywords) if keywords else "N/A"
+    
+    return f"""
+    <div>
+        <p><b>{summary}</b></p>
+        <hr/>
+        <h3>📧 Email Metadata</h3>
+        <table class="table table-bordered">
+            <tr><td><b>From</b></td><td>{from_address}</td></tr>
+            <tr><td><b>Subject</b></td><td>{subject}</td></tr>
+            <tr><td><b>Received</b></td><td>{received_at}</td></tr>
+            <tr><td><b>Attachments</b></td><td>{atts_str}</td></tr>
+        </table>
+        
+        <hr/>
+        <h3>🔧 Technical Setup</h3>
+        <p><b>Logic App:</b> <code>{logic_app_name}</code></p>
+        <p><b>Azure Function:</b> <code>{azure_function_name}</code></p>
+        
+        <hr/>
+        <h3>📊 Data Flow</h3>
+        <ul>
+            <li><b>Input:</b> {input_format or 'Email with attachments'}</li>
+            <li><b>Processing:</b> Azure Function + Document Intelligence</li>
+            <li><b>Output:</b> {output_format}</li>
+        </ul>
+        
+        <hr/>
+        <h3>🎯 Keywords</h3>
+        <p>{keywords_str}</p>
+        
+        <hr/>
+        <h3>✅ Standard Workflow Sub-Tasks created automatically.</h3>
+    </div>
+    """.strip()
+
+
+def format_automation_description(
+    client: str,
+    flow_type: str,
+    summary: str,
+    from_address: str,
+    subject: str,
+    received_at: str,
+    triggers: Optional[List[str]] = None,
+    actions: Optional[List[str]] = None,
+    integrations: Optional[List[str]] = None,
+    logic_app_name: Optional[str] = None,
+    azure_function_name: Optional[str] = None,
+    schedule: Optional[str] = None,
+    keywords: Optional[List[str]] = None
+) -> str:
+    """
+    Generate properly formatted HTML description for Automation tasks.
+    """
+    if not logic_app_name:
+        client_slug = client.lower().replace(' ', '-').replace('_', '-')
+        logic_app_name = f"la-dkm-{client_slug}-automation"
+    
+    if not azure_function_name:
+        client_slug = client.lower().replace(' ', '-').replace('_', '-')
+        azure_function_name = f"func-dkm-{client_slug}"
+    
+    triggers_html = "".join([f"<li>{t}</li>" for t in triggers]) if triggers else "<li>TBD</li>"
+    actions_html = "".join([f"<li>{a}</li>" for a in actions]) if actions else "<li>TBD</li>"
+    integrations_str = ", ".join(integrations) if integrations else "TBD"
+    keywords_str = ", ".join(keywords) if keywords else "N/A"
+    
+    return f"""
+    <div>
+        <p><b>{summary}</b></p>
+        <hr/>
+        <h3>📧 Email Metadata</h3>
+        <table class="table table-bordered">
+            <tr><td><b>From</b></td><td>{from_address}</td></tr>
+            <tr><td><b>Subject</b></td><td>{subject}</td></tr>
+            <tr><td><b>Received</b></td><td>{received_at}</td></tr>
+        </table>
+        
+        <hr/>
+        <h3>🔧 Technical Setup</h3>
+        <p><b>Logic App:</b> <code>{logic_app_name}</code></p>
+        <p><b>Azure Function:</b> <code>{azure_function_name}</code></p>
+        
+        <hr/>
+        <h3>⚡ Automation Details</h3>
+        <p><b>Triggers:</b></p>
+        <ul>{triggers_html}</ul>
+        
+        <p><b>Actions:</b></p>
+        <ul>{actions_html}</ul>
+        
+        <p><b>Integrations:</b> {integrations_str}</p>
+        <p><b>Schedule:</b> {schedule or 'Event-driven'}</p>
+        
+        <hr/>
+        <h3>🎯 Keywords</h3>
+        <p>{keywords_str}</p>
+        
+        <hr/>
+        <h3>✅ Standard Workflow Sub-Tasks created automatically.</h3>
+    </div>
+    """.strip()
+
+
+def get_subtasks_for_type(project_type: str) -> List[SubTask]:
+    """Get standard sub-tasks for a project type."""
+    if project_type == "AUTOMATION":
+        return AUTOMATION_SUBTASKS
+    return INTERFACE_SUBTASKS
+
+
+============================================================
+FILE: schema/email_payload.py
+============================================================
+"""
+Donna Schema - Email Payload
+Data model for incoming email from Logic Apps.
+"""
+from dataclasses import dataclass, field
+from typing import List, Optional, Dict, Any
+import base64
+
+
+@dataclass
+class Attachment:
+    """Represents an email attachment."""
+    name: str
+    content_type: str
+    content_bytes: Optional[str] = None  # Base64 encoded
+    size: int = 0
+    
+    @property
+    def is_pdf(self) -> bool:
+        """Check if attachment is a PDF."""
+        return 'pdf' in self.content_type.lower() or self.name.lower().endswith('.pdf')
+    
+    @property
+    def is_excel(self) -> bool:
+        """Check if attachment is an Excel file."""
+        excel_types = ['spreadsheet', 'excel', 'xlsx', 'xls', 'csv']
+        return any(t in self.content_type.lower() for t in excel_types) or \
+               any(self.name.lower().endswith(ext) for ext in ['.xlsx', '.xls', '.csv'])
+    
+    @property
+    def is_image(self) -> bool:
+        """Check if attachment is an image."""
+        return 'image' in self.content_type.lower()
+    
+    def get_bytes(self) -> Optional[bytes]:
+        """Decode Base64 content to bytes."""
+        if self.content_bytes:
+            return base64.b64decode(self.content_bytes)
+        return None
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Attachment":
+        """Create Attachment from dictionary."""
+        return cls(
+            name=data.get('name', 'unknown'),
+            content_type=data.get('contentType', data.get('content_type', 'application/octet-stream')),
+            content_bytes=data.get('contentBytes', data.get('content_bytes')),
+            size=data.get('size', 0)
+        )
+
+
+@dataclass
+class EmailPayload:
+    """
+    Full email data model matching Logic Apps payload.
+    
+    Expected JSON from Logic App:
+    {
+        "subject": "...",
+        "from": "...",
+        "body": "...",
+        "bodyPreview": "...",
+        "receivedDateTime": "...",
+        "importance": "normal",
+        "hasAttachments": true,
+        "attachments": [{"name": "...", "contentType": "...", "contentBytes": "..."}]
+    }
+    """
+    subject: str
+    from_address: str
+    body: str
+    received_at: str
+    attachments: List[Attachment] = field(default_factory=list)
+    importance: str = "normal"
+    body_preview: str = ""
+    to_address: str = ""
+    
+    @property
+    def has_attachments(self) -> bool:
+        """Check if email has any attachments."""
+        return len(self.attachments) > 0
+    
+    @property
+    def has_pdf(self) -> bool:
+        """Check if email has PDF attachments."""
+        return any(a.is_pdf for a in self.attachments)
+    
+    @property
+    def has_excel(self) -> bool:
+        """Check if email has Excel attachments."""
+        return any(a.is_excel for a in self.attachments)
+    
+    @property
+    def attachment_names(self) -> List[str]:
+        """Get list of attachment names."""
+        return [a.name for a in self.attachments]
+    
+    @property
+    def attachment_types(self) -> List[str]:
+        """Get unique list of attachment types (PDF, Excel, Image, Other)."""
+        types = set()
+        for a in self.attachments:
+            if a.is_pdf:
+                types.add("PDF")
+            elif a.is_excel:
+                types.add("Excel")
+            elif a.is_image:
+                types.add("Image")
+            else:
+                types.add("Other")
+        return list(types)
+    
+    def get_enriched_text(self) -> str:
+        """
+        Create enriched text representation for LLM processing.
+        Includes all relevant email metadata.
+        """
+        att_info = ', '.join(self.attachment_names) if self.attachments else 'None'
+        
+        return f"""
+FROM: {self.from_address}
+TO: {self.to_address}
+SUBJECT: {self.subject}
+RECEIVED: {self.received_at}
+IMPORTANCE: {self.importance}
+HAS ATTACHMENTS: {self.has_attachments}
+ATTACHMENT FILES: {att_info}
+ATTACHMENT TYPES: {', '.join(self.attachment_types) if self.attachment_types else 'None'}
+
+EMAIL BODY:
+{self.body}
+""".strip()
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "EmailPayload":
+        """
+        Create EmailPayload from Logic Apps JSON.
+        Handles both camelCase and snake_case field names.
+        """
+        # Parse attachments
+        raw_attachments = data.get('attachments', [])
+        attachments = []
+        
+        if isinstance(raw_attachments, list):
+            for att in raw_attachments:
+                if isinstance(att, dict):
+                    attachments.append(Attachment.from_dict(att))
+                elif isinstance(att, str):
+                    # Simple string attachment name
+                    attachments.append(Attachment(name=att, content_type='application/octet-stream'))
+        
+        return cls(
+            subject=data.get('subject', ''),
+            from_address=data.get('from', data.get('from_address', 'Unknown')),
+            to_address=data.get('to', data.get('to_address', '')),
+            body=data.get('body', data.get('email_body', '')),
+            body_preview=data.get('bodyPreview', data.get('body_preview', '')),
+            received_at=data.get('receivedDateTime', data.get('received_at', '')),
+            importance=data.get('importance', 'normal'),
+            attachments=attachments
+        )
+    
+    @classmethod
+    def from_request(cls, json_body: Dict[str, Any]) -> "EmailPayload":
+        """Alias for from_dict for cleaner API."""
+        return cls.from_dict(json_body)
+
+
+============================================================
+FILE: schema/odoo_fields.py
+============================================================
+"""
+Donna Schema - Odoo Fields
+Enum definitions matching Odoo project fields.
+"""
+from enum import Enum
+from typing import List
+
+
+class ProjectType(Enum):
+    """
+    Project type classification.
+    Determines which handler processes the request.
+    """
+    INTERFACE = "INTERFACE"      # Logistics/data mapping projects
+    AUTOMATION = "AUTOMATION"    # Process automation/scripting projects
+    UNKNOWN = "UNKNOWN"          # Fallback for unclassified
+
+
+class Tag(Enum):
+    """
+    Standard Odoo project tags.
+    Client tags are created dynamically by AI detection.
+    """
+    INTERFACE = "INTERFACE"
+    AUTOMATION = "AUTOMATION"
+    URGENT = "Urgent"
+    
+    @classmethod
+    def get_value(cls, name: str) -> str:
+        """Get tag value by name, or return the name itself for dynamic tags."""
+        try:
+            return cls[name.upper().replace(' ', '_')].value
+        except KeyError:
+            return name  # Return as-is for dynamic client tags
+
+
+class DataSource(Enum):
+    """
+    Data source types for Odoo tasks.
+    Maps to x_data_sources or similar custom field.
+    """
+    EXCEL = "Excel"
+    EMAIL = "Email"
+    PDF = "PDF"
+    API = "API"
+    SFTP = "SFTP"
+    
+    @classmethod
+    def from_attachment_types(cls, types: List[str]) -> List["DataSource"]:
+        """Convert attachment type strings to DataSource enums."""
+        mapping = {
+            "PDF": cls.PDF,
+            "Excel": cls.EXCEL,
+            "Image": None,  # Images don't map to a data source
+            "Other": None
+        }
+        sources = [mapping.get(t) for t in types if mapping.get(t)]
+        sources.append(cls.EMAIL)  # Always include EMAIL as source
+        return list(set(sources))
+
+
+class Priority(Enum):
+    """
+    Task priority levels.
+    Maps to Odoo's priority field (usually 0-3).
+    """
+    LOW = "0"
+    MEDIUM = "1"
+    HIGH = "2"
+    CRITICAL = "3"
+    
+    @classmethod
+    def from_importance(cls, importance: str) -> "Priority":
+        """Map email importance to priority."""
+        mapping = {
+            "low": cls.LOW,
+            "normal": cls.MEDIUM,
+            "high": cls.HIGH,
+            "urgent": cls.CRITICAL
+        }
+        return mapping.get(importance.lower(), cls.MEDIUM)
+    
+    @classmethod
+    def from_string(cls, value: str) -> "Priority":
+        """Parse priority from string."""
+        mapping = {
+            "low": cls.LOW,
+            "medium": cls.MEDIUM,
+            "high": cls.HIGH,
+            "critical": cls.CRITICAL
+        }
+        return mapping.get(value.lower(), cls.MEDIUM)
+
+
+class OdooProject(Enum):
+    """
+    Known Odoo projects.
+    """
+    INTERFACE = "Interface"
+    AUTOMATION = "Automation"
+    
+    @classmethod
+    def from_project_type(cls, project_type: ProjectType) -> "OdooProject":
+        """Map ProjectType to OdooProject."""
+        mapping = {
+            ProjectType.INTERFACE: cls.INTERFACE,
+            ProjectType.AUTOMATION: cls.AUTOMATION,
+            ProjectType.UNKNOWN: cls.INTERFACE  # Default fallback
+        }
+        return mapping.get(project_type, cls.INTERFACE)
+
+
+============================================================
+FILE: schema/project_context.py
+============================================================
+"""
+Donna Schema - Project Context
+Enriched context for project creation after LLM processing.
+"""
+from dataclasses import dataclass, field
+from typing import List, Dict, Any, Optional
+
+from .email_payload import EmailPayload
+from .odoo_fields import ProjectType, DataSource, Priority
+
+
+@dataclass
+class ExtractedData:
+    """
+    Data extracted by LLM from email/attachments.
+    """
+    client: str
+    flow_type: str
+    keywords: List[str] = field(default_factory=list)
+    suggested_task_name: Optional[str] = None
+    suggested_description: Optional[str] = None
+    logic_app_name: Optional[str] = None
+    azure_function_name: Optional[str] = None
+    raw_response: Optional[Dict[str, Any]] = None
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "ExtractedData":
+        """Create from LLM response dictionary."""
+        return cls(
+            client=data.get('client', 'Unknown'),
+            flow_type=data.get('flow_type', 'Unknown'),
+            keywords=data.get('keywords', []),
+            suggested_task_name=data.get('task_name'),
+            suggested_description=data.get('description'),
+            logic_app_name=data.get('logic_app'),
+            azure_function_name=data.get('azure_function'),
+            raw_response=data
+        )
+
+    @property
+    def triggers(self) -> List[str]:
+        return self.raw_response.get('triggers', []) if self.raw_response else []
+    
+    @property
+    def actions(self) -> List[str]:
+        return self.raw_response.get('actions', []) if self.raw_response else []
+    
+    @property
+    def integrations(self) -> List[str]:
+        return self.raw_response.get('integrations', []) if self.raw_response else []
+    
+    @property
+    def schedule(self) -> Optional[str]:
+        return self.raw_response.get('schedule') if self.raw_response else None
+        
+    @property
+    def input_format(self) -> Optional[str]:
+        return self.raw_response.get('input_format') if self.raw_response else None
+        
+    @property
+    def output_format(self) -> str:
+        return self.raw_response.get('output_format', 'Excel') if self.raw_response else 'Excel'
+        
+    @property
+    def logic_app(self) -> Optional[str]:
+        return self.logic_app_name
+        
+    @property
+    def azure_function(self) -> Optional[str]:
+        return self.azure_function_name
+
+
+@dataclass
+class ProjectContext:
+    """
+    Complete context for creating an Odoo project/task.
+    Built by the Brain after processing.
+    """
+    email: EmailPayload
+    extracted_data: ExtractedData
+    project_type: ProjectType
+    tags: List[str] = field(default_factory=list)
+    data_sources: List[DataSource] = field(default_factory=list)
+    priority: Priority = Priority.MEDIUM
+    
+    @property
+    def task_name(self) -> str:
+        """Generate task name from extracted data."""
+        if self.extracted_data.suggested_task_name:
+            return self.extracted_data.suggested_task_name
+        
+        client = self.extracted_data.client
+        flow = self.extracted_data.flow_type
+        return f"{client} – {flow}"
+    
+    @property
+    def task_description(self) -> str:
+        """Generate task description."""
+        if self.extracted_data.suggested_description:
+            base = self.extracted_data.suggested_description
+        else:
+            base = self._generate_description()
+        
+        # Append email metadata
+        metadata = f"""
+---
+**Email Metadata:**
+- From: {self.email.from_address}
+- Subject: {self.email.subject}
+- Received: {self.email.received_at}
+- Attachments: {', '.join(self.email.attachment_names) if self.email.attachment_names else 'None'}
+"""
+        return f"{base}\n{metadata}"
+    
+    def _generate_description(self) -> str:
+        """Generate description from extracted data."""
+        data = self.extracted_data
+        att_types = ', '.join(self.email.attachment_types) if self.email.attachment_types else 'None'
+        
+        return f"""
+**Project Type:** {self.project_type.value}
+
+**Client:** {data.client}
+**Flow Type:** {data.flow_type}
+
+**Data Sources:** {', '.join([ds.value for ds in self.data_sources])}
+**Attachment Types:** {att_types}
+
+**Logic App:** {data.logic_app_name or 'To be created'}
+**Azure Function:** {data.azure_function_name or 'To be created'}
+""".strip()
+    
+    @property
+    def odoo_project_name(self) -> str:
+        """Get the Odoo project name based on project type."""
+        from .odoo_fields import OdooProject
+        return OdooProject.from_project_type(self.project_type).value
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "project_type": self.project_type.value,
+            "task_name": self.task_name,
+            "task_description": self.task_description,
+            "tags": self.tags,
+            "data_sources": [ds.value for ds in self.data_sources],
+            "priority": self.priority.value,
+            "client": self.extracted_data.client,
+            "flow_type": self.extracted_data.flow_type,
+            "email_from": self.email.from_address,
+            "email_subject": self.email.subject
+        }
+
+
+============================================================
+FILE: triage/__init__.py
+============================================================
+"""
+Donna Triage Module
+Classification and attachment analysis for smart routing.
+"""
+from .classifier import ProjectClassifier
+from .attachment_analyzer import AttachmentAnalyzer, ProcessingStrategy
+
+__all__ = ["ProjectClassifier", "AttachmentAnalyzer", "ProcessingStrategy"]
+
+
+============================================================
+FILE: triage/attachment_analyzer.py
+============================================================
+"""
+Donna Triage - Attachment Analyzer
+Decides which AI processor to use based on attachments.
+"""
+from enum import Enum
+from typing import TYPE_CHECKING
+import logging
+
+if TYPE_CHECKING:
+    from ..schema.email_payload import EmailPayload
+
+logger = logging.getLogger(__name__)
+
+
+class ProcessingStrategy(Enum):
+    """
+    Processing strategy based on attachment analysis.
+    Determines which AI tool to use.
+    """
+    TEXT_ONLY = "text_only"      # Use CustomCall for text-only processing
+    PDF = "pdf"                  # Use CustomCallWithPdf for PDF analysis
+    EXCEL = "excel"              # Use Excel processor
+    MIXED = "mixed"              # Multiple attachment types - process each
+
+
+class AttachmentAnalyzer:
+    """
+    Analyzes email attachments to determine the optimal processing strategy.
+    
+    Decision Logic:
+    ┌─────────────────┬────────────────────┐
+    │ Scenario        │ Strategy           │
+    ├─────────────────┼────────────────────┤
+    │ No attachments  │ TEXT_ONLY          │
+    │ Only PDFs       │ PDF                │
+    │ Only Excel      │ EXCEL              │
+    │ PDF + Excel     │ MIXED              │
+    │ Other files     │ TEXT_ONLY          │
+    └─────────────────┴────────────────────┘
+    """
+    
+    def analyze(self, email: "EmailPayload") -> ProcessingStrategy:
+        """
+        Analyze email attachments and return processing strategy.
+        
+        Args:
+            email: The email payload to analyze
+            
+        Returns:
+            ProcessingStrategy indicating which processor to use
+        """
+        if not email.has_attachments:
+            logger.info("📧 No attachments detected -> TEXT_ONLY strategy")
+            return ProcessingStrategy.TEXT_ONLY
+        
+        has_pdf = email.has_pdf
+        has_excel = email.has_excel
+        
+        logger.info(f"📎 Attachments: {email.attachment_names}")
+        logger.info(f"   PDF: {has_pdf}, Excel: {has_excel}")
+        
+        if has_pdf and has_excel:
+            logger.info("📊 Mixed attachments -> MIXED strategy")
+            return ProcessingStrategy.MIXED
+        
+        if has_pdf:
+            logger.info("📄 PDF detected -> PDF strategy")
+            return ProcessingStrategy.PDF
+        
+        if has_excel:
+            logger.info("📗 Excel detected -> EXCEL strategy")
+            return ProcessingStrategy.EXCEL
+        
+        # Other attachment types (images, etc.) - fall back to text
+        logger.info("📦 Other attachments -> TEXT_ONLY strategy")
+        return ProcessingStrategy.TEXT_ONLY
+    
+    def should_use_pdf_processor(self, email: "EmailPayload") -> bool:
+        """Helper to check if PDF processor should be used."""
+        strategy = self.analyze(email)
+        return strategy in [ProcessingStrategy.PDF, ProcessingStrategy.MIXED]
+    
+    def should_use_excel_processor(self, email: "EmailPayload") -> bool:
+        """Helper to check if Excel processor should be used."""
+        strategy = self.analyze(email)
+        return strategy in [ProcessingStrategy.EXCEL, ProcessingStrategy.MIXED]
+    
+    def get_processing_summary(self, email: "EmailPayload") -> dict:
+        """
+        Get a summary of the processing decision.
+        Useful for logging and debugging.
+        """
+        strategy = self.analyze(email)
+        
+        return {
+            "strategy": strategy.value,
+            "has_attachments": email.has_attachments,
+            "attachment_count": len(email.attachments),
+            "attachment_names": email.attachment_names,
+            "attachment_types": email.attachment_types,
+            "use_pdf_processor": strategy in [ProcessingStrategy.PDF, ProcessingStrategy.MIXED],
+            "use_excel_processor": strategy in [ProcessingStrategy.EXCEL, ProcessingStrategy.MIXED],
+            "use_text_processor": strategy == ProcessingStrategy.TEXT_ONLY
+        }
+
+
+============================================================
+FILE: triage/classifier.py
+============================================================
+"""
+Donna Triage - Project Classifier
+LLM-powered classification to determine project type.
+"""
+import json
+import logging
+import os
+from typing import TYPE_CHECKING, Dict, Any, Optional
+
+if TYPE_CHECKING:
+    from ..schema.email_payload import EmailPayload
+    from ..schema.project_context import ExtractedData
+
+from ..schema.odoo_fields import ProjectType
+
+logger = logging.getLogger(__name__)
+
+# Classification prompt
+CLASSIFIER_PROMPT = """You are a project classifier for a logistics software company.
+Analyze the email and determine the project type.
+
+PROJECT TYPES:
+1. INTERFACE - Data mapping/integration projects:
+   - Excel template processing
+   - Invoice/document parsing
+   - Data transformation (Excel → Custom format)
+   - Logistics document handling
+   - File format conversions
+   
+2. AUTOMATION - Process automation projects:
+   - Script development
+   - Workflow automation
+   - API integrations
+   - Scheduled tasks
+   - Code/development requests
+
+CLASSIFICATION RULES:
+- If email mentions Excel, templates, invoices, data mapping → INTERFACE
+- If email mentions scripts, automation, workflows, code → AUTOMATION
+- If unclear, default to INTERFACE (most common)
+
+OUTPUT FORMAT (JSON only):
+{
+    "project_type": "INTERFACE" or "AUTOMATION",
+    "confidence": 0.0-1.0,
+    "reasoning": "Brief explanation"
+}
+
+Return ONLY valid JSON, no markdown.
+"""
+
+
+class ProjectClassifier:
+    """
+    Uses LLM to classify emails into project types.
+    
+    The classifier examines:
+    - Email subject and body keywords
+    - Attachment types
+    - Sender patterns
+    - Extracted data keywords
+    """
+    
+    def __init__(self, llm_client=None):
+        """
+        Initialize classifier.
+        
+        Args:
+            llm_client: Optional LLM client. If None, will use CustomCall.
+        """
+        self.llm = llm_client
+        self._init_llm()
+    
+    def _init_llm(self):
+        """Initialize LLM client if not provided."""
+        if self.llm is None:
+            try:
+                from ..openai_api import CustomCall
+                self.llm = CustomCall()
+            except Exception as e:
+                logger.error(f"Failed to initialize LLM client: {e}")
+                self.llm = None
+    
+    def classify(
+        self, 
+        email: "EmailPayload", 
+        extracted: Optional["ExtractedData"] = None
+    ) -> ProjectType:
+        """
+        Classify email into a project type.
+        
+        Args:
+            email: The email payload
+            extracted: Optional pre-extracted data from LLM
+            
+        Returns:
+            ProjectType enum value
+        """
+        # Try LLM classification first
+        if self.llm:
+            try:
+                return self._classify_with_llm(email, extracted)
+            except Exception as e:
+                logger.warning(f"LLM classification failed, using rules: {e}")
+        
+        # Fallback to rule-based classification
+        return self._classify_with_rules(email, extracted)
+    
+    def _classify_with_llm(
+        self, 
+        email: "EmailPayload", 
+        extracted: Optional["ExtractedData"] = None
+    ) -> ProjectType:
+        """Use LLM for classification."""
+        context = self._build_context(email, extracted)
+        
+        response = self.llm.send_request(CLASSIFIER_PROMPT, context)
+        
+        if not response:
+            raise Exception("LLM returned empty response")
+        
+        # Parse response
+        cleaned = response.replace("```json", "").replace("```", "").strip()
+        data = json.loads(cleaned)
+        
+        project_type_str = data.get("project_type", "INTERFACE").upper()
+        confidence = data.get("confidence", 0.5)
+        reasoning = data.get("reasoning", "")
+        
+        logger.info(f"🎯 Classification: {project_type_str} (confidence: {confidence})")
+        logger.info(f"   Reasoning: {reasoning}")
+        
+        try:
+            return ProjectType[project_type_str]
+        except KeyError:
+            logger.warning(f"Unknown project type: {project_type_str}, defaulting to INTERFACE")
+            return ProjectType.INTERFACE
+    
+    def _classify_with_rules(
+        self, 
+        email: "EmailPayload", 
+        extracted: Optional["ExtractedData"] = None
+    ) -> ProjectType:
+        """Rule-based fallback classification."""
+        text = f"{email.subject} {email.body}".lower()
+        
+        # INTERFACE keywords
+        interface_keywords = [
+            'excel', 'template', 'invoice', 'mapping', 'data',
+            'logistics', 'document', 'pdf', 'format', 'conversion',
+            'import', 'export', 'spreadsheet', 'csv'
+        ]
+        
+        # AUTOMATION keywords
+        automation_keywords = [
+            'script', 'automate', 'automation', 'workflow', 'code',
+            'develop', 'api', 'integrate', 'schedule', 'cron',
+            'function', 'trigger', 'logic app'
+        ]
+        
+        interface_score = sum(1 for kw in interface_keywords if kw in text)
+        automation_score = sum(1 for kw in automation_keywords if kw in text)
+        
+        # Attachment type also influences classification
+        if email.has_excel or email.has_pdf:
+            interface_score += 2
+        
+        logger.info(f"🔍 Rule-based scores - INTERFACE: {interface_score}, AUTOMATION: {automation_score}")
+        
+        if automation_score > interface_score:
+            return ProjectType.AUTOMATION
+        
+        return ProjectType.INTERFACE  # Default
+    
+    def _build_context(
+        self, 
+        email: "EmailPayload", 
+        extracted: Optional["ExtractedData"] = None
+    ) -> str:
+        """Build context string for LLM."""
+        keywords = []
+        if extracted and extracted.keywords:
+            keywords = extracted.keywords
+        
+        return f"""
+Subject: {email.subject}
+From: {email.from_address}
+Has PDF: {email.has_pdf}
+Has Excel: {email.has_excel}
+Attachment Types: {', '.join(email.attachment_types)}
+Keywords: {', '.join(keywords) if keywords else 'None'}
+
+Body Preview:
+{email.body[:1000]}
+""".strip()
+
+
+============================================================
+FILE: __init__.py
+============================================================
+"""
+Donna AI Agent - Azure Function Entry Point
+
+An intelligent assistant that processes emails from Logic Apps,
+classifies projects, and creates Odoo tasks with proper metadata.
+
+Features:
+- Smart attachment analysis (text-only vs PDF vs Excel)
+- Project type classification (INTERFACE vs AUTOMATION)
+- Automatic tag and data source assignment
+- Odoo integration with full metadata
+
+Trigger: HTTP POST from Logic App
+"""
+import azure.functions as func
+import logging
+import json
+import sys
+import os
+
+# Add paths for imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from Donna.schema.email_payload import EmailPayload
+from Donna.core.brain import DonnaBrain
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Suppress noisy logs
+logging.getLogger("azure").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+
+async def main(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Azure Function entry point.
+    Donna receives an email, thinks, and acts.
+    
+    Expected JSON payload from Logic Apps:
+    {
+        "subject": "New Project: ACME Invoice Processing",
+        "from": "luc@company.com",
+        "to": "projects@company.com",
+        "body": "Email body text...",
+        "bodyPreview": "First 100 chars preview...",
+        "receivedDateTime": "2026-01-20T15:00:00Z",
+        "importance": "high",
+        "hasAttachments": true,
+        "attachments": [
+            {
+                "name": "invoice.pdf",
+                "contentType": "application/pdf",
+                "contentBytes": "base64...",
+                "size": 12345
+            }
+        ]
+    }
+    """
+    logger.info('🤖 Donna: Processing incoming email request')
+    
+    try:
+        # Parse request body
+        try:
+            body = req.get_json()
+        except ValueError:
+            logger.error("Invalid JSON in request body")
+            return func.HttpResponse(
+                body=json.dumps({"error": "Invalid JSON format"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+        
+        # Parse email payload
+        try:
+            email = EmailPayload.from_request(body)
+        except Exception as e:
+            logger.error(f"Failed to parse email payload: {e}")
+            return func.HttpResponse(
+                body=json.dumps({"error": f"Invalid email payload: {str(e)}"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+        
+        # Validate required fields
+        if not email.body and not email.body_preview:
+            logger.warning("No email body provided")
+            return func.HttpResponse(
+                body=json.dumps({"error": "Email body is required"}),
+                status_code=400,
+                mimetype="application/json"
+            )
+        
+        # Log basic info
+        logger.info(f"📧 From: {email.from_address}")
+        logger.info(f"📋 Subject: {email.subject}")
+        logger.info(f"📎 Attachments: {len(email.attachments)}")
+        
+        # Initialize Donna's Brain
+        brain = DonnaBrain()
+        
+        # Step 1: Process (Think)
+        context = brain.process(email)
+        
+        # Step 2: Execute (Act)
+        result = brain.execute(context)
+        
+        # Build response
+        if result.success:
+            response_data = {
+                "success": True,
+                "task_id": result.task_id,
+                "project_id": result.project_id,
+                "project_name": result.project_name,
+                "task_name": result.task_name,
+                "context": context.to_dict(),
+                "email_metadata": {
+                    "from": email.from_address,
+                    "subject": email.subject,
+                    "received": email.received_at,
+                    "attachment_count": len(email.attachments),
+                    "attachment_types": email.attachment_types
+                }
+            }
+            
+            logger.info(f"✅ Task created: {result.task_name} (ID: {result.task_id})")
+            
+            return func.HttpResponse(
+                body=json.dumps(response_data),
+                status_code=200,
+                mimetype="application/json"
+            )
+        else:
+            logger.error(f"❌ Task creation failed: {result.error}")
+            
+            return func.HttpResponse(
+                body=json.dumps({
+                    "success": False,
+                    "error": result.error,
+                    "task_name": result.task_name
+                }),
+                status_code=500,
+                mimetype="application/json"
+            )
+    
+    except Exception as e:
+        logger.error(f"❌ Unhandled exception: {e}", exc_info=True)
+        return func.HttpResponse(
+            body=json.dumps({
+                "error": "Internal server error",
+                "details": str(e)
+            }),
+            status_code=500,
+            mimetype="application/json"
+        )
+
+
+============================================================
+FILE: config.py
+============================================================
+"""
+Donna AI Agent - Configuration
+Centralized configuration for Odoo, OpenAI, and other services.
+"""
+import os
+
+
+class Config:
+    # Odoo Settings
+    ODOO_URL = os.getenv("ODOO_URL", "https://dkm-customs.odoo.com")
+    ODOO_DB = os.getenv("ODOO_DB", "vva-onniti-dkm-main-20654023")
+    ODOO_USERNAME = os.getenv("ODOO_USERNAME", "anas.benabbou@dkm-customs.com")
+    ODOO_API_KEY = os.getenv("ODOO_API_KEY", "d3f959e2b9dcca8d7180b95c8d673398b8b6040c")
+
+
+============================================================
+FILE: function.json
+============================================================
+{
+    "scriptFile": "__init__.py",
+    "bindings": [
+        {
+            "authLevel": "function",
+            "type": "httpTrigger",
+            "direction": "in",
+            "name": "req",
+            "methods": [
+                "post"
+            ]
+        },
+        {
+            "type": "http",
+            "direction": "out",
+            "name": "$return"
+        }
+    ]
+}
+
+============================================================
+FILE: OVERVIEW.md
+============================================================
+# 🤖 Donna – AI Project Intake Agent
+
+**Donna** is an intelligent Azure Function agent designed to streamline the project intake process for DKM Customs. She acts as the first line of defense for the development team, turning unstructured email requests into structured, actionable tasks in Odoo.
+
+---
+
+## 🚀 Mission
+To eliminate manual data entry and triage for new project requests, ensuring that developers have all necessary context, files, and initial technical specifications ready the moment a task is created.
+
+---
+
+## 🧠 Core Capabilities
+
+### 1. **Intelligent Triage & Classification**
+Donna analyzes incoming emails and attachments to determine the nature of the request:
+*   **Interface Projects**: Logistics data mapping, Excel conversions, innovative interfaces.
+*   **Automation Projects**: Scripts, API integrations, workflows, scheduled tasks.
+*   **Strategy Selection**: Automatically decides whether to process based on email text, PDF content (using OCR/Vision), or Excel structural analysis.
+
+### 2. **Smart Extraction (OpenAI Integrated)**
+Using advanced LLMs (GPT-4o), Donna extracts critical metadata:
+*   **Client Identification**: (e.g., Bleckman, Umicore).
+*   **Flow Type**: (e.g., "Import Release", "Packing List Interface").
+*   **Technical Specs**: Suggests naming conventions for Logic Apps and Azure Functions (`la-dkm-client-flow`, `func-dkm-client`).
+*   **Keywords & Priority**: Detects urgency and relevant search terms.
+
+### 3. **Structured Odoo Task Creation**
+Donna talks directly to the Odoo ERP via XML-RPC:
+*   **Project Routing**: Places task in the correct Odoo Project ("Interface" or "Automation").
+*   **Dynamic Tagging**: Applies strict tags for quick filtering:
+    *   `INTERFACE` or `AUTOMATION`
+    *   Subsidiary: `VanPoppel`, `Vermaas`, or defaults to `DKM`.
+*   **Rich HTML Descriptions**: format descriptions with tables containing:
+    *   Email Metadata (Sender, Time).
+    *   Data Flow Diagram (Input → Process → Output).
+    *   Technical Setup placehodlers.
+
+### 4. **Automated Setup**
+*   **Standard Sub-Tasks**: Instantly creates a "Definition of Done" checklist (e.g., "Create Logic App", "Test", "Deploy").
+*   **Attachment Handling**: Decodes and uploads email attachments (PDF/Excel) directly to the Odoo task.
+
+---
+
+## 🛠️ Workflow Architecture
+
+```mermaid
+graph TD
+    A[Incoming Email via Logic App] -->|JSON Payload| B(Donna Azure Function)
+    
+    subgraph "Donna Brain 🧠"
+        B --> C{Attachment Analyzer}
+        C -->|PDFs| D[PDF Processor (Assistants API)]
+        C -->|Excel/None| E[Text Processor (GPT-4o)]
+        
+        D & E --> F[Context Builder]
+        F --> G[Project Classifier]
+    end
+    
+    subgraph "Execution ⚙️"
+        G -->|Interface| H[Interface Handler]
+        G -->|Automation| I[Automation Handler]
+        
+        H & I --> J[Odoo Project Service]
+    end
+    
+    subgraph "Odoo ERP 📦"
+        J --> K[Create Main Task]
+        J --> L[Set Tags & Priority]
+        J --> M[Create Sub-Tasks]
+        J --> N[Upload Attachments]
+    end
+```
+
+---
+
+## 📂 Project Structure
+
+```
+Donna/
+├── __init__.py          # Azure Function Entry Point
+├── config.py            # Credentials & Configuration
+├── core/                # Brain & Routing Logic
+│   ├── brain.py         # The Orchestrator
+│   └── router.py        # Handler Selection
+├── ai/                  # Intelligence Layer
+│   ├── prompts.py       # Centralized Prompt Management
+│   └── text_processor.py
+├── openai_api/          # OpenAI Wrappers
+│   ├── custom_call.py   # Text Chat
+│   └── custom_call_with_pdf.py # Assistants API
+├── handlers/            # Business Logic
+│   ├── interface_handler.py
+│   └── automation_handler.py
+├── odoo/                # Odoo Integration
+│   ├── client.py        # XML-RPC Client
+│   └── project_service.py # CRUD Operations
+└── schema/              # Data Models
+    ├── email_payload.py
+    └── odoo_fields.py
+```
+
+---
+
+## 🔍 Example Output
+
+**Task:** `Bleckman – Interface for Packing Lists`  
+**Project:** `Interface`  
+**Tags:** `INTERFACE`, `DKM`
+
+**Description:**
+> **Develop a new interface for Bleckman's packing lists...**
+>
+> **Technical Setup**
+> *   Logic App: `la-dkm-bleckman-interface`
+> *   Function: `func-dkm-bleckman`
+>
+> **Data Flow**
+> *   Input: Email (PDF/Excel)
+> *   Output: Custom XML
+>
+> **Sub-Tasks**
+> *   [ ] Create Logic App
+> *   [ ] Create Azure Function
+>   ...
+
+---
+
+## 🔐 Security & Tech Stack
+*   **Language**: Python 3.10+
+*   **Host**: Azure Functions (Consumption Plan)
+*   **AI**: OpenAI GPT-4o, OpenAI Assistants API
+*   **Secrets**: Azure Key Vault (Managed Identity)
+*   **Integration**: Odoo XML-RPC
