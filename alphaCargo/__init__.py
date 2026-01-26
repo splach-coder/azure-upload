@@ -3,273 +3,233 @@ import logging
 import json
 from collections import defaultdict
 
-from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl, fix_hs_codes
+from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl, fix_hs_codes, detect_missing_fields, repair_with_ai
 from alphaCargo.functions.functions import  clean_incoterm, clean_number_from_chars, extract_and_clean, normalize_numbers, safe_float_conversion, safe_int_conversion
 from alphaCargo.excel.create_excel import write_to_excel
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Processing file upload request.')
 
-    # Attempt to parse JSON body
     try:
         req_body = req.get_json()
-        files = req_body.get("files", "")
-        Invs = files.get("Invs", "")
-        PLs = files.get("PLs", "")
+        files = req_body.get("files", {})
+        Invs = files.get("Invs", [])
+        PLs = files.get("PLs", [])
         email = req_body.get("body", "")
 
+        all_inv_items = []
+        all_pl_items = []
+        
         Inv_result = {}
         PLs_result = {} 
         
         # Process each invoice file
-        for file in Invs :
-            documents = file.get("documents")
-
-            result = {}
+        for file in Invs:
+            documents = file.get("documents", [])
+            content = file.get("content", "")
+            
+            file_result = {}
+            file_items = []
 
             for page in documents:
-                fields = page.get("fields")
+                fields = page.get("fields", {})
                 for key, value in fields.items():
                     if key in ["Items", "Summary"]:
-                        arr = value.get("valueArray")
-                        result[key] = []
+                        arr = value.get("valueArray", [])
                         for item in arr:
-                            valueObject = item.get("valueObject")
+                            valueObject = item.get("valueObject", {})
                             obj = {}
-                            for keyObj, valueObj in valueObject.items():
-                                obj[keyObj] = valueObj.get("content")    
-                            result[key].append(obj)
+                            for keyObj, valObj in valueObject.items():
+                                obj[keyObj] = valObj.get("content")    
+                            file_items.append(obj)
                             
                     elif key == "Adress":
-                        result[key] = []
-                        valueObject = value.get("valueObject")
-                        arr = valueObject.get("ROW1")
-                        valueObject = arr.get("valueObject")
+                        valueObject = value.get("valueObject", {})
+                        row1 = valueObject.get("ROW1", {})
+                        row1_val_obj = row1.get("valueObject", {})
                         obj = {}
-                        for keyObj, valueObj in valueObject.items():
-                            obj[keyObj] = valueObj.get("content")    
-                        result[key].append(obj)
-                    else :
-                        result[key] = value.get("content")      
+                        for keyObj, valObj in row1_val_obj.items():
+                            obj[keyObj] = valObj.get("content")    
+                        file_result[key] = [obj]
+                    else:
+                        file_result[key] = value.get("content")      
 
-            '''------------------   Clean the JSON response   ------------------ '''       
-            #clean and split the incoterm
-            result["Inco Term"] = clean_incoterm(result.get("Inco Term", ""))
+            file_result["Items"] = file_items
+            logging.error(file_result)
+            # AI Fallback for Invoice
+            missing = detect_missing_fields(file_result, "Invoice")
+            if missing:
+                logging.info(f"Missing fields in Invoice: {missing}. Triggering AI fallback.")
+                repaired_data = repair_with_ai(content, "Invoice")
+                if repaired_data:
+                    # If critical item fields are missing, replace list
+                    if any(x in missing for x in ["HS CODE", "Quantity", "Amount", "Items"]):
+                        logging.info("Replacing items with AI extracted items.")
+                        file_result["Items"] = repaired_data.get("Items", file_result.get("Items", []))
+                    
+                    # Fill missing header fields
+                    for key in ["Invoice Number", "Inco Term", "Total Value", "Currency"]:
+                        if not file_result.get(key) and repaired_data.get(key):
+                            file_result[key] = repaired_data[key]
 
-            #clean and split the total value
-            total = result.get("Total Value", "")
-            total = total.replace(' ', '')
-            value = normalize_numbers(total)
-            value = safe_float_conversion(total)
-            total = round(value, 2)
-            result["Total Value"] = total
-
-            #update the numbers in the items
-            items = result.get("Items", "")  
-            for item in items :
-                #handle the value
-                Price = item.get("Amount", "")
-                if Price is not None:
-                    Price = Price.replace(' ', '')
-                    Price = normalize_numbers(Price)
-                    Price = safe_float_conversion(Price)
-                    item["Amount"] = Price
-                
-                HsCode = item.get("HS CODE", "")
-                HsCode = extract_hs_code(HsCode)
-                item["HS CODE"] = HsCode
-                
-                #handle the Qty
-                Qty = item.get("Quantity", "")
-                Qty = normalize_numbers(Qty)
-                Qty = safe_int_conversion(Qty)
-                item["Qty"] = Qty
-
-                item["Invoice Number"] = result.get("Invoice Number", "")
+            # Post-process and normalize
+            file_result["Inco Term"] = clean_incoterm(file_result.get("Inco Term", ""))
             
-            Inv_result = result
-        
-        # Parse each packing list file
-        for file in PLs :
-            documents = file.get("documents")
+            total_val = str(file_result.get("Total Value", "")).replace(' ', '')
+            normalized_total = normalize_numbers(total_val)
+            file_result["Total Value"] = round(safe_float_conversion(normalized_total), 2)
 
-            result = {}
+            for item in file_result.get("Items", []):
+                price = str(item.get("Amount", "")).replace(' ', '')
+                item["Amount"] = safe_float_conversion(normalize_numbers(price))
+                
+                hs_code = item.get("HS CODE") or item.get("Commodity") or ""
+                item["HS CODE"] = extract_hs_code(str(hs_code))
+                
+                qty = item.get("Quantity", "") or item.get("Qty", "")
+                item["Qty"] = safe_int_conversion(normalize_numbers(str(qty)))
+                item["Invoice Number"] = file_result.get("Invoice Number", "")
+                
+                
+            logging.error(json.dumps(file_result, indent=4))
+            # Store results
+            Inv_result.update(file_result) # Note: this will keep the last file's header but we accumulate items
+            all_inv_items.extend(file_result.get("Items", []))
+        
+        Inv_result["Items"] = all_inv_items
+        
+        # Process each packing list file
+        for file in PLs:
+            documents = file.get("documents", [])
+            content = file.get("content", "")
+
+            file_result = {}
+            file_items = []
 
             for page in documents:
-                fields = page.get("fields")
+                fields = page.get("fields", {})
                 for key, value in fields.items():
                     if key in ["Items", "Summary"]:
-                        arr = value.get("valueArray")
-                        result[key] = []
+                        arr = value.get("valueArray", [])
                         for item in arr:
-                            valueObject = item.get("valueObject")
+                            valueObject = item.get("valueObject", {})
                             obj = {}
-                            for keyObj, valueObj in valueObject.items():
-                                obj[keyObj] = valueObj.get("content")    
-                            result[key].append(obj)
-                            
+                            for keyObj, valObj in valueObject.items():
+                                obj[keyObj] = valObj.get("content")    
+                            file_items.append(obj)
                     elif key == "Adress":
-                        result[key] = []
-                        valueObject = value.get("valueObject")
-                        arr = valueObject.get("ROW1")
-                        valueObject = arr.get("valueObject")
+                        valueObject = value.get("valueObject", {})
+                        row1 = valueObject.get("ROW1", {})
+                        row1_val_obj = row1.get("valueObject", {})
                         obj = {}
-                        for keyObj, valueObj in valueObject.items():
-                            obj[keyObj] = valueObj.get("content")    
-                        result[key].append(obj)
-                    else :
-                        result[key] = value.get("content")               
+                        for keyObj, valObj in row1_val_obj.items():
+                            obj[keyObj] = valObj.get("content")    
+                        file_result[key] = [obj]
+                    else:
+                        file_result[key] = value.get("content")               
 
-            '''------------------   Clean the JSON response   ------------------ '''                   
-            #clean and convert the Gross weight
-            gross_weight_total = result.get("Total Gross", "")
-            gross_weight_total = clean_number_from_chars(gross_weight_total)
-            if '.' in gross_weight_total or ',' in gross_weight_total:
-                gross_weight_total = normalize_numbers(gross_weight_total)
-            result["Total Gross"] = safe_float_conversion(gross_weight_total)
-            
-            #clean and convert the Net weight
-            gross_weight_total = result.get("Total Packages", "")
-            gross_weight_total = clean_number_from_chars(gross_weight_total)
-            if '.' in gross_weight_total or ',' in gross_weight_total:
-                gross_weight_total = normalize_numbers(gross_weight_total)
-            result["Total Packages"] = safe_int_conversion(gross_weight_total)
-            
-            #clean and convert the Gross weight
-            gross_weight_total = result.get("Total Net", "")
-            gross_weight_total = clean_number_from_chars(gross_weight_total)
-            if '.' in gross_weight_total or ',' in gross_weight_total:
-                gross_weight_total = normalize_numbers(gross_weight_total)
-            result["Total Net"] = safe_float_conversion(gross_weight_total)
+            file_result["Items"] = file_items
 
-            #update the numbers in the items
-            items = result.get("Items", "")  
-            for item in items :
-                #handle the value
-                Qty = item.get("Quantity", "")
-                Qty = normalize_numbers(Qty)
-                Qty = safe_int_conversion(Qty)
-                item["Quantity"] = Qty
-                
-                Ctns = item.get("Ctns", "")
-                Ctns = normalize_numbers(Ctns)
-                Ctns = safe_int_conversion(Ctns)
-                item["Ctns"] = Ctns
-                
-                Net = item.get("Net Weight", "")
-                Net = normalize_numbers(Net)
-                Net = safe_float_conversion(Net)
-                item["Net Weight"] = Net
-                
-                Net = item.get("Gross Weight", "")
-                Net = normalize_numbers(Net)
-                Net = safe_float_conversion(Net)
-                item["Gross Weight"] = Net
+            # AI Fallback for PL
+            missing = detect_missing_fields(file_result, "Packing List")
+            if missing:
+                logging.info(f"Missing fields in PL: {missing}. Triggering AI fallback.")
+                repaired_data = repair_with_ai(content, "Packing List")
+                if repaired_data:
+                    if any(x in missing for x in ["Net Weight", "Gross Weight", "Items"]):
+                        logging.info("Replacing PL items with AI extracted items.")
+                        file_result["Items"] = repaired_data.get("Items", file_result.get("Items", []))
+                    
+                    for key in ["Total Gross", "Total Net", "Total Packages"]:
+                        if not file_result.get(key) and repaired_data.get(key):
+                            file_result[key] = repaired_data[key]
 
-                item["Invoice Number"] = result.get("Invoice Number", "")
+            # Normalize PL fields
+            for key in ["Total Gross", "Total Net", "Total Packages"]:
+                val = clean_number_from_chars(str(file_result.get(key, "")))
+                if '.' in val or ',' in val:
+                    val = normalize_numbers(val)
+                
+                if key == "Total Packages":
+                    file_result[key] = safe_int_conversion(val)
+                else:
+                    file_result[key] = safe_float_conversion(val)
+
+            for item in file_result.get("Items", []):
+                item["Quantity"] = safe_int_conversion(normalize_numbers(str(item.get("Quantity", ""))))
+                item["Ctns"] = safe_int_conversion(normalize_numbers(str(item.get("Ctns", ""))))
+                item["Net Weight"] = safe_float_conversion(normalize_numbers(str(item.get("Net Weight", ""))))
+                item["Gross Weight"] = safe_float_conversion(normalize_numbers(str(item.get("Gross Weight", ""))))
+                item["Invoice Number"] = file_result.get("Invoice Number", "")
+
+
             
-            PLs_result = result
+            PLs_result.update(file_result)
+            all_pl_items.extend(file_result.get("Items", []))
         
-        # Fix HS codes in the invoice items
+        PLs_result["Items"] = all_pl_items
+
+        # Fix HS codes and merge
         Inv_result = fix_hs_codes(Inv_result)
-        
-        # Merge JSON objects
         merged_result = merge_invoice_and_pl(Inv_result, PLs_result)
         
-        '''------------------   Extract data from the email   ------------------ '''    
-        #Extract the body data
+        # Email Extraction Fallback
         cleaned_email_body_html = extract_and_clean(email)
         shipping_text = merged_result.get("Origin", "")
         
-        #extract the table as json object
         from AI_agents.OpenAI.custom_call import CustomCall
-
         extractor = CustomCall()
+        
         prompt = f"""
-You are an information extraction engine.
-Extract ONLY structured data from the following email and shipping text into a single plain JSON object.
-
-Constraints:
-- Output ONLY a single plain JSON object. No markdown, no backticks, no explanation, no extra text.
-- If a field is missing, omit it (do not invent values).
-- Numbers must be JSON numbers (no quotes). Use dot as decimal separator (e.g. 17959.5).
-- Dates must be ISO format: YYYY-MM-DD.
-- Keys must match the schema below (use as a guide). Use real values from the email and shipping text.
+You are an information extraction engine. Extract ONLY structured data from the following email and shipping text into a single plain JSON object.
+- Output ONLY a single plain JSON object. No markdown.
+- Numbers must be numeric. Dates must be YYYY-MM-DD.
 
 SCHEMA:
 {{
-  "Client": {{
-    "Name": "string",
-    "VAT": "string",
-    "EORI": "string"
-  }},
-  "Invoice": {{
-    "Amount": 0.0,
-    "Currency": "string"
-  }},
+  "Client": {{ "Name": "string", "VAT": "string", "EORI": "string" }},
+  "Invoice": {{ "Amount": 0.0, "Currency": "string" }},
   "Shipment": {{
-    "Delivery Place": [
-      "Name",
-      "Street + number",
-      "Postcode",
-      "City",
-      "Country" As country code (e.g. NL, DE, BE)
-    ],
-    "Reference DR": "string",
-    "Client Reference": "string",
-    "ETA": "YYYY-MM-DD",
-    "Container Number": "string",
-    "Container Size": "string",
-    "Packages": 0,
-    "Gross Weight": 0.0,
-    "Origin Country": "string", as country code (e.g. NL, DE, BE)
-    "Destination Country": "string" as country code (e.g. NL, DE, BE)
+    "Delivery Place": ["Name", "Street + number", "Postcode", "City", "Country Code"],
+    "Reference DR": "string", "Client Reference": "string", "ETA": "YYYY-MM-DD",
+    "Container Number": "string", "Container Size": "string", "Packages": 0, "Gross Weight": 0.0,
+    "Origin Country": "string", "Destination Country": "string"
   }}
 }}
 
-Now extract the JSON from the following inputs.  
-EMAIL:  
-{cleaned_email_body_html}  
-
-SHIPPING TEXT:  
-{shipping_text}
-""" 
-
-        role = "System"
-
-        result = extractor.send_request(role, prompt)
-        result = result.replace("```", "").replace("json", "").strip()
-        result = json.loads(result)
+EMAIL: {cleaned_email_body_html}
+SHIPPING TEXT: {shipping_text}
+"""
+        email_res = extractor.send_request("System", prompt)
+        if email_res:
+            email_res = email_res.replace("```json", "").replace("```", "").strip()
+            try:
+                merged_result["Email"] = json.loads(email_res)
+            except:
+                merged_result["Email"] = {}
         
-        merged_result["Email"] = result
-        
+        # Generate Excel
         try:
-            # Call writeExcel to generate the Excel file in memory
             excel_file = write_to_excel(merged_result)
-            logging.info("Generated Excel file.")
             
-            reference = f"{merged_result.get('Email', '').get('Shipment', '').get('Reference DR', '')}-{merged_result.get('Container Number', '')}"
-
-            # Set response headers for the Excel file download
+            # Safe reference generation
+            email_data = merged_result.get("Email", {})
+            shipment = email_data.get("Shipment", {}) if isinstance(email_data, dict) else {}
+            ref_dr = shipment.get('Reference DR', 'UNKNOWN') if isinstance(shipment, dict) else 'UNKNOWN'
+            container = merged_result.get('Container Number', 'UNKNOWN')
+            
+            filename = f"{ref_dr}-{container}.xlsx"
             headers = {
-                'Content-Disposition': 'attachment; filename="' + reference + '.xlsx"',
+                'Content-Disposition': f'attachment; filename="{filename}"',
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             }
 
-            # Return the Excel file as an HTTP response
             return func.HttpResponse(excel_file.getvalue(), headers=headers, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     
         except Exception as e:
-            logging.error(f"Error: {e}")
-            return func.HttpResponse(
-                f"Error processing request: {e}", status_code=500
-            )              
+            logging.error(f"Excel Generation Error: {e}")
+            return func.HttpResponse(f"Error generating excel: {e}", status_code=500)
 
-    except ValueError as e:
-        logging.error("Invalid JSON in request body.")
-        logging.error(e)
-        return func.HttpResponse(
-            body=json.dumps({"error": "Invalid JSON"}),
-            status_code=400,
-            mimetype="application/json"
-        )
+    except Exception as e:
+        logging.error(f"Global Error: {e}")
+        return func.HttpResponse(body=json.dumps({"error": str(e)}), status_code=400, mimetype="application/json")
