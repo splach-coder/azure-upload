@@ -3,7 +3,7 @@ import logging
 import json
 from collections import defaultdict
 
-from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl, fix_hs_codes, detect_missing_fields, repair_with_ai
+from alphaCargo.utils import extract_hs_code, merge_invoice_and_pl, fix_hs_codes, detect_missing_fields, repair_with_ai, get_iso_country, repair_damaged_items
 from alphaCargo.functions.functions import  clean_incoterm, clean_number_from_chars, extract_and_clean, normalize_numbers, safe_float_conversion, safe_int_conversion
 from alphaCargo.excel.create_excel import write_to_excel
 
@@ -55,24 +55,46 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                         file_result[key] = value.get("content")      
 
             file_result["Items"] = file_items
-            logging.error(file_result)
-            # AI Fallback for Invoice
-            missing = detect_missing_fields(file_result, "Invoice")
-            if missing:
-                logging.info(f"Missing fields in Invoice: {missing}. Triggering AI fallback.")
+            
+            # Translate Country of Origin
+            origin = file_result.get("Origin", "")
+            if origin:
+                file_result["Origin"] = get_iso_country(origin)
+
+            # Identify if any items are damaged
+            has_damaged = False
+            for item in file_result.get("Items", []):
+                hs = item.get("HS CODE") or item.get("Commodity")
+                qty = item.get("Quantity") or item.get("Qty")
+                amount = item.get("Amount") or item.get("Invoice value")
+                
+                # Treat empty, None, or numerical '0' as damaged
+                is_qty_zero = safe_float_conversion(normalize_numbers(str(qty or "0"))) == 0
+                is_amount_zero = safe_float_conversion(normalize_numbers(str(amount or "0"))) == 0
+
+                if not hs or is_qty_zero or is_amount_zero:
+                    has_damaged = True
+                    break
+
+            if has_damaged or not file_result.get("Items"):
+                logging.info(f"--- DAMAGE DETECTED in Invoice ---")
+                logging.info(f"Current Items: {json.dumps(file_result.get('Items', []), indent=2)}")
+                logging.info(f"Triggering AI re-extraction...")
                 repaired_data = repair_with_ai(content, "Invoice")
-                if repaired_data:
-                    # If critical item fields are missing, replace list
-                    if any(x in missing for x in ["HS CODE", "Quantity", "Amount", "Items"]):
-                        logging.info("Replacing items with AI extracted items.")
-                        file_result["Items"] = repaired_data.get("Items", file_result.get("Items", []))
-                    
-                    # Fill missing header fields
-                    for key in ["Invoice Number", "Inco Term", "Total Value", "Currency"]:
+                if repaired_data and repaired_data.get("Items"):
+                    logging.info("AI Repair Successful. New Items extracted.")
+                    file_result["Items"] = repaired_data["Items"]
+                    # Also update header fields if AI found them
+                    for key in ["Invoice Number", "Inco Term", "Total Value", "Origin Country"]:
                         if not file_result.get(key) and repaired_data.get(key):
                             file_result[key] = repaired_data[key]
+                else:
+                    logging.error("AI Repair failed to return items.")
 
-            # Post-process and normalize
+            # NEW: Country translation (moved after potential AI repair)
+            # Check both 'Origin' (DI key) and 'Origin Country' (AI key)
+            origin = file_result.get("Origin") or file_result.get("Origin Country") or ""
+            file_result["Origin"] = get_iso_country(origin)
             file_result["Inco Term"] = clean_incoterm(file_result.get("Inco Term", ""))
             
             total_val = str(file_result.get("Total Value", "")).replace(' ', '')
@@ -90,10 +112,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Qty"] = safe_int_conversion(normalize_numbers(str(qty)))
                 item["Invoice Number"] = file_result.get("Invoice Number", "")
                 
-                
-            logging.error(json.dumps(file_result, indent=4))
-            # Store results
-            Inv_result.update(file_result) # Note: this will keep the last file's header but we accumulate items
+            Inv_result.update(file_result)
             all_inv_items.extend(file_result.get("Items", []))
         
         Inv_result["Items"] = all_inv_items
@@ -130,19 +149,38 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             file_result["Items"] = file_items
 
-            # AI Fallback for PL
-            missing = detect_missing_fields(file_result, "Packing List")
-            if missing:
-                logging.info(f"Missing fields in PL: {missing}. Triggering AI fallback.")
+            # Identify if any items are damaged (PL level: NW, GW)
+            has_damaged_pl = False
+            for item in file_result.get("Items", []):
+                nw = item.get("Net Weight") or item.get("Net")
+                gw = item.get("Gross Weight") or item.get("Gross")
+                
+                # Treat empty or numerical '0' as damaged for PL
+                is_nw_zero = safe_float_conversion(normalize_numbers(str(nw or "0"))) == 0
+                is_gw_zero = safe_float_conversion(normalize_numbers(str(gw or "0"))) == 0
+
+                if is_nw_zero or is_gw_zero:
+                    has_damaged_pl = True
+                    break
+
+            if has_damaged_pl or not file_result.get("Items"):
+                logging.info(f"--- DAMAGE DETECTED in Packing List ---")
+                logging.info(f"Current Items: {json.dumps(file_result.get('Items', []), indent=2)}")
+                logging.info(f"Triggering AI re-extraction...")
                 repaired_data = repair_with_ai(content, "Packing List")
-                if repaired_data:
-                    if any(x in missing for x in ["Net Weight", "Gross Weight", "Items"]):
-                        logging.info("Replacing PL items with AI extracted items.")
-                        file_result["Items"] = repaired_data.get("Items", file_result.get("Items", []))
-                    
-                    for key in ["Total Gross", "Total Net", "Total Packages"]:
+                if repaired_data and repaired_data.get("Items"):
+                    logging.info("AI Repair Successful for PL.")
+                    file_result["Items"] = repaired_data["Items"]
+                    for key in ["Total Gross", "Total Net", "Total Packages", "Origin Country"]:
                         if not file_result.get(key) and repaired_data.get(key):
                             file_result[key] = repaired_data[key]
+                else:
+                    logging.error("AI Repair failed for PL.")
+
+            # NEW: Country translation
+            origin = file_result.get("Origin") or file_result.get("Origin Country") or ""
+            file_result["Origin"] = get_iso_country(origin)
+
 
             # Normalize PL fields
             for key in ["Total Gross", "Total Net", "Total Packages"]:
@@ -162,7 +200,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 item["Gross Weight"] = safe_float_conversion(normalize_numbers(str(item.get("Gross Weight", ""))))
                 item["Invoice Number"] = file_result.get("Invoice Number", "")
 
-
             
             PLs_result.update(file_result)
             all_pl_items.extend(file_result.get("Items", []))
@@ -173,7 +210,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         Inv_result = fix_hs_codes(Inv_result)
         merged_result = merge_invoice_and_pl(Inv_result, PLs_result)
         
-        # Email Extraction Fallback
+        # Email Extraction
         cleaned_email_body_html = extract_and_clean(email)
         shipping_text = merged_result.get("Origin", "")
         

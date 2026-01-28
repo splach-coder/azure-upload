@@ -107,6 +107,80 @@ def fix_hs_codes(invoice_data):
     
     return invoice_data
 
+COUNTRY_MAPPING = {
+    "AFGHANISTAN": "AF", "ALAND ISLANDS": "AX", "ALBANIA": "AL", "ALGERIA": "DZ", "AMERICAN SAMOA": "AS",
+    "ANDORRA": "AD", "ANGOLA": "AO", "ANGUILLA": "AI", "ANTARCTICA": "AQ", "ANTIGUA AND BARBUDA": "AG",
+    "ARGENTINA": "AR", "ARMENIA": "AM", "ARUBA": "AW", "AUSTRALIA": "AU", "AUSTRIA": "AT",
+    "AZERBAIJAN": "AZ", "BAHAMAS": "BS", "BAHRAIN": "BH", "BANGLADESH": "BD", "BARBADOS": "BB",
+    "BELARUS": "BY", "BELGIUM": "BE", "BELIZE": "BZ", "BENIN": "BJ", "BERMUDA": "BM",
+    "BHUTAN": "BT", "BOLIVIA": "BO", "BOSNIA AND HERZEGOVINA": "BA", "BOTSWANA": "BW", "BOUVET ISLAND": "BV",
+    "BRAZIL": "BR", "BRITISH INDIAN OCEAN TERRITORY": "IO", "BRUNEI DARUSSALAM": "BN", "BULGARIA": "BG", "BURKINA FASO": "BF",
+    "BURUNDI": "BI", "CAMBODIA": "KH", "CAMEROON": "CM", "CANADA": "CA", "CAPE VERDE": "CV",
+    "CAYMAN ISLANDS": "KY", "CENTRAL AFRICAN REPUBLIC": "CF", "CHAD": "TD", "CHILE": "CL", "CHINA": "CN",
+    "CHRISTMAS ISLAND": "CX", "COCOS (KEELING) ISLANDS": "CC", "COLOMBIA": "CO", "COMOROS": "KM", "CONGO": "CG",
+    "CONGO, THE DEMOCRATIC REPUBLIC OF THE": "CD", "COOK ISLANDS": "CK", "COSTA RICA": "CR", "COTE D'IVOIRE": "CI", "CROATIA": "HR",
+    "CUBA": "CU", "CYPRUS": "CY", "CZECH REPUBLIC": "CZ", "DENMARK": "DK", "DJIBOUTI": "DJ",
+    "DOMINICA": "DM", "DOMINICAN REPUBLIC": "DO", "ECUADOR": "EC", "EGYPT": "EG", "EL SALVADOR": "SV",
+    "EQUATORIAL GUINEA": "GQ", "ERITREA": "ER", "ESTONIA": "EE", "ETHIOPIA": "ET", "FALKLAND ISLANDS (MALVINAS)": "FK",
+    "FAROE ISLANDS": "FO", "FIJI": "FJ", "FINLAND": "FI", "FRANCE": "FR", "FRENCH GUIANA": "GF",
+    "FRENCH POLYNESIA": "PF", "FRENCH SOUTHERN TERRITORIES": "TF", "GABON": "GA", "GAMBIA": "GM", "GEORGIA": "GE",
+    "GERMANY": "DE", "GHANA": "GH", "GIBRALTAR": "GI", "GREECE": "GR", "GREENLAND": "GL",
+    "GRENADA": "GD", "GUADELOUPE": "GP", "GUAM": "GU", "GUATEMALA": "GT", "GUERNSEY": "GG",
+    "GUINEA": "GN", "GUINEA-BISSAU": "GW", "GUYANA": "GY", "HAITI": "HT", "HEARD ISLAND AND MCDONALD ISLANDS": "HM",
+    "HOLY SEE (VATICAN CITY STATE)": "VA", "HONDURAS": "HN", "HONG KONG": "HK", "HUNGARY": "HU", "ICELAND": "IS",
+    "INDIA": "IN", "INDONESIA": "ID", "IRAN, ISLAMIC REPUBLIC OF": "IR", "IRAQ": "IQ", "IRELAND": "IE",
+    "ISLE OF MAN": "IM", "ISRAEL": "IL", "ITALY": "IT", "JAMAICA": "JM", "JAPAN": "JP",
+    "JERSEY": "JE", "JORDAN": "JO", "KAZAKHSTAN": "KZ", "KENYA": "KE", "KIRIBATI": "KI",
+    "KOREA, DEMOCRATIC PEOPLE'S REPUBLIC OF": "KP", "KOREA, REPUBLIC OF": "KR", "KUWAIT": "KW", "KYRGYZSTAN": "KG", "LAO PEOPLE'S DEMOCRATIC REPUBLIC": "LA",
+    "LATVIA": "LV", "LEBANON": "LB", "LESOTHO": "LS", "LIBERIA": "LR", "LIBYAN ARAB JAMAHIRIYA": "LY",
+    "LIECHTENSTEIN": "LI", "LITHUANIA": "LT", "LUXEMBOURG": "LU", "MACAO": "MO", "MACEDONIA, THE FORMER YUGOSLAV REPUBLIC OF": "MK",
+    "MADAGASCAR": "MG", "MALAWI": "MW", "MALAYSIA": "MY", "MALDIVES": "MV", "MALI": "ML",
+    "MALTA": "MT", "MARSHALL ISLANDS": "MH", "MARTINIQUE": "MQ", "MAURITANIA": "MR", "MAURITIUS": "MU",
+    "MAYOTTE": "YT", "MEXICO": "MX", "MICRONESIA, FEDERATED STATES OF": "FM", "MOLDOVA, REPUBLIC OF": "MD", "MONACO": "MC",
+    "MONGOLIA": "MN", "MONTENEGRO": "ME", "MONTSERRAT": "MS", "MOROCCO": "MA", "MOZAMBIQUE": "MZ",
+    "MYANMAR": "MM", "NAMIBIA": "NA", "NAURU": "NR", "NEPAL": "NP", "NETHERLANDS": "NL",
+    "NETHERLANDS ANTILLES": "AN", "NEW CALEDONIA": "NC", "NEW ZEALAND": "NZ", "NICARAGUA": "NI", "NIGER": "NE",
+    "NIGERIA": "NG", "NIUE": "NU", "NORFOLK ISLAND": "NF", "NORTHERN MARIANA ISLANDS": "MP", "NORWAY": "NO",
+    "OMAN": "OM", "PAKISTAN": "PK", "PALAU": "PW", "PALESTINIAN TERRITORY, OCCUPIED": "PS", "PANAMA": "PA",
+    "PAPUA NEW GUINEA": "PG", "PARAGUAY": "PY", "PERU": "PE", "PHILIPPINES": "PH", "PITCAIRN": "PN",
+    "POLAND": "PL", "PORTUGAL": "PT", "PUERTO RICO": "PR", "QATAR": "QA", "REUNION": "RE",
+    "ROMANIA": "RO", "RUSSIAN FEDERATION": "RU", "RWANDA": "RW", "SAINT HELENA": "SH", "SAINT KITTS AND NEVIS": "KN",
+    "SAINT LUCIA": "LC", "SAINT PIERRE AND MIQUELON": "PM", "SAINT VINCENT AND THE GRENADINES": "VC", "SAMOA": "WS", "SAN MARINO": "SM",
+    "SAO TOME AND PRINCIPE": "ST", "SAUDI ARABIA": "SA", "SENEGAL": "SN", "SERBIA": "RS", "SEYCHELLES": "SC",
+    "SIERRA LEONE": "SL", "SINGAPORE": "SG", "SLOVAKIA": "SK", "SLOVENIA": "SI", "SOLOMON ISLANDS": "SB",
+    "SOMALIA": "SO", "SOUTH AFRICA": "ZA", "SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS": "GS", "SPAIN": "ES", "SRI LANKA": "LK",
+    "SUDAN": "SD", "SURINAME": "SR", "SVALBARD AND JAN MAYEN": "SJ", "SWAZILAND": "SZ", "SWEDEN": "SE",
+    "SWITZERLAND": "CH", "SYRIAN ARAB REPUBLIC": "SY", "TAIWAN, PROVINCE OF CHINA": "TW", "TAJIKISTAN": "TJ", "TANZANIA, UNITED REPUBLIC OF": "TZ",
+    "THAILAND": "TH", "TIMOR-LESTE": "TL", "TOGO": "TG", "TOKELAU": "TK", "TONGA": "TO",
+    "TRINIDAD AND TOBAGO": "TT", "TUNISIA": "TN", "TURKEY": "TR", "TURKMENISTAN": "TM", "TURKS AND CAICOS ISLANDS": "TC",
+    "TUVALU": "TV", "UGANDA": "UG", "UKRAINE": "UA", "UNITED ARAB EMIRATES": "AE", "UNITED KINGDOM": "GB",
+    "UNITED STATES": "US", "UNITED STATES MINOR OUTLYING ISLANDS": "UM", "URUGUAY": "UY", "UZBEKISTAN": "UZ", "VANUATU": "VU",
+    "VENEZUELA": "VE", "VIET NAM": "VN", "VIRGIN ISLANDS, BRITISH": "VG", "VIRGIN ISLANDS, U.S.": "VI", "WALLIS AND FUTUNA": "WF",
+    "WESTERN SAHARA": "EH", "YEMEN": "YE", "ZAMBIA": "ZM", "ZIMBABWE": "ZW"
+}
+
+def get_iso_country(text):
+    if not text:
+        return ""
+    
+    text_upper = str(text).upper().strip()
+    
+    found_matches = []
+    # Find all countries mentioned in the text and their positions
+    for name, code in COUNTRY_MAPPING.items():
+        match = re.search(r'\b' + re.escape(name) + r'\b', text_upper)
+        if match:
+            found_matches.append((match.start(), code))
+    
+    if not found_matches:
+        # Fallback: if no match found, just clean and return the original string
+        return text_upper
+    
+    # Sort by the start position in the text (first appearing country wins)
+    found_matches.sort(key=lambda x: x[0])
+    
+    return found_matches[0][1] # Return the ISO code for the first country found
+
 def detect_missing_fields(data, doc_type="Invoice"):
     """Determines if the extracted data is missing critical fields or has incomplete items."""
     missing = []
@@ -148,6 +222,77 @@ def detect_missing_fields(data, doc_type="Invoice"):
 
     return missing
 
+def repair_damaged_items(damaged_items, content, doc_type="Invoice"):
+    """Specific repair for only damaged items."""
+    from AI_agents.OpenAI.custom_call import CustomCall
+    import json
+    import logging
+
+    if not damaged_items:
+        return []
+
+    extractor = CustomCall()
+    
+    schema = ""
+    if doc_type == "Invoice":
+        schema = """
+{
+  "Items": [
+    {
+      "HS CODE": "string",
+      "Quantity": 0,
+      "Amount": 0.0,
+      "Description": "string"
+    }
+  ]
+}"""
+    else:
+        schema = """
+{
+  "Items": [
+    {
+      "Quantity": 0,
+      "Net Weight": 0.0,
+      "Gross Weight": 0.0,
+      "Ctns": 0,
+      "Description": "string"
+    }
+  ]
+}"""
+
+    prompt = f"""
+You are an expert data extraction engine specialized in logistics documents ({doc_type}).
+I have identified some "damaged" items that are missing critical fields. 
+Please find and re-extract ONLY these items from the raw OCR text provided below.
+
+DAMAGED ITEMS (Partial data):
+{json.dumps(damaged_items, indent=2)}
+
+CONSTRAINTS:
+- Output ONLY a single plain JSON object containing the repaired items.
+- Ensure "HS CODE", "Quantity", and "Amount" are present for Invoices.
+- Ensure "Net Weight" and "Gross Weight" are present for Packing Lists.
+- Return items in the same order as provided in DAMAGED ITEMS.
+
+SCHEMA:
+{schema}
+
+TEXT CONTENT:
+{content}
+"""
+    
+    try:
+        response = extractor.send_request("System", prompt)
+        if not response:
+            return []
+        
+        json_str = response.replace("```json", "").replace("```", "").strip()
+        data = json.loads(json_str)
+        return data.get("Items", [])
+    except Exception as e:
+        logging.error(f"Damaged Item Repair failed: {e}")
+        return []
+
 def repair_with_ai(content, doc_type="Invoice", existing_data=None):
     """Uses LLM to extract data from raw OCR content when DI fails or is incomplete."""
     from AI_agents.OpenAI.custom_call import CustomCall
@@ -164,6 +309,7 @@ def repair_with_ai(content, doc_type="Invoice", existing_data=None):
   "Inco Term": "string",
   "Total Value": 0.0,
   "Currency": "string",
+  "Origin Country": "string",
   "Items": [
     {
       "HS CODE": "string",
@@ -178,6 +324,7 @@ def repair_with_ai(content, doc_type="Invoice", existing_data=None):
   "Total Gross": 0.0,
   "Total Net": 0.0,
   "Total Packages": 0,
+  "Origin Country": "string",
   "Items": [
     {
       "Quantity": 0,
@@ -196,6 +343,7 @@ CONSTRAINTS:
 - Output ONLY a single plain JSON object. No markdown, no extra text.
 - Numbers must be numeric (no commas in JSON, use dot for decimal).
 - Extract ALL items from the item table.
+- For "Origin Country", look for phrases like "FROM [COUNTRY] TO..." and extract the FIRST country mentioned as the origin.
 - For Invoices, focus on capturing "HS CODE" (Commodity), "Quantity" (Collis), and "Amount" (Invoice value).
 - For Packing Lists, focus on "Net Weight" (NW) and "Gross Weight" (GW) for each item.
 
@@ -205,6 +353,10 @@ SCHEMA:
 TEXT CONTENT:
 {content}
 """
+    
+    logging.info(f"--- AI REPAIR PROMPT ({doc_type}) ---")
+    logging.info(prompt)
+    logging.info(f"------------------------------------")
     
     try:
         response = extractor.send_request("System", prompt)
